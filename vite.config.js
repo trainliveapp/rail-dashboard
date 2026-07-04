@@ -4,7 +4,8 @@ import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
-  // IMPORTANT: change this to match your GitHub repo name exactly, e.g. '/rail-dashboard/'
-  base: '/rail-dashboard/',
+  // Relative base path, works whether hosted at a domain root (Netlify)
+  // or a subfolder like /rail-dashboard/ (GitHub Pages), no editing needed.
+  base: './',
   plugins: [react(), tailwindcss()],
 })
