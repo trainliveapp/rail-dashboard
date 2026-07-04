@@ -56,36 +56,36 @@ function ratingIcon(rating, color = '#7f1d1d') {
 }
 
 const tubePaths = {
-  Central: [[51.5211, -0.1520], [51.5215, -0.1430], [51.5222, -0.1340], [51.5233, -0.1250], [51.5245, -0.1160]],
-  Victoria: [[51.5330, -0.1370], [51.5290, -0.1355], [51.5246, -0.1339], [51.5195, -0.1325], [51.5145, -0.1310]],
-  Northern: [[51.5340, -0.1430], [51.5290, -0.1385], [51.5246, -0.1339], [51.5195, -0.1290], [51.5150, -0.1245]],
-  Elizabeth: [[51.5185, -0.1510], [51.5225, -0.1410], [51.5246, -0.1339], [51.5262, -0.1240], [51.5285, -0.1140]],
+  Central: [[51.51655, -0.17553], [51.51747, -0.15483], [51.51908, -0.13413], [51.52161, -0.11343], [51.52437, -0.09273]],
+  Victoria: [[51.54392, -0.14103], [51.53472, -0.13758], [51.5246, -0.1339], [51.51287, -0.13068], [51.50137, -0.12723]],
+  Northern: [[51.54622, -0.15483], [51.53472, -0.14448], [51.5246, -0.1339], [51.51287, -0.12263], [51.50252, -0.11228]],
+  Elizabeth: [[51.51057, -0.17323], [51.51977, -0.15023], [51.5246, -0.1339], [51.52828, -0.11113], [51.53357, -0.08813]],
 }
 
 const metroStops = [
-  { lat: 51.5222, lng: -0.1340 },
+  { lat: 51.51908, lng: -0.13413 },
   { lat: 51.5246, lng: -0.1339 },
-  { lat: 51.5195, lng: -0.1325 },
-  { lat: 51.5262, lng: -0.1240 },
+  { lat: 51.51287, lng: -0.13068 },
+  { lat: 51.52828, lng: -0.11113 },
 ]
 
 const scatterMarkers = [
-  { type: 'delay', color: '#dc2626', lat: 51.5232, lng: -0.1360 },
-  { type: 'delay', color: '#dc2626', lat: 51.5205, lng: -0.1400 },
-  { type: 'report', color: '#7c3aed', lat: 51.5228, lng: -0.1310 },
-  { type: 'report', color: '#7c3aed', lat: 51.5210, lng: -0.1355 },
-  { type: 'crowding', color: '#f59e0b', lat: 51.5215, lng: -0.1290 },
-  { type: 'crowding', color: '#f59e0b', lat: 51.5250, lng: -0.1270 },
+  { type: 'delay', color: '#dc2626', lat: 51.52138, lng: -0.13873 },
+  { type: 'delay', color: '#dc2626', lat: 51.51517, lng: -0.14793 },
+  { type: 'report', color: '#7c3aed', lat: 51.52046, lng: -0.12723 },
+  { type: 'report', color: '#7c3aed', lat: 51.51632, lng: -0.13758 },
+  { type: 'crowding', color: '#f59e0b', lat: 51.51747, lng: -0.12263 },
+  { type: 'crowding', color: '#f59e0b', lat: 51.52552, lng: -0.11803 },
 ]
 
 const hotelPins = [
-  { lat: 51.5240, lng: -0.1250 },
-  { lat: 51.5200, lng: -0.1370 },
+  { lat: 51.52322, lng: -0.11343 },
+  { lat: 51.51402, lng: -0.14103 },
 ]
 
 const cycleParkingPins = [
-  { lat: 51.5255, lng: -0.1280 },
-  { lat: 51.5218, lng: -0.1330 },
+  { lat: 51.52667, lng: -0.12033 },
+  { lat: 51.51816, lng: -0.13183 },
 ]
 
 function MapBridge({ mapRef }) {
@@ -117,7 +117,7 @@ export default function MapPanel({ layers, nearby }) {
 
   return (
     <div className="relative w-full h-[420px] lg:h-[520px] overflow-hidden bg-slate-100">
-      <MapContainer center={CENTER} zoom={15} zoomControl={false} className="w-full h-full">
+      <MapContainer center={CENTER} zoom={16} zoomControl={false} className="w-full h-full">
         <MapBridge mapRef={mapRef} />
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -212,7 +212,7 @@ export default function MapPanel({ layers, nearby }) {
         <button aria-label="Zoom out" onClick={() => mapRef.current?.zoomOut()} className="w-11 h-11 bg-white shadow-sm rounded-lg flex items-center justify-center text-slate-600 active:bg-slate-50">
           <Minus size={18} />
         </button>
-        <button aria-label="Recenter map" onClick={() => mapRef.current?.setView(CENTER, 15)} className="w-11 h-11 bg-white shadow-sm rounded-lg flex items-center justify-center text-slate-600 active:bg-slate-50">
+        <button aria-label="Recenter map" onClick={() => mapRef.current?.setView(CENTER, 16)} className="w-11 h-11 bg-white shadow-sm rounded-lg flex items-center justify-center text-slate-600 active:bg-slate-50">
           <LocateFixed size={18} />
         </button>
       </div>

@@ -295,21 +295,21 @@ export const nextDepartures = [
 // Real-ish coordinates around Warren Street / Euston area, London, used for the
 // interactive map's overlay pins.
 export const housingPins = [
-  { id: 1, lat: 51.5265, lng: -0.1385, price: '£720/mon' },
-  { id: 2, lat: 51.5258, lng: -0.1355, price: '£720/mon' },
-  { id: 3, lat: 51.5248, lng: -0.1310, price: '£720/mon' },
-  { id: 4, lat: 51.5238, lng: -0.1370, price: '£720/mon' },
-  { id: 5, lat: 51.5233, lng: -0.1345, price: '£720/mon' },
-  { id: 6, lat: 51.5228, lng: -0.1320, price: '£720/mon' },
-  { id: 7, lat: 51.5220, lng: -0.1400, price: '£720/mon' },
-  { id: 8, lat: 51.5218, lng: -0.1290, price: '£720/mon' },
+  { id: 1, lat: 51.52897, lng: -0.14448, price: '£720/mon' },
+  { id: 2, lat: 51.52736, lng: -0.13758, price: '£720/mon' },
+  { id: 3, lat: 51.52506, lng: -0.12723, price: '£720/mon' },
+  { id: 4, lat: 51.52276, lng: -0.14103, price: '£720/mon' },
+  { id: 5, lat: 51.52161, lng: -0.13528, price: '£720/mon' },
+  { id: 6, lat: 51.52046, lng: -0.12953, price: '£720/mon' },
+  { id: 7, lat: 51.51862, lng: -0.14793, price: '£720/mon' },
+  { id: 8, lat: 51.51816, lng: -0.12263, price: '£720/mon' },
 ]
 
 export const coffeePins = [
-  { id: 1, lat: 51.5262, lng: -0.1330, name: 'Caffe Terrazzo', rating: 4.8, status: 'Closed', address: "1 Manor Road, London, England, inside Ealing Broadway station" },
-  { id: 2, lat: 51.5232, lng: -0.1390, name: 'Urban Brew Café', rating: 4.5, status: 'Closed', address: '14 King Street, Manchester' },
-  { id: 3, lat: 51.5225, lng: -0.1300, name: 'Bean & Bliss', rating: 4.9, status: 'Open', address: '18 Market Square, Cambridge' },
-  { id: 4, lat: 51.5215, lng: -0.1315, name: 'Café Aroma', rating: 4.9, status: 'Open', address: '20 George Street, Brighton' },
+  { id: 1, lat: 51.52828, lng: -0.13183, name: 'Caffe Terrazzo', rating: 4.8, status: 'Closed', address: "1 Manor Road, London, England, inside Ealing Broadway station" },
+  { id: 2, lat: 51.52138, lng: -0.14563, name: 'Urban Brew Café', rating: 4.5, status: 'Closed', address: '14 King Street, Manchester' },
+  { id: 3, lat: 51.51977, lng: -0.12493, name: 'Bean & Bliss', rating: 4.9, status: 'Open', address: '18 Market Square, Cambridge' },
+  { id: 4, lat: 51.51747, lng: -0.12838, name: 'Café Aroma', rating: 4.9, status: 'Open', address: '20 George Street, Brighton' },
 ]
 
-export const liveEventPin = { lat: 51.5268, lng: -0.1300, name: 'Rugby', location: "King's Cross St Pancras", date: 'Sat, 18 Jul 2026, 18:30' }
+export const liveEventPin = { lat: 51.52966, lng: -0.12493, name: 'Rugby', location: "King's Cross St Pancras", date: 'Sat, 18 Jul 2026, 18:30' }
