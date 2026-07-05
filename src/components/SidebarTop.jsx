@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  Search, Heart, Clock, ArrowUpDown, Menu, X, Map, CalendarDays, Bell, HelpCircle, Plus,
+  Search, Heart, Clock, ArrowUpDown, ArrowRight, Menu, X, Map, CalendarDays, Bell, HelpCircle, Plus,
 } from 'lucide-react'
 import { savedJourneys } from '../data/mockData'
 import logo from '../assets/logo.png'
@@ -20,6 +20,13 @@ export default function SidebarTop({ className = '' }) {
   const [journeyTab, setJourneyTab] = useState('saved')
   const [menuOpen, setMenuOpen] = useState(false)
   const [savedOpen, setSavedOpen] = useState(false)
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
+
+  const handleSwap = () => {
+    setFrom(to)
+    setTo(from)
+  }
 
   return (
     <div className={`bg-white ${className}`}>
@@ -85,24 +92,26 @@ export default function SidebarTop({ className = '' }) {
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-xs font-bold tracking-widest text-slate-400">PLAN JOURNEY</h2>
           </div>
-          <div className="relative flex gap-2 mb-3">
+
+          {/* Bold, full width two-segment tab bar, replacing the old small pill buttons */}
+          <div className="relative flex rounded-lg border border-slate-200 overflow-hidden mb-4">
             <button
               onClick={() => {
                 setJourneyTab('saved')
                 setSavedOpen((o) => (journeyTab === 'saved' ? !o : true))
               }}
-              className={`flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-full border ${journeyTab === 'saved' ? 'border-blue-200 bg-blue-50 text-blue-700' : 'border-slate-200 text-slate-500'}`}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-semibold transition-colors ${journeyTab === 'saved' ? 'bg-blue-700 text-white' : 'bg-white text-blue-700'}`}
             >
-              <Heart size={12} /> Saved Journey
+              <Heart size={14} /> Saved Journey
             </button>
             <button
               onClick={() => {
                 setJourneyTab('leave')
                 setSavedOpen(false)
               }}
-              className={`flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-full border ${journeyTab === 'leave' ? 'border-blue-200 bg-blue-50 text-blue-700' : 'border-slate-200 text-slate-500'}`}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-semibold transition-colors ${journeyTab === 'leave' ? 'bg-blue-700 text-white' : 'bg-white text-blue-700'}`}
             >
-              <Clock size={12} /> Leave now
+              <Clock size={14} /> Leave now
             </button>
 
             {savedOpen && (
@@ -131,29 +140,52 @@ export default function SidebarTop({ className = '' }) {
             )}
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="flex flex-col items-center gap-1 pt-3.5">
-              <span className="w-2.5 h-2.5 rounded-full border-2 border-blue-600" />
-              <span className="w-px h-8 bg-slate-200" />
-              <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
-            </div>
-            <div className="flex-1 space-y-2">
-              <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5">
-                <Search size={14} className="text-slate-400" />
-                <input placeholder="Starting station" className="bg-transparent text-sm outline-none w-full placeholder:text-slate-400" />
+          {/* Labeled fields with clear buttons, and an overlapping swap button, like a real journey planner */}
+          <div className="relative mb-4">
+            <div className="border border-slate-200 rounded-t-lg px-4 py-2.5 bg-white">
+              <label className="text-xs text-slate-400 block">Starting station</label>
+              <div className="flex items-center justify-between gap-2">
+                <input
+                  value={from}
+                  onChange={(e) => setFrom(e.target.value)}
+                  placeholder="Add station"
+                  className="text-base font-medium text-slate-800 outline-none w-full bg-transparent placeholder:text-slate-300 placeholder:font-normal"
+                />
+                {from && (
+                  <button onClick={() => setFrom('')} aria-label="Clear starting station" className="text-slate-400 shrink-0">
+                    <X size={18} />
+                  </button>
+                )}
               </div>
-              <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5">
-                <Search size={14} className="text-slate-400" />
-                <input placeholder="Destination" className="bg-transparent text-sm outline-none w-full placeholder:text-slate-400" />
+            </div>
+            <div className="border border-t-0 border-slate-200 rounded-b-lg px-4 py-2.5 bg-white">
+              <label className="text-xs text-slate-400 block">Destination (optional)</label>
+              <div className="flex items-center justify-between gap-2">
+                <input
+                  value={to}
+                  onChange={(e) => setTo(e.target.value)}
+                  placeholder="Add station"
+                  className="text-base font-medium text-slate-800 outline-none w-full bg-transparent placeholder:text-slate-300 placeholder:font-normal"
+                />
+                {to && (
+                  <button onClick={() => setTo('')} aria-label="Clear destination" className="text-slate-400 shrink-0">
+                    <X size={18} />
+                  </button>
+                )}
               </div>
             </div>
-            <button aria-label="Swap stations" className="w-11 h-11 rounded-full border border-slate-200 flex items-center justify-center text-slate-500 shrink-0">
+
+            <button
+              onClick={handleSwap}
+              aria-label="Swap stations"
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white border border-slate-300 shadow-sm flex items-center justify-center text-blue-700"
+            >
               <ArrowUpDown size={16} />
             </button>
           </div>
 
-          <button className="w-full mt-3 bg-blue-600 hover:bg-blue-700 transition-colors text-white font-medium text-sm py-3 rounded-lg">
-            Plain Journey
+          <button className="w-full bg-blue-700 hover:bg-blue-800 transition-colors text-white font-semibold text-base py-3.5 rounded-lg flex items-center justify-between px-5">
+            Plan Journey <ArrowRight size={18} />
           </button>
         </section>
       </div>
