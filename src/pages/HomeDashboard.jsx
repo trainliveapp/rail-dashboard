@@ -26,9 +26,9 @@ export default function HomeDashboard() {
       <TopPromoBar />
 
       <div className="flex flex-col lg:flex-row">
-        <Sidebar nearby={nearby} toggleNearby={toggleNearby} layers={layers} toggleLayer={toggleLayer} className="order-2 lg:order-1" />
+        <Sidebar nearby={nearby} toggleNearby={toggleNearby} layers={layers} toggleLayer={toggleLayer} />
 
-        <main className="flex-1 min-w-0 order-1 lg:order-2">
+        <main className="flex-1 min-w-0">
           <MapPanel layers={layers} nearby={nearby} />
 
           <div className="px-4 sm:px-6 lg:px-8 py-6 space-y-6 max-w-6xl mx-auto">

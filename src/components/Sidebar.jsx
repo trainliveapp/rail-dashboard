@@ -6,7 +6,7 @@ import {
   AlertTriangle, Radio, Menu, X, Map, CalendarDays, Bell, HelpCircle,
   Plus,
 } from 'lucide-react'
-import { liveFeed, savedJourneys } from '../data/mockData'
+import { lines, liveFeed, savedJourneys } from '../data/mockData'
 import logo from '../assets/logo.png'
 
 const icons = { Bike, ParkingSquare, Building2, PartyPopper, Store, TrainFront, Megaphone, Users, Wrench, Home }
@@ -47,13 +47,13 @@ function ToggleRow({ icon, label, enabled, onChange }) {
   )
 }
 
-export default function Sidebar({ nearby, toggleNearby, layers, toggleLayer, className = '' }) {
+export default function Sidebar({ nearby, toggleNearby, layers, toggleLayer }) {
   const [journeyTab, setJourneyTab] = useState('saved')
   const [menuOpen, setMenuOpen] = useState(false)
   const [savedOpen, setSavedOpen] = useState(false)
 
   return (
-    <aside className={`w-full lg:w-[300px] shrink-0 bg-white border-r border-slate-200 flex flex-col h-full overflow-y-auto ${className}`}>
+    <aside className="w-full lg:w-[300px] shrink-0 bg-white border-r border-slate-200 flex flex-col h-full overflow-y-auto">
       {/* Logo + sign in */}
       <div className="relative flex items-center justify-between px-5 py-4 border-b border-slate-100">
         <div className="flex items-center gap-3">
@@ -186,6 +186,26 @@ export default function Sidebar({ nearby, toggleNearby, layers, toggleLayer, cla
           <button className="w-full mt-3 bg-blue-600 hover:bg-blue-700 transition-colors text-white font-medium text-sm py-3 rounded-lg">
             Plain Journey
           </button>
+        </section>
+
+        <hr className="border-slate-100" />
+
+        {/* Lines */}
+        <section>
+          <h2 className="text-xs font-bold tracking-widest text-slate-400 mb-3">LINES</h2>
+          <div className="grid grid-cols-2 gap-2.5">
+            {lines.map((line) => (
+              <div key={line.name} className="border border-slate-200 rounded-lg px-3 py-2.5 flex items-start gap-2">
+                <span className="w-1 h-8 rounded-full mt-0.5" style={{ backgroundColor: line.color }} />
+                <div>
+                  <p className="text-sm font-medium text-slate-800">{line.name}</p>
+                  <p className={`text-xs ${line.level === 'good' ? 'text-emerald-600' : line.level === 'minor' ? 'text-amber-600' : 'text-red-600'}`}>
+                    {line.status}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
         </section>
 
         <hr className="border-slate-100" />
