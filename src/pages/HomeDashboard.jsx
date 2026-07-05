@@ -4,7 +4,6 @@ import SidebarTop from '../components/SidebarTop'
 import SidebarBottom from '../components/SidebarBottom'
 import MapPanel from '../components/MapPanel'
 import FeatureCards from '../components/FeatureCards'
-import GrabAndGoBanner from '../components/GrabAndGoBanner'
 import DepartureBoards from '../components/DepartureBoards'
 import DisruptionsAndEvents from '../components/DisruptionsAndEvents'
 import NextDeparturesPanel from '../components/NextDeparturesPanel'
@@ -44,7 +43,6 @@ export default function HomeDashboard() {
 
         <div className="area-content px-4 sm:px-6 lg:px-8 py-6 space-y-6 max-w-6xl mx-auto w-full">
           <FeatureCards />
-          <GrabAndGoBanner />
           <DepartureBoards />
           <DisruptionsAndEvents />
           <NextDeparturesPanel />
