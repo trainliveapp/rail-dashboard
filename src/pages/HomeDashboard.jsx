@@ -23,7 +23,7 @@ export default function HomeDashboard() {
     setLayers((prev) => prev.map((item, idx) => (idx === i ? { ...item, enabled: !item.enabled } : item)))
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 overflow-x-hidden">
       <TopPromoBar />
 
       <div className="dashboard-grid">
