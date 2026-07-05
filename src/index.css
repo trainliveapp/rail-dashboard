@@ -8,3 +8,33 @@
 body {
   font-family: var(--font-sans);
 }
+
+/* Home dashboard layout: on mobile, the flow is search form, then map, then
+   the rest of the sidebar, then the page content below, matching how
+   Trainline and National Rail's mobile apps lead with the search form.
+   On desktop (lg+), it reassembles into the familiar left sidebar / right
+   content two column layout. */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-areas:
+    "top"
+    "map"
+    "rest"
+    "content";
+}
+
+@media (min-width: 1024px) {
+  .dashboard-grid {
+    grid-template-columns: 300px 1fr;
+    grid-template-areas:
+      "top map"
+      "rest map"
+      "rest content";
+  }
+}
+
+.area-top { grid-area: top; }
+.area-map { grid-area: map; }
+.area-rest { grid-area: rest; }
+.area-content { grid-area: content; }
