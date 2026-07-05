@@ -38,3 +38,11 @@ body {
 .area-map { grid-area: map; }
 .area-rest { grid-area: rest; }
 .area-content { grid-area: content; }
+
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

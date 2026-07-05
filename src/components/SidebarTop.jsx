@@ -41,7 +41,7 @@ export default function SidebarTop({ className = '' }) {
           >
             {menuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
-          <img src={logo} alt="TrainLive" className="h-8 w-auto" />
+          <img src={logo} alt="TrainLive" className="h-10 w-auto" />
         </div>
         <Link to="/signin" className="bg-blue-600 hover:bg-blue-700 transition-colors text-white text-sm font-medium px-4 py-2 rounded-full">
           Sign in
