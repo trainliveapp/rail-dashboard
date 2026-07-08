@@ -6,7 +6,6 @@ import MapPanel from '../components/MapPanel'
 import MapPlaceholder from '../components/MapPlaceholder'
 import FeatureCards from '../components/FeatureCards'
 import DepartureBoards from '../components/DepartureBoards'
-import DisruptionsAndEvents from '../components/DisruptionsAndEvents'
 import NextDeparturesPanel from '../components/NextDeparturesPanel'
 import SustainabilityBanner from '../components/SustainabilityBanner'
 import Footer from '../components/Footer'
@@ -52,7 +51,6 @@ export default function HomeDashboard() {
         <div className="area-content px-4 sm:px-6 lg:px-8 py-6 space-y-6 max-w-6xl mx-auto w-full">
           <FeatureCards />
           <DepartureBoards />
-          <DisruptionsAndEvents />
           <NextDeparturesPanel />
           <SustainabilityBanner />
           <Footer />
