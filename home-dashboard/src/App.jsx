@@ -18,8 +18,6 @@ export default function App() {
   )
 
   useEffect(() => {
-    // Start fading just before the 2.5s mark, so the fade itself finishes
-    // right at 2.5s instead of adding extra time on top of it.
     const fadeTimer = setTimeout(() => setFadingOut(true), 2000)
     const removeTimer = setTimeout(() => setShowSplash(false), 2500)
     return () => {

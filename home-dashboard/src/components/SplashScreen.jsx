@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react'
 import logo from '../assets/logo.png'
 
-// Matches the 2000ms fade-start timer in App.jsx, so the counter reads
-// "100%" right as the screen begins to fade, not mid-count.
 const LOAD_DURATION_MS = 2000
 
 export default function SplashScreen({ fadingOut }) {
