@@ -103,7 +103,7 @@ const lineFilterColors = {
   Elizabeth: 'text-violet-600',
 }
 
-export default function MapPanel({ layers, nearby }) {
+export default function MapPanel({ layers, nearby, className = 'h-[420px] lg:h-[520px]' }) {
   const [activeLines, setActiveLines] = useState([])
   const [reportOpen, setReportOpen] = useState(false)
   const mapRef = useRef(null)
@@ -116,7 +116,7 @@ export default function MapPanel({ layers, nearby }) {
   const visibleLines = activeLines.length ? activeLines : Object.keys(tubePaths)
 
   return (
-    <div className="relative w-full h-[420px] lg:h-[520px] overflow-hidden bg-slate-100">
+    <div className={`relative w-full ${className} overflow-hidden bg-slate-100`}>
       <MapContainer center={CENTER} zoom={16} zoomControl={false} className="w-full h-full">
         <MapBridge mapRef={mapRef} />
         <TileLayer

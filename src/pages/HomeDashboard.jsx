@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import TopPromoBar from '../components/TopPromoBar'
-import SidebarTop from '../components/SidebarTop'
+import FloatingTopBar from '../components/FloatingTopBar'
+import JourneySheet from '../components/JourneySheet'
 import SidebarBottom from '../components/SidebarBottom'
 import MapPanel from '../components/MapPanel'
-import MapPlaceholder from '../components/MapPlaceholder'
 import FeatureCards from '../components/FeatureCards'
 import DepartureBoards from '../components/DepartureBoards'
 import NextDeparturesPanel from '../components/NextDeparturesPanel'
@@ -12,13 +12,8 @@ import Footer from '../components/Footer'
 import { nearbyToggles, mapLayerToggles } from '../data/mockData'
 
 export default function HomeDashboard() {
-  // Owned here (not inside Sidebar) so the map can react to the same toggles,
-  // e.g. switching on "Housebuddy" actually shows rental pins on the map.
   const [nearby, setNearby] = useState(nearbyToggles)
   const [layers, setLayers] = useState(mapLayerToggles)
-  // The map stays hidden until the person searches a journey or explicitly
-  // asks to see it, matching the Waze-style "destination first" flow.
-  const [mapOpen, setMapOpen] = useState(false)
 
   const toggleNearby = (i) =>
     setNearby((prev) => prev.map((item, idx) => (idx === i ? { ...item, enabled: !item.enabled } : item)))
@@ -29,33 +24,22 @@ export default function HomeDashboard() {
     <div className="min-h-screen bg-slate-50 overflow-x-hidden">
       <TopPromoBar />
 
-      <div className="dashboard-grid">
-        <SidebarTop className="area-top lg:border-r border-slate-200" onSearch={() => setMapOpen(true)} />
+      {/* Map-first hero, Waze-style: the map is the whole screen, everything
+          else (menu, sign in, search) floats on top of it, nothing is hidden
+          behind a click first. */}
+      <div className="relative h-[calc(100vh-42px)] min-h-[520px] w-full">
+        <MapPanel layers={layers} nearby={nearby} className="h-full" />
+        <FloatingTopBar />
+        <JourneySheet />
+      </div>
 
-        <div className="area-map">
-          {mapOpen ? (
-            <MapPanel layers={layers} nearby={nearby} />
-          ) : (
-            <MapPlaceholder onOpen={() => setMapOpen(true)} />
-          )}
-        </div>
-
-        <SidebarBottom
-          nearby={nearby}
-          toggleNearby={toggleNearby}
-          layers={layers}
-          toggleLayer={toggleLayer}
-          mapOpen={mapOpen}
-          className="area-rest lg:border-r border-slate-200"
-        />
-
-        <div className="area-content px-4 sm:px-6 lg:px-8 py-6 space-y-6 max-w-6xl mx-auto w-full">
-          <DepartureBoards />
-          <FeatureCards />
-          <NextDeparturesPanel />
-          <SustainabilityBanner />
-          <Footer />
-        </div>
+      <div className="px-4 sm:px-6 lg:px-8 py-6 space-y-6 max-w-6xl mx-auto w-full">
+        <SidebarBottom nearby={nearby} toggleNearby={toggleNearby} layers={layers} toggleLayer={toggleLayer} className="border border-slate-200 rounded-xl" />
+        <DepartureBoards />
+        <FeatureCards />
+        <NextDeparturesPanel />
+        <SustainabilityBanner />
+        <Footer />
       </div>
     </div>
   )
