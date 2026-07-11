@@ -1,8 +1,10 @@
-import { useRef, useEffect } from 'react'
-import { MapContainer, TileLayer, Polyline, Marker, Popup, useMap } from 'react-leaflet'
+import { useRef, useEffect, useState } from 'react'
+import { MapContainer, TileLayer, Polyline, Marker, Popup, Tooltip, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import { Plus, Minus, LocateFixed, CloudLightning } from 'lucide-react'
-import { lines, housingPins, coffeePins, liveEventPin } from '../data/mockData'
+import { lines, housingPins, coffeePins, liveEventPin, stations } from '../data/mockData'
+import { getStationScores } from '../lib/stationRatings'
+import StationPopup from './StationPopup'
 
 const CENTER = [51.5246, -0.1339]
 
@@ -42,6 +44,21 @@ function priceIcon(price) {
   })
 }
 
+function stationIcon(score, size = 28) {
+  if (!score || !score.ratingCount) {
+    return badgeIcon('metro', '#1e293b', size)
+  }
+  return L.divIcon({
+    html: `<div style="position:relative;width:${size + 4}px;height:${size + 4}px;">
+      <div style="width:${size}px;height:${size}px;border-radius:9999px;background:#1e293b;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.35);">${ICONS.metro}</div>
+      <div style="position:absolute;top:-8px;right:-22px;background:white;padding:2px 6px;border-radius:9999px;font-size:10px;font-weight:600;color:#0f172a;box-shadow:0 1px 3px rgba(0,0,0,.25);white-space:nowrap;">★ ${score.overallScore.toFixed(1)}</div>
+    </div>`,
+    className: '',
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  })
+}
+
 function ratingIcon(rating, color = '#7f1d1d') {
   return L.divIcon({
     html: `<div style="position:relative;width:36px;height:36px;">
@@ -60,13 +77,6 @@ const tubePaths = {
   Northern: [[51.54622, -0.15483], [51.53472, -0.14448], [51.5246, -0.1339], [51.51287, -0.12263], [51.50252, -0.11228]],
   Elizabeth: [[51.51057, -0.17323], [51.51977, -0.15023], [51.5246, -0.1339], [51.52828, -0.11113], [51.53357, -0.08813]],
 }
-
-const metroStops = [
-  { lat: 51.51908, lng: -0.13413 },
-  { lat: 51.5246, lng: -0.1339 },
-  { lat: 51.51287, lng: -0.13068 },
-  { lat: 51.52828, lng: -0.11113 },
-]
 
 const scatterMarkers = [
   { type: 'delay', color: '#dc2626', lat: 51.52138, lng: -0.13873 },
@@ -95,10 +105,13 @@ function MapBridge({ mapRef }) {
   return null
 }
 
-// activeLines now comes from the parent (NavBar drives it), so the map and
-// the nav bar's line filter chips always agree with each other.
 export default function MapPanel({ layers, nearby, activeLines = [], className = 'h-[420px] lg:h-[520px]' }) {
   const mapRef = useRef(null)
+  const [stationScores, setStationScores] = useState({})
+
+  useEffect(() => {
+    getStationScores(stations.map((s) => s.id)).then(setStationScores)
+  }, [])
 
   const isOn = (list, label) => list.find((i) => i.label === label)?.enabled
   const visibleLines = activeLines.length ? activeLines : Object.keys(tubePaths)
@@ -118,8 +131,15 @@ export default function MapPanel({ layers, nearby, activeLines = [], className =
             <Polyline key={name} positions={path} pathOptions={{ color: lines.find((l) => l.name === name)?.color, weight: 4 }} />
           ))}
 
-        {metroStops.map((m, i) => (
-          <Marker key={i} position={[m.lat, m.lng]} icon={badgeIcon('metro', '#1e293b')} />
+        {stations.map((s) => (
+          <Marker key={s.id} position={[s.lat, s.lng]} icon={stationIcon(stationScores[s.id])}>
+            <Tooltip direction="top" permanent offset={[0, -16]} className="!bg-transparent !border-0 !shadow-none !text-[11px] !font-semibold !text-slate-700">
+              {s.name}
+            </Tooltip>
+            <Popup minWidth={260}>
+              <StationPopup stationId={s.id} stationName={s.name} />
+            </Popup>
+          </Marker>
         ))}
 
         {scatterMarkers.map((m, i) => (
@@ -163,15 +183,12 @@ export default function MapPanel({ layers, nearby, activeLines = [], className =
           cycleParkingPins.map((p, i) => <Marker key={i} position={[p.lat, p.lng]} icon={badgeIcon('bike', '#db2777')} />)}
       </MapContainer>
 
-      {/* Only the disruption card floats on the map now, everything nav
-          related moved off the map entirely and into NavBar. */}
       <div className="absolute top-3 left-3 z-[1000] w-56 max-w-[70vw] bg-slate-900 text-white rounded-xl p-4 shadow-lg">
         <CloudLightning size={20} className="mb-3 text-slate-300" />
         <p className="text-sm font-semibold leading-snug">Expect Disruption 43% Chance Of Service Changes.</p>
         <p className="text-xs text-slate-400 mt-2">📍 Ealing</p>
       </div>
 
-      {/* Sits above the floating "Where to?" search bar at the bottom, not under it */}
       <div className="absolute right-3 bottom-24 z-[1000] flex flex-col gap-2">
         <button aria-label="Zoom in" onClick={() => mapRef.current?.zoomIn()} className="w-11 h-11 bg-white shadow-sm rounded-lg flex items-center justify-center text-slate-600 active:bg-slate-50">
           <Plus size={18} />
@@ -184,8 +201,6 @@ export default function MapPanel({ layers, nearby, activeLines = [], className =
         </button>
       </div>
 
-      {/* Hidden on mobile, the marker colors already carry the meaning there
-          and this was getting buried under the search bar anyway */}
       <div className="hidden sm:block absolute bottom-24 left-3 z-[1000] bg-white shadow-sm rounded-xl px-4 py-3 text-xs text-slate-600">
         <p className="font-bold tracking-widest text-[10px] text-slate-400 mb-2">LEGEND</p>
         <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">

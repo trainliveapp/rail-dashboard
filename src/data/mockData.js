@@ -92,6 +92,15 @@ export const favoriteStations = [
   { name: 'Ealing Broadway', line: 'Elizabeth line' },
   { name: 'Liverpool Street', line: 'Central line' },
 ]
+// Named stations for the map. Previously these were unnamed dots with no
+// id, which meant there was nothing to attach a rating to. Coordinates
+// match the same points the map already used.
+export const stations = [
+  { id: 'warren-street', name: 'Warren Street', lat: 51.51908, lng: -0.13413 },
+  { id: 'euston-square', name: 'Euston Square', lat: 51.5246, lng: -0.1339 },
+  { id: 'great-portland-street', name: 'Great Portland Street', lat: 51.51287, lng: -0.13068 },
+  { id: 'euston', name: 'Euston', lat: 51.52828, lng: -0.11113 },
+]
 
 export const reportCategories = [
   { key: 'revenue', label: 'Revenue Protection', icon: 'Coins' },
