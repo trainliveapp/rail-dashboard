@@ -1,11 +1,17 @@
 import authBg from '../assets/auth-bg.png'
 import logo from '../assets/logo.png'
 
-export default function AuthLayout({ children, cardWidth = 'max-w-[560px]' }) {
+export default function AuthLayout({ children, cardWidth = 'max-w-[560px]', backgroundImage, blurBackground = true }) {
+  const bgSrc = backgroundImage || authBg
+
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden py-10 px-4">
-      <img src={authBg} alt="" className="absolute inset-0 w-full h-full object-cover blur-sm scale-105" />
-      <div className="absolute inset-0 bg-slate-900/55" />
+      <img
+        src={bgSrc}
+        alt=""
+        className={`absolute inset-0 w-full h-full object-cover ${blurBackground ? 'blur-sm scale-105' : ''}`}
+      />
+      <div className={`absolute inset-0 ${blurBackground ? 'bg-slate-900/55' : 'bg-slate-900/45'}`} />
 
       <img src={logo} alt="TrainLive" className="absolute top-6 left-6 h-9 w-auto z-10" />
 

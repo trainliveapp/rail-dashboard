@@ -4,6 +4,7 @@ import { User, Mail, Apple, AlertCircle } from 'lucide-react'
 import AuthLayout from '../components/AuthLayout'
 import PasswordField from '../components/PasswordField'
 import { supabase } from '../lib/supabaseClient'
+import livePatternBg from '../assets/live-pattern-bg.png'
 
 function GoogleIcon() {
   return (
@@ -71,7 +72,7 @@ export default function SignupPage() {
   }
 
   return (
-    <AuthLayout>
+    <AuthLayout backgroundImage={livePatternBg} blurBackground={false}>
       <form onSubmit={handleSubmit}>
         <h1 className="text-3xl font-bold text-slate-900 mb-2">Create your account</h1>
         <p className="text-slate-500 mb-6">Save stations, get personalized alerts and claim delay repay in one tap.</p>
