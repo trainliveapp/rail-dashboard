@@ -4,7 +4,7 @@ import { savedJourneys } from '../data/mockData'
 import { planJourney } from '../lib/mockJourneyPlanner'
 import JourneyResults from './JourneyResults'
 
-export default function JourneySheet() {
+export default function JourneySheet({ onJourneyPlanned }) {
   const [expanded, setExpanded] = useState(false)
   const [journeyTab, setJourneyTab] = useState('saved')
   const [savedOpen, setSavedOpen] = useState(false)
@@ -18,7 +18,14 @@ export default function JourneySheet() {
   }
 
   const handlePlanJourney = () => {
-    setJourney(planJourney(from, to))
+    const result = planJourney(from, to)
+    setJourney(result)
+    onJourneyPlanned?.(result)
+  }
+
+  const handleBackToSearch = () => {
+    setJourney(null)
+    onJourneyPlanned?.(null)
   }
 
   if (!expanded) {
@@ -50,7 +57,7 @@ export default function JourneySheet() {
         </div>
 
         {journey ? (
-          <JourneyResults journey={journey} onBack={() => setJourney(null)} />
+          <JourneyResults journey={journey} onBack={handleBackToSearch} />
         ) : (
           <>
         <div className="flex items-center justify-between mb-3">

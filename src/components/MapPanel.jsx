@@ -105,7 +105,7 @@ function MapBridge({ mapRef }) {
   return null
 }
 
-export default function MapPanel({ layers, nearby, activeLines = [], className = 'h-[420px] lg:h-[520px]' }) {
+export default function MapPanel({ layers, nearby, activeLines = [], highlightLines = [], className = 'h-[420px] lg:h-[520px]' }) {
   const mapRef = useRef(null)
   const [stationScores, setStationScores] = useState({})
 
@@ -115,6 +115,7 @@ export default function MapPanel({ layers, nearby, activeLines = [], className =
 
   const isOn = (list, label) => list.find((i) => i.label === label)?.enabled
   const visibleLines = activeLines.length ? activeLines : Object.keys(tubePaths)
+  const isHighlighting = highlightLines.length > 0
 
   return (
     <div className={`relative w-full ${className} overflow-hidden bg-slate-100`}>
@@ -127,9 +128,21 @@ export default function MapPanel({ layers, nearby, activeLines = [], className =
 
         {Object.entries(tubePaths)
           .filter(([name]) => visibleLines.includes(name))
-          .map(([name, path]) => (
-            <Polyline key={name} positions={path} pathOptions={{ color: lines.find((l) => l.name === name)?.color, weight: 4 }} />
-          ))}
+          .map(([name, path]) => {
+            const isJourneyLine = highlightLines.includes(name)
+            const faded = isHighlighting && !isJourneyLine
+            return (
+              <Polyline
+                key={name}
+                positions={path}
+                pathOptions={{
+                  color: lines.find((l) => l.name === name)?.color,
+                  weight: isJourneyLine ? 7 : 4,
+                  opacity: faded ? 0.25 : 1,
+                }}
+              />
+            )
+          })}
 
         {stations.map((s) => (
           <Marker key={s.id} position={[s.lat, s.lng]} icon={stationIcon(stationScores[s.id])}>

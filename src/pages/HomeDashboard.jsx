@@ -16,6 +16,9 @@ export default function HomeDashboard() {
   const [layers, setLayers] = useState(mapLayerToggles)
   // Lives here now so NavBar's line chips and the map itself always agree.
   const [activeLines, setActiveLines] = useState([])
+  // Same reasoning: the journey sheet and the map both need to know about
+  // the current planned journey, so it lives here, not in either one.
+  const [plannedJourney, setPlannedJourney] = useState(null)
 
   const toggleNearby = (i) =>
     setNearby((prev) => prev.map((item, idx) => (idx === i ? { ...item, enabled: !item.enabled } : item)))
@@ -29,12 +32,15 @@ export default function HomeDashboard() {
       <TopPromoBar />
       <NavBar activeLines={activeLines} onToggleLine={toggleLine} />
 
-      {/* The map itself, search sheet floats on top of just this section.
-          Shorter on mobile (65vh) so a hint of the page below shows and
-          invites scrolling, full height from sm: up. */}
       <div className="relative h-[65vh] sm:h-[75vh] lg:h-[calc(100vh-130px)] min-h-[420px] w-full">
-        <MapPanel layers={layers} nearby={nearby} activeLines={activeLines} className="h-full" />
-        <JourneySheet />
+        <MapPanel
+          layers={layers}
+          nearby={nearby}
+          activeLines={activeLines}
+          highlightLines={plannedJourney ? plannedJourney.legs.map((l) => l.line) : []}
+          className="h-full"
+        />
+        <JourneySheet onJourneyPlanned={setPlannedJourney} />
       </div>
 
       <div className="px-4 sm:px-6 lg:px-8 py-6 space-y-6 max-w-6xl mx-auto w-full">
