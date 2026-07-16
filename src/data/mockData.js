@@ -92,14 +92,46 @@ export const favoriteStations = [
   { name: 'Ealing Broadway', line: 'Elizabeth line' },
   { name: 'Liverpool Street', line: 'Central line' },
 ]
+
 // Named stations for the map. Previously these were unnamed dots with no
 // id, which meant there was nothing to attach a rating to. Coordinates
 // match the same points the map already used.
 export const stations = [
-  { id: 'warren-street', name: 'Warren Street', lat: 51.51908, lng: -0.13413 },
-  { id: 'euston-square', name: 'Euston Square', lat: 51.5246, lng: -0.1339 },
-  { id: 'great-portland-street', name: 'Great Portland Street', lat: 51.51287, lng: -0.13068 },
-  { id: 'euston', name: 'Euston', lat: 51.52828, lng: -0.11113 },
+  { id: 'angel', name: 'Angel', lat: 51.531821, lng: -0.10613, lines: ['Northern'] },
+  { id: 'bank', name: 'Bank', lat: 51.51345, lng: -0.08899, lines: ['Central', 'Northern'] },
+  { id: 'belsize-park', name: 'Belsize Park', lat: 51.550275, lng: -0.164704, lines: ['Northern'] },
+  { id: 'bond-street', name: 'Bond Street', lat: 51.514325, lng: -0.148986, lines: ['Central', 'Elizabeth'] },
+  { id: 'borough', name: 'Borough', lat: 51.501094, lng: -0.09341, lines: ['Northern'] },
+  { id: 'camden-town', name: 'Camden Town', lat: 51.53894, lng: -0.142557, lines: ['Northern'] },
+  { id: 'chalk-farm', name: 'Chalk Farm', lat: 51.544202, lng: -0.15347, lines: ['Northern'] },
+  { id: 'chancery-lane', name: 'Chancery Lane', lat: 51.518112, lng: -0.112121, lines: ['Central'] },
+  { id: 'charing-cross', name: 'Charing Cross', lat: 51.507335, lng: -0.127362, lines: ['Northern'] },
+  { id: 'elephant-castle', name: 'Elephant & Castle', lat: 51.495383, lng: -0.100545, lines: ['Northern'] },
+  { id: 'embankment', name: 'Embankment', lat: 51.507014, lng: -0.122577, lines: ['Northern'] },
+  { id: 'euston', name: 'Euston', lat: 51.528432, lng: -0.134286, lines: ['Northern', 'Victoria'] },
+  { id: 'farringdon-rail', name: 'Farringdon (Rail)', lat: 51.5192, lng: -0.1033, lines: ['Elizabeth'] },
+  { id: 'goodge-street', name: 'Goodge Street', lat: 51.520515, lng: -0.134358, lines: ['Northern'] },
+  { id: 'green-park', name: 'Green Park', lat: 51.506557, lng: -0.143119, lines: ['Victoria'] },
+  { id: 'highbury-islington', name: 'Highbury & Islington', lat: 51.547, lng: -0.10375, lines: ['Victoria'] },
+  { id: 'holborn', name: 'Holborn', lat: 51.517615, lng: -0.120177, lines: ['Central'] },
+  { id: 'kentish-town', name: 'Kentish Town', lat: 51.55031, lng: -0.14074, lines: ['Northern'] },
+  { id: 'king-s-cross-st-pancras', name: "King's Cross St Pancras", lat: 51.530605, lng: -0.122944, lines: ['Northern', 'Victoria'] },
+  { id: 'lancaster-gate', name: 'Lancaster Gate', lat: 51.511871, lng: -0.175145, lines: ['Central'] },
+  { id: 'leicester-square', name: 'Leicester Square', lat: 51.511223, lng: -0.12849, lines: ['Northern'] },
+  { id: 'liverpool-street', name: 'Liverpool Street', lat: 51.5173, lng: -0.083213, lines: ['Central', 'Elizabeth'] },
+  { id: 'london-bridge', name: 'London Bridge', lat: 51.50502, lng: -0.089635, lines: ['Northern'] },
+  { id: 'marble-arch', name: 'Marble Arch', lat: 51.51354, lng: -0.157836, lines: ['Central'] },
+  { id: 'moorgate', name: 'Moorgate', lat: 51.51812, lng: -0.08829, lines: ['Northern'] },
+  { id: 'mornington-crescent', name: 'Mornington Crescent', lat: 51.534358, lng: -0.138539, lines: ['Northern'] },
+  { id: 'old-street', name: 'Old Street', lat: 51.525628, lng: -0.087542, lines: ['Northern'] },
+  { id: 'oxford-circus', name: 'Oxford Circus', lat: 51.515308, lng: -0.14208, lines: ['Central', 'Victoria'] },
+  { id: 'paddington', name: 'Paddington', lat: 51.5162, lng: -0.1777, lines: ['Elizabeth'] },
+  { id: 'queensway', name: 'Queensway', lat: 51.5105, lng: -0.18723, lines: ['Central'] },
+  { id: 'st-paul-s', name: "St Paul's", lat: 51.514925, lng: -0.097482, lines: ['Central'] },
+  { id: 'tottenham-court-road', name: 'Tottenham Court Road', lat: 51.516467, lng: -0.130524, lines: ['Central', 'Elizabeth', 'Northern'] },
+  { id: 'victoria', name: 'Victoria', lat: 51.496358, lng: -0.143229, lines: ['Victoria'] },
+  { id: 'warren-street', name: 'Warren Street', lat: 51.524653, lng: -0.1381, lines: ['Northern', 'Victoria'] },
+  { id: 'waterloo', name: 'Waterloo', lat: 51.503057, lng: -0.114357, lines: ['Northern'] },
 ]
 
 export const reportCategories = [
@@ -126,7 +158,7 @@ export const savedJourneys = [
 export const lines = [
   { name: 'Central', status: 'Good service', color: '#DC2626', level: 'good' },
   { name: 'Victoria', status: 'Minor delays', color: '#2563EB', level: 'minor' },
-  { name: 'Northern', status: 'Severe delay', color: '#111827', level: 'severe' },
+  { name: 'Northern', status: 'Severe delay', color: '#94A3B8', level: 'severe' },
   { name: 'Elizabeth', status: 'Good service', color: '#7C3AED', level: 'good' },
 ]
 

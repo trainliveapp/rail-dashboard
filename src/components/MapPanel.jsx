@@ -141,8 +141,8 @@ export default function MapPanel({ layers, nearby, activeLines = [], highlightLi
       <MapContainer center={CENTER} zoom={16} zoomControl={false} className="w-full h-full">
         <MapBridge mapRef={mapRef} />
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
         />
 
         {Object.entries(tubeLineGeometry)
@@ -166,7 +166,7 @@ export default function MapPanel({ layers, nearby, activeLines = [], highlightLi
 
         {stations.map((s) => (
           <Marker key={s.id} position={[s.lat, s.lng]} icon={stationIcon(stationScores[s.id])}>
-            <Tooltip direction="top" permanent offset={[0, -16]} className="!bg-transparent !border-0 !shadow-none !text-[11px] !font-semibold !text-slate-700">
+            <Tooltip direction="top" permanent offset={[0, -16]} className="!bg-transparent !border-0 !shadow-none !text-[11px] !font-semibold !text-white" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>
               {s.name}
             </Tooltip>
             <Popup minWidth={260}>
