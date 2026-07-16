@@ -3,8 +3,10 @@ import { MapContainer, TileLayer, Polyline, Marker, Popup, Tooltip, useMap } fro
 import L from 'leaflet'
 import { Plus, Minus, LocateFixed, CloudLightning } from 'lucide-react'
 import { lines, housingPins, coffeePins, liveEventPin, stations } from '../data/mockData'
+import { tubeLineGeometry } from '../data/tubeLineGeometry'
 import { getStationScores } from '../lib/stationRatings'
 import StationPopup from './StationPopup'
+import DisruptionPopup from './DisruptionPopup'
 
 const CENTER = [51.5246, -0.1339]
 
@@ -71,20 +73,37 @@ function ratingIcon(rating, color = '#7f1d1d') {
   })
 }
 
-const tubePaths = {
-  Central: [[51.51655, -0.17553], [51.51747, -0.15483], [51.51908, -0.13413], [51.52161, -0.11343], [51.52437, -0.09273]],
-  Victoria: [[51.54392, -0.14103], [51.53472, -0.13758], [51.5246, -0.1339], [51.51287, -0.13068], [51.50137, -0.12723]],
-  Northern: [[51.54622, -0.15483], [51.53472, -0.14448], [51.5246, -0.1339], [51.51287, -0.12263], [51.50252, -0.11228]],
-  Elizabeth: [[51.51057, -0.17323], [51.51977, -0.15023], [51.5246, -0.1339], [51.52828, -0.11113], [51.53357, -0.08813]],
-}
-
 const scatterMarkers = [
-  { type: 'delay', color: '#dc2626', lat: 51.52138, lng: -0.13873 },
-  { type: 'delay', color: '#dc2626', lat: 51.51517, lng: -0.14793 },
-  { type: 'report', color: '#7c3aed', lat: 51.52046, lng: -0.12723 },
-  { type: 'report', color: '#7c3aed', lat: 51.51632, lng: -0.13758 },
-  { type: 'crowding', color: '#f59e0b', lat: 51.51747, lng: -0.12263 },
-  { type: 'crowding', color: '#f59e0b', lat: 51.52552, lng: -0.11803 },
+  {
+    type: 'delay', color: '#dc2626', lat: 51.52138, lng: -0.13873,
+    title: 'Signal failure', description: 'Trains held at the platform. Delays of 10-15 minutes expected while engineers investigate.',
+    reportedAgo: '6 min ago', confirmations: 12,
+  },
+  {
+    type: 'delay', color: '#dc2626', lat: 51.51517, lng: -0.14793,
+    title: 'Train fault', description: 'A defective train is being taken out of service. Following trains are running with a short gap.',
+    reportedAgo: '14 min ago', confirmations: 5,
+  },
+  {
+    type: 'report', color: '#7c3aed', lat: 51.52046, lng: -0.12723,
+    title: 'Broken escalator', description: 'Southbound escalator out of service, stairs available as an alternative.',
+    reportedAgo: '22 min ago', confirmations: 3,
+  },
+  {
+    type: 'report', color: '#7c3aed', lat: 51.51632, lng: -0.13758,
+    title: 'Ticket barrier fault', description: 'One gate line is out of action, staff are letting people through manually.',
+    reportedAgo: '9 min ago', confirmations: 7,
+  },
+  {
+    type: 'crowding', color: '#f59e0b', lat: 51.51747, lng: -0.12263,
+    title: 'Platform crowding', description: 'Heavier than usual footfall on the platform, allow extra time to board.',
+    reportedAgo: '3 min ago', confirmations: 18,
+  },
+  {
+    type: 'crowding', color: '#f59e0b', lat: 51.52552, lng: -0.11803,
+    title: 'Platform crowding', description: 'Busy due to a nearby event finishing, expect a wait to board.',
+    reportedAgo: '11 min ago', confirmations: 9,
+  },
 ]
 
 const hotelPins = [
@@ -114,7 +133,7 @@ export default function MapPanel({ layers, nearby, activeLines = [], highlightLi
   }, [])
 
   const isOn = (list, label) => list.find((i) => i.label === label)?.enabled
-  const visibleLines = activeLines.length ? activeLines : Object.keys(tubePaths)
+  const visibleLines = activeLines.length ? activeLines : Object.keys(tubeLineGeometry)
   const isHighlighting = highlightLines.length > 0
 
   return (
@@ -126,22 +145,23 @@ export default function MapPanel({ layers, nearby, activeLines = [], highlightLi
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        {Object.entries(tubePaths)
+        {Object.entries(tubeLineGeometry)
           .filter(([name]) => visibleLines.includes(name))
-          .map(([name, path]) => {
+          .map(([name, segments]) => {
             const isJourneyLine = highlightLines.includes(name)
             const faded = isHighlighting && !isJourneyLine
-            return (
+            const color = lines.find((l) => l.name === name)?.color
+            return segments.map((positions, i) => (
               <Polyline
-                key={name}
-                positions={path}
+                key={`${name}-${i}`}
+                positions={positions}
                 pathOptions={{
-                  color: lines.find((l) => l.name === name)?.color,
+                  color,
                   weight: isJourneyLine ? 7 : 4,
                   opacity: faded ? 0.25 : 1,
                 }}
               />
-            )
+            ))
           })}
 
         {stations.map((s) => (
@@ -156,7 +176,11 @@ export default function MapPanel({ layers, nearby, activeLines = [], highlightLi
         ))}
 
         {scatterMarkers.map((m, i) => (
-          <Marker key={i} position={[m.lat, m.lng]} icon={badgeIcon(m.type, m.color)} />
+          <Marker key={i} position={[m.lat, m.lng]} icon={badgeIcon(m.type, m.color)}>
+            <Popup minWidth={220}>
+              <DisruptionPopup marker={m} />
+            </Popup>
+          </Marker>
         ))}
 
         {isOn(layers, 'Housebuddy') &&
