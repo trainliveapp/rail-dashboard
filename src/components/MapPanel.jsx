@@ -133,8 +133,7 @@ export default function MapPanel({ layers, nearby, activeLines = [], highlightLi
   }, [])
 
   const isOn = (list, label) => list.find((i) => i.label === label)?.enabled
-  const visibleLines = activeLines.length ? activeLines : Object.keys(tubeLineGeometry)
-  const isHighlighting = highlightLines.length > 0
+  const visibleLines = highlightLines.length ? highlightLines : activeLines
 
   return (
     <div className={`relative w-full ${className} overflow-hidden bg-slate-100`}>
@@ -145,11 +144,10 @@ export default function MapPanel({ layers, nearby, activeLines = [], highlightLi
           url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}"
         />
 
-        {Object.entries(tubeLineGeometry)
+{Object.entries(tubeLineGeometry)
           .filter(([name]) => visibleLines.includes(name))
           .map(([name, segments]) => {
             const isJourneyLine = highlightLines.includes(name)
-            const faded = isHighlighting && !isJourneyLine
             const color = lines.find((l) => l.name === name)?.color
             return segments.map((positions, i) => (
               <Polyline
@@ -158,7 +156,7 @@ export default function MapPanel({ layers, nearby, activeLines = [], highlightLi
                 pathOptions={{
                   color,
                   weight: isJourneyLine ? 7 : 4,
-                  opacity: faded ? 0.25 : 1,
+                  opacity: 1,
                 }}
               />
             ))
