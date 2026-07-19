@@ -10,6 +10,23 @@ body {
   font-family: var(--font-sans);
 }
 
+/* Tailwind v4's Preflight deliberately removes the browser default
+   cursor:pointer on <button>, matching native app conventions rather than
+   web ones, every button in this app was affected: zoom controls, the
+   search bar, line filter chips, results, all of them. This restores the
+   hand cursor everywhere something is actually clickable. */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+a,
+select,
+summary {
+  cursor: pointer;
+}
+button:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
 /* Home dashboard layout: on mobile, the flow is search form, then map, then
    the rest of the sidebar, then the page content below, matching how
    Trainline and National Rail's mobile apps lead with the search form.

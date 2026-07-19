@@ -607,7 +607,7 @@ export const lines = [
   { name: 'Jubilee', status: 'Good service', color: '#A0A5A9', level: 'good' },
   { name: 'London Overground', status: 'Good service', color: '#EE7C0E', level: 'good' },
   { name: 'Metropolitan', status: 'Good service', color: '#C4007D', level: 'good' },
-  { name: 'Northern', status: 'Severe delay', color: '#94A3B8', level: 'severe' },
+  { name: 'Northern', status: 'Severe delay', color: '#1A1A1A', level: 'severe' },
   { name: 'Piccadilly', status: 'Good service', color: '#4C6FCB', level: 'good' },
   { name: 'Tramlink', status: 'Good service', color: '#84B817', level: 'good' },
   { name: 'Victoria', status: 'Minor delays', color: '#2563EB', level: 'minor' },

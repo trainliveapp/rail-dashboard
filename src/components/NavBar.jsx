@@ -132,7 +132,7 @@ export default function NavBar({ activeLines, onToggleLine }) {
           <button
             key={line.name}
             onClick={() => onToggleLine(line.name)}
-            className={`bg-white text-xs font-medium px-3 py-1.5 rounded-full flex items-center gap-1.5 border shrink-0 ${activeLines.includes(line.name) ? 'border-slate-300' : 'border-slate-100'}`}
+            className={`bg-white hover:bg-slate-50 hover:border-slate-300 transition-colors text-xs font-medium px-3 py-1.5 rounded-full flex items-center gap-1.5 border shrink-0 ${activeLines.includes(line.name) ? 'border-slate-300' : 'border-slate-100'}`}
           >
             <span className="w-2 h-2 rounded-full" style={{ backgroundColor: line.color }} />
             <span className={lineFilterColors[line.name]}>{line.name}</span>

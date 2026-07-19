@@ -1,17 +1,52 @@
-import { useRef, useEffect, useState } from 'react'
-import { MapContainer, TileLayer, Polyline, Marker, Popup, Tooltip, useMap } from 'react-leaflet'
+import { useRef, useEffect, useState, useMemo } from 'react'
+import { MapContainer, TileLayer, Polyline, Marker, Popup, Tooltip, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
-import { Plus, Minus, LocateFixed, CloudLightning } from 'lucide-react'
+import { Plus, Minus, LocateFixed } from 'lucide-react'
 import { lines, housingPins, coffeePins, liveEventPin, stations } from '../data/mockData'
 import { tubeLineGeometry } from '../data/tubeLineGeometry'
 import { getStationScores } from '../lib/stationRatings'
 import StationPopup from './StationPopup'
-import DisruptionPopup from './DisruptionPopup'
 
 const CENTER = [51.5246, -0.1339]
 
+// A journey's line highlight should only light up the stretch of track
+// actually being used, not the entire line across London, this bounds the
+// segments rendered to the area around the journey's own points, with a
+// little padding so the highlighted line doesn't end abruptly right at a
+// station.
+function boundsFromPoints(points, paddingDeg = 0.02) {
+  const lats = points.map((p) => p[0])
+  const lngs = points.map((p) => p[1])
+  return {
+    minLat: Math.min(...lats) - paddingDeg,
+    maxLat: Math.max(...lats) + paddingDeg,
+    minLng: Math.min(...lngs) - paddingDeg,
+    maxLng: Math.max(...lngs) + paddingDeg,
+  }
+}
+function segmentInBounds(segment, bounds) {
+  return segment.some(
+    ([lat, lng]) => lat >= bounds.minLat && lat <= bounds.maxLat && lng >= bounds.minLng && lng <= bounds.maxLng
+  )
+}
+
+function liveArrowIcon(heading = 0) {
+  return L.divIcon({
+    html: `<div style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;">
+      <div style="width:34px;height:34px;border-radius:9999px;background:rgba(37,99,235,0.18);position:absolute;"></div>
+      <div style="width:22px;height:22px;border-radius:9999px;background:#2563eb;border:3px solid white;box-shadow:0 1px 4px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;transform:rotate(${heading}deg);transition:transform 0.4s ease;">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="white" stroke="none"><path d="M12 2 L19 21 L12 17 L5 21 Z"/></svg>
+      </div>
+    </div>`,
+    className: '',
+    iconSize: [36, 36],
+    iconAnchor: [18, 18],
+  })
+}
+
 const svg = (inner, size = 16) =>
   `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`
+
 
 const ICONS = {
   metro: svg('<path d="M8 3.1V7a4 4 0 0 0 8 0V3.1"/><path d="m9 15-1-1"/><path d="m15 15 1-1"/><path d="M9 19c-2.8 0-5-2.2-5-5v-4a8 8 0 0 1 16 0v4c0 2.8-2.2 5-5 5Z"/><path d="m8 19-2 3"/><path d="m16 19 2 3"/>'),
@@ -46,13 +81,31 @@ function priceIcon(price) {
   })
 }
 
-function stationIcon(score, size = 28) {
+function endpointIcon(kind) {
+  const isStart = kind === 'start'
+  const color = isStart ? '#16a34a' : '#0f172a'
+  const label = isStart ? 'Start' : 'End'
+  const inner = isStart
+    ? svg('<circle cx="12" cy="12" r="6" fill="white" stroke="none"/>', 14)
+    : svg('<path d="M4 22V4"/><path d="M4 5h13l-2.5 3.5L17 12H4"/>', 16)
+  return L.divIcon({
+    html: `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+      <div style="background:white;padding:2px 8px;border-radius:9999px;font-size:11px;font-weight:700;color:${color};box-shadow:0 1px 4px rgba(0,0,0,.3);white-space:nowrap;">${label}</div>
+      <div style="width:26px;height:26px;border-radius:9999px;background:${color};display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.4);border:3px solid white;">${inner}</div>
+    </div>`,
+    className: '',
+    iconSize: [60, 48],
+    iconAnchor: [30, 48],
+  })
+}
+
+function stationIcon(score, size = 18) {
   if (!score || !score.ratingCount) {
     return badgeIcon('metro', '#1e293b', size)
   }
   return L.divIcon({
-    html: `<div style="position:relative;width:${size + 4}px;height:${size + 4}px;">
-      <div style="width:${size}px;height:${size}px;border-radius:9999px;background:#1e293b;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.35);">${ICONS.metro}</div>
+    html: `<div style="position:relative;width:${size}px;height:${size}px;">
+      ${`<div style="width:${size}px;height:${size}px;border-radius:9999px;background:#1e293b;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.35);">${ICONS.metro}</div>`}
       <div style="position:absolute;top:-8px;right:-22px;background:white;padding:2px 6px;border-radius:9999px;font-size:10px;font-weight:600;color:#0f172a;box-shadow:0 1px 3px rgba(0,0,0,.25);white-space:nowrap;">★ ${score.overallScore.toFixed(1)}</div>
     </div>`,
     className: '',
@@ -73,39 +126,6 @@ function ratingIcon(rating, color = '#7f1d1d') {
   })
 }
 
-const scatterMarkers = [
-  {
-    type: 'delay', color: '#dc2626', lat: 51.52138, lng: -0.13873,
-    title: 'Signal failure', description: 'Trains held at the platform. Delays of 10-15 minutes expected while engineers investigate.',
-    reportedAgo: '6 min ago', confirmations: 12,
-  },
-  {
-    type: 'delay', color: '#dc2626', lat: 51.51517, lng: -0.14793,
-    title: 'Train fault', description: 'A defective train is being taken out of service. Following trains are running with a short gap.',
-    reportedAgo: '14 min ago', confirmations: 5,
-  },
-  {
-    type: 'report', color: '#7c3aed', lat: 51.52046, lng: -0.12723,
-    title: 'Broken escalator', description: 'Southbound escalator out of service, stairs available as an alternative.',
-    reportedAgo: '22 min ago', confirmations: 3,
-  },
-  {
-    type: 'report', color: '#7c3aed', lat: 51.51632, lng: -0.13758,
-    title: 'Ticket barrier fault', description: 'One gate line is out of action, staff are letting people through manually.',
-    reportedAgo: '9 min ago', confirmations: 7,
-  },
-  {
-    type: 'crowding', color: '#f59e0b', lat: 51.51747, lng: -0.12263,
-    title: 'Platform crowding', description: 'Heavier than usual footfall on the platform, allow extra time to board.',
-    reportedAgo: '3 min ago', confirmations: 18,
-  },
-  {
-    type: 'crowding', color: '#f59e0b', lat: 51.52552, lng: -0.11803,
-    title: 'Platform crowding', description: 'Busy due to a nearby event finishing, expect a wait to board.',
-    reportedAgo: '11 min ago', confirmations: 9,
-  },
-]
-
 const hotelPins = [
   { lat: 51.52322, lng: -0.11343 },
   { lat: 51.51402, lng: -0.14103 },
@@ -124,32 +144,192 @@ function MapBridge({ mapRef }) {
   return null
 }
 
-export default function MapPanel({ layers, nearby, activeLines = [], highlightLines = [], className = 'h-[420px] lg:h-[520px]' }) {
+// Pans/zooms to fit every station touched by the planned journey (not just
+// the two endpoints, changes can bow a route well away from a straight
+// line between them), whenever a new journey comes in from the sheet.
+// Padding is asymmetric on purpose: the journey sheet covers roughly the
+// bottom half of this container while results are showing, so a route
+// framed with even padding would end up with its lower half tucked behind
+// it. Biasing padding toward the bottom keeps the route inside the part of
+// the map that's actually visible.
+function RouteFit({ points }) {
+  const map = useMap()
+  useEffect(() => {
+    if (!points || points.length === 0) return
+    if (points.length === 1) {
+      map.flyTo(points[0], 16, { duration: 0.75 })
+      return
+    }
+    map.flyToBounds(L.latLngBounds(points), {
+      paddingTopLeft: [40, 40],
+      paddingBottomRight: [40, 260],
+      maxZoom: 16,
+      duration: 0.75,
+    })
+  }, [points, map])
+  return null
+}
+
+// Keeps the live position marker in view as it updates, panning at the
+// current zoom level rather than resetting it, this is meant to feel like a
+// gentle continuous follow, not the (comparatively jarring) fit-to-bounds
+// RouteFit does when a journey is first planned or a different route is
+// picked. Stops following the moment the user manually drags the map, so it
+// never fights their own panning, that's what MapInteractionWatcher is for.
+function LiveFollow({ lat, lng, suspended }) {
+  const map = useMap()
+  useEffect(() => {
+    if (lat == null || lng == null || suspended) return
+    map.panTo([lat, lng], { animate: true, duration: 0.5 })
+  }, [lat, lng, suspended, map])
+  return null
+}
+
+function MapInteractionWatcher({ onUserDrag }) {
+  useMapEvents({
+    dragstart: () => onUserDrag(),
+  })
+  return null
+}
+
+function ZoomTracker({ onZoomChange }) {
+  const map = useMapEvents({
+    zoomend: () => onZoomChange(map.getZoom()),
+  })
+  return null
+}
+
+// Below this zoom, station markers don't render at all, at a city-wide
+// view the basemap's own city/borough labels are what should carry the
+// map, not hundreds of our train icons stacked on top of each other.
+// They (and their name labels) fade in once you've zoomed to roughly
+// town/neighbourhood scale, the same progressive reveal every serious map
+// app uses.
+const STATION_VISIBLE_ZOOM = 14
+
+export default function MapPanel({
+  layers,
+  nearby,
+  activeLines = [],
+  highlightLines = [],
+  route = null,
+  liveLocation = null,
+  className = 'h-[420px] lg:h-[520px]',
+}) {
   const mapRef = useRef(null)
   const [stationScores, setStationScores] = useState({})
+  const [followSuspended, setFollowSuspended] = useState(false)
+  const [zoom, setZoom] = useState(16)
 
   useEffect(() => {
     getStationScores(stations.map((s) => s.id)).then(setStationScores)
   }, [])
 
+  // A new live-tracked journey should resume auto-follow, even if the user
+  // had paused it (by dragging) on a previous one.
+  useEffect(() => {
+    setFollowSuspended(false)
+  }, [route?.selectedOption?.id])
+
   const isOn = (list, label) => list.find((i) => i.label === label)?.enabled
   const visibleLines = highlightLines.length ? highlightLines : activeLines
+
+  // Memoized on the actual coordinates, not recomputed as a fresh array
+  // every render, RouteFit's effect depends on this array by reference, and
+  // an unrelated re-render (toggling a layer, ticking station scores in)
+  // would otherwise snap the map back to the route underneath the user's
+  // own pan/zoom. Keyed on lat/lng rather than station id, "current
+  // location" reuses the same id on every fix but a different position.
+  const originKey = route?.originStation ? `${route.originStation.lat},${route.originStation.lng}` : null
+  const destinationKey = route?.destinationStation ? `${route.destinationStation.lat},${route.destinationStation.lng}` : null
+  const selectedOptionId = route?.selectedOption?.id
+  const routeFitPoints = useMemo(() => {
+    if (!route) return []
+    const points = []
+    if (route.originStation) points.push([route.originStation.lat, route.originStation.lng])
+    if (route.destinationStation) points.push([route.destinationStation.lat, route.destinationStation.lng])
+    for (const leg of route.selectedOption?.legs || []) {
+      const match = stations.find((s) => s.name === leg.from || s.name === leg.to)
+      if (match) points.push([match.lat, match.lng])
+    }
+    return points
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [originKey, destinationKey, selectedOptionId])
+
+  // One bounding box per transit leg, not one box for the whole journey.
+  // A journey spanning a long distance (miles apart, like this one) was
+  // producing a single huge box that swept in unrelated track from a
+  // highlighted line, a short 2-stop Northern line hop was rendering as if
+  // the entire nearby Northern line was part of the route. Scoping to each
+  // leg's own two stations keeps the highlight to just the stretch that
+  // leg actually covers.
+  const legBoundsByLine = useMemo(() => {
+    const map = {}
+    for (const leg of route?.selectedOption?.legs || []) {
+      if (!['tube', 'dlr', 'overground'].includes(leg.transitMode) || !leg.line) continue
+      const points = [leg.from, leg.to]
+        .map((name) => stations.find((s) => s.name === name))
+        .filter(Boolean)
+        .map((s) => [s.lat, s.lng])
+      if (points.length === 0) continue
+      const bounds = boundsFromPoints(points, 0.015)
+      map[leg.line] = map[leg.line] ? [...map[leg.line], bounds] : [bounds]
+    }
+    return map
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedOptionId])
+
+  function segmentInAnyBounds(segment, boundsList) {
+    return boundsList.some((b) => segmentInBounds(segment, b))
+  }
 
   return (
     <div className={`relative w-full ${className} overflow-hidden bg-slate-100`}>
       <MapContainer center={CENTER} zoom={16} zoomControl={false} className="w-full h-full">
         <MapBridge mapRef={mapRef} />
+        <ZoomTracker onZoomChange={setZoom} />
         <TileLayer
-          attribution='&copy; Esri &mdash; Esri, HERE, Garmin, FAO, NOAA, USGS'
-          url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+          maxNativeZoom={19}
+          maxZoom={19}
         />
+
+        {routeFitPoints.length > 0 && <RouteFit points={routeFitPoints} />}
+        {route?.originStation && route?.destinationStation && (
+          <Polyline
+            positions={[
+              [route.originStation.lat, route.originStation.lng],
+              [route.destinationStation.lat, route.destinationStation.lng],
+            ]}
+            pathOptions={
+              route.selectedOption
+                ? { color: '#1d4ed8', weight: 4, opacity: 0.45 } // planned: understated guide line, real line segments render on top of this when they match
+                : { color: '#2563eb', weight: 3, opacity: 0.8, dashArray: '2 10' } // still choosing: dashed preview
+            }
+          />
+        )}
+        {route?.originStation && (
+          <Marker position={[route.originStation.lat, route.originStation.lng]} icon={endpointIcon('start')} />
+        )}
+        {route?.destinationStation && (
+          <Marker position={[route.destinationStation.lat, route.destinationStation.lng]} icon={endpointIcon('end')} />
+        )}
 
 {Object.entries(tubeLineGeometry)
           .filter(([name]) => visibleLines.includes(name))
           .map(([name, segments]) => {
             const isJourneyLine = highlightLines.includes(name)
             const color = lines.find((l) => l.name === name)?.color
-            return segments.map((positions, i) => (
+            let segmentsToRender = segments
+            if (isJourneyLine) {
+              const boundsList = legBoundsByLine[name]
+              // No leg bounds resolved for this line (station name didn't
+              // match anything) is treated as "show nothing", not "show
+              // everything", better to under-highlight than repeat the bug.
+              segmentsToRender = boundsList ? segments.filter((seg) => segmentInAnyBounds(seg, boundsList)) : []
+            }
+            return segmentsToRender.map((positions, i) => (
               <Polyline
                 key={`${name}-${i}`}
                 positions={positions}
@@ -162,24 +342,41 @@ export default function MapPanel({ layers, nearby, activeLines = [], highlightLi
             ))
           })}
 
-        {stations.map((s) => (
-          <Marker key={s.id} position={[s.lat, s.lng]} icon={stationIcon(stationScores[s.id])}>
-            <Tooltip direction="top" permanent offset={[0, -16]} className="!bg-transparent !border-0 !shadow-none !text-[11px] !font-semibold !text-white" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>
-              {s.name}
-            </Tooltip>
-            <Popup minWidth={260}>
-              <StationPopup stationId={s.id} stationName={s.name} />
-            </Popup>
-          </Marker>
-        ))}
+        {liveLocation && (
+          <>
+            <MapInteractionWatcher onUserDrag={() => setFollowSuspended(true)} />
+            <LiveFollow lat={liveLocation.lat} lng={liveLocation.lng} suspended={followSuspended} />
+            <Marker position={[liveLocation.lat, liveLocation.lng]} icon={liveArrowIcon(liveLocation.heading)} zIndexOffset={1000} />
+          </>
+        )}
 
-        {scatterMarkers.map((m, i) => (
-          <Marker key={i} position={[m.lat, m.lng]} icon={badgeIcon(m.type, m.color)}>
-            <Popup minWidth={220}>
-              <DisruptionPopup marker={m} />
-            </Popup>
-          </Marker>
-        ))}
+        {zoom >= STATION_VISIBLE_ZOOM &&
+          stations.map((s) => (
+            <Marker key={s.id} position={[s.lat, s.lng]} icon={stationIcon(stationScores[s.id])}>
+              <Tooltip
+                direction="top"
+                permanent
+                offset={[0, -12]}
+                className="!bg-transparent !border-0 !shadow-none !text-[11px] !font-semibold !text-slate-800"
+                style={{ textShadow: '0 0 3px white, 0 0 3px white, 0 1px 2px white' }}
+              >
+                {s.name}
+              </Tooltip>
+              <Popup minWidth={260}>
+                <StationPopup stationId={s.id} stationName={s.name} />
+              </Popup>
+            </Marker>
+          ))}
+
+        {/* Disruption markers removed for now, scatterMarkers below is
+            hardcoded demo data with made-up locations, not real incidents.
+            Wiring in real disruptions is realistic though: TfL's Line
+            Status API (free, no key needed) returns current line-level
+            status/severity, and combined with each line's stations you
+            could plot real markers the same way this block did. National
+            Rail doesn't have an equivalent free real-time incident feed,
+            Rail Data Marketplace has service-alert data but it's a
+            different integration than the journey planner's TransportAPI. */}
 
         {isOn(layers, 'Housebuddy') &&
           housingPins.map((p) => <Marker key={p.id} position={[p.lat, p.lng]} icon={priceIcon(p.price)} />)}
@@ -218,21 +415,29 @@ export default function MapPanel({ layers, nearby, activeLines = [], highlightLi
           cycleParkingPins.map((p, i) => <Marker key={i} position={[p.lat, p.lng]} icon={badgeIcon('bike', '#db2777')} />)}
       </MapContainer>
 
-      <div className="absolute top-3 left-3 z-[1000] w-56 max-w-[70vw] bg-slate-900 text-white rounded-xl p-4 shadow-lg">
-        <CloudLightning size={20} className="mb-3 text-slate-300" />
-        <p className="text-sm font-semibold leading-snug">Expect Disruption 43% Chance Of Service Changes.</p>
-        <p className="text-xs text-slate-400 mt-2">📍 Ealing</p>
-      </div>
 
-      <div className="absolute right-3 bottom-24 z-[1000] flex flex-col gap-2">
-        <button aria-label="Zoom in" onClick={() => mapRef.current?.zoomIn()} className="w-11 h-11 bg-white shadow-sm rounded-lg flex items-center justify-center text-slate-600 active:bg-slate-50">
-          <Plus size={18} />
+      <div className="absolute right-3 top-3 z-[1000] flex flex-col gap-1.5 sm:gap-2">
+        <button aria-label="Zoom in" onClick={() => mapRef.current?.zoomIn()} className="w-8 h-8 sm:w-10 sm:h-10 bg-white shadow-sm rounded-lg flex items-center justify-center text-slate-600 active:bg-slate-50">
+          <Plus size={15} />
         </button>
-        <button aria-label="Zoom out" onClick={() => mapRef.current?.zoomOut()} className="w-11 h-11 bg-white shadow-sm rounded-lg flex items-center justify-center text-slate-600 active:bg-slate-50">
-          <Minus size={18} />
+        <button aria-label="Zoom out" onClick={() => mapRef.current?.zoomOut()} className="w-8 h-8 sm:w-10 sm:h-10 bg-white shadow-sm rounded-lg flex items-center justify-center text-slate-600 active:bg-slate-50">
+          <Minus size={15} />
         </button>
-        <button aria-label="Recenter map" onClick={() => mapRef.current?.setView(CENTER, 16)} className="w-11 h-11 bg-white shadow-sm rounded-lg flex items-center justify-center text-slate-600 active:bg-slate-50">
-          <LocateFixed size={18} />
+        <button
+          aria-label="Recenter map"
+          onClick={() => {
+            if (liveLocation) {
+              mapRef.current?.panTo([liveLocation.lat, liveLocation.lng], { animate: true })
+              setFollowSuspended(false)
+            } else {
+              mapRef.current?.setView(CENTER, 16)
+            }
+          }}
+          className={`w-8 h-8 sm:w-10 sm:h-10 shadow-sm rounded-lg flex items-center justify-center active:bg-slate-50 ${
+            liveLocation && followSuspended ? 'bg-blue-600 text-white' : 'bg-white text-slate-600'
+          }`}
+        >
+          <LocateFixed size={15} />
         </button>
       </div>
 
