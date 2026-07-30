@@ -98,3 +98,27 @@ button:disabled,
 .animate-splash-zoom {
   animation: splash-zoom 2.5s ease-out both;
 }
+/* DARK MAP MAGIC */
+.dark-mode-wrapper {
+  filter: invert(1) hue-rotate(180deg) brightness(0.95) contrast(0.95);
+}
+
+/* This keeps your custom SVG markers & chat icon looking normal */
+.dark-mode-wrapper img {
+  filter: invert(1) hue-rotate(180deg) brightness(1) contrast(1);
+}
+
+/* Dark Map Station Labels */
+.station-label {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-size: 11px;
+  font-weight: 500;
+  font-family: system-ui, sans-serif;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 1);
+}
+.station-label::before {
+  display: none !important; /* Removes the tooltip arrow */
+}
