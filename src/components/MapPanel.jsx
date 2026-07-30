@@ -132,9 +132,9 @@ export default function MapPanel() {
           attributionControl={false}
         >
           <TileLayer
-            url={`https://{s}.tile.thunderforest.com/transport/{z}/{x}/{y}.png?apikey=${import.meta.env.VITE_THUNDERFOREST_KEY}`}
-            subdomains="abc"
-          />
+  url="https://{s}.tile.thunderforest.com/transport/{z}/{x}/{y}.png?apikey=621eabec59ac465f80e08407cea35377"
+  subdomains="abc"
+/>
         </MapContainer>
       </div>
 
