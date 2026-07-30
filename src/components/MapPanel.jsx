@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ImagePlus, X } from "lucide-react";
-import { GoogleMap, useJsApiLoader } from "@react-google-maps/api";
+import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from "@react-google-maps/api";
 import StationReportModal from "./StationReportModal";
 import { supabase } from "../supabase";
 import liveIcon from "./live-icon.png";
@@ -8,21 +8,24 @@ import liveIcon from "./live-icon.png";
 const center = { lat: 51.5074, lng: -0.1278 };
 const containerStyle = { width: "100%", height: "100%" };
 
-// --- HEADER TEXT COLORS (Tweaked light colors for readability on white) ---
 const lineTextColors = {
-  bakerloo: "#B36305",       // Brown
-  central: "#DC241F",        // Red
-  circle: "#C4A000",         // Darker Yellow
-  district: "#00782A",       // Green
-  "hammersmith-city": "#D1668A", // Darker Pink
-  jubilee: "#A0A5A9",        // Grey
-  metropolitan: "#9B0056",   // Magenta
-  northern: "#1A1A1A",       // Black
-  piccadilly: "#003688",     // Dark Blue
-  victoria: "#0098D4",       // Light Blue
-  "waterloo-city": "#5E9E8C" // Darker Teal
+  bakerloo: "#B36305", central: "#DC241F", circle: "#C4A000", district: "#00782A",
+  "hammersmith-city": "#D1668A", jubilee: "#A0A5A9", metropolitan: "#9B0056",
+  northern: "#1A1A1A", piccadilly: "#003688", victoria: "#0098D4", "waterloo-city": "#5E9E8C"
 };
 
+const blueDot = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><circle cx="10" cy="10" r="8" fill="#3B82F6" stroke="white" stroke-width="2" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));"/></svg>`;
+const redDot = `
+<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+  <circle cx="20" cy="20" r="10" fill="rgba(239, 68, 68, 0.4)">
+    <animate attributeName="r" from="10" to="20" dur="1.5s" repeatCount="indefinite" />
+    <animate attributeName="opacity" from="0.8" to="0" dur="1.5s" repeatCount="indefinite" />
+  </circle>
+  <circle cx="20" cy="20" r="8" fill="#EF4444" stroke="white" stroke-width="3" style="filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.8));"/>
+</svg>`;
+
+const blueIcon = { url: `data:image/svg+xml;charset=utf-8,${encodeURIComponent(blueDot)}` };
+const redIcon = { url: `data:image/svg+xml;charset=utf-8,${encodeURIComponent(redDot)}` };
 const stations = [
   { name: "Oxford Circus", lat: 51.5154, lng: -0.1419 }, { name: "Paddington", lat: 51.5154, lng: -0.1755 },
   { name: "Kings Cross St Pancras", lat: 51.5322, lng: -0.1218 }, { name: "Euston", lat: 51.5286, lng: -0.1332 },
@@ -60,7 +63,7 @@ export default function MapPanel() {
   const { isLoaded } = useJsApiLoader({ googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_KEY });
 
   const [reportModal, setReportModal] = useState({ open: false, station: "" });
-  const [nearestStation, setNearestStation] = useState(null);
+  const [infoWindow, setInfoWindow] = useState({ open: false, station: "", position: null });
   const [reports, setReports] = useState([]);
 
   const [open, setOpen] = useState(false);
@@ -72,21 +75,6 @@ export default function MapPanel() {
   const [imagePreview, setImagePreview] = useState("");
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
-
-  const findNearestStation = useCallback((lat, lng) => {
-    let minDist = Infinity; let closest = null;
-    stations.forEach(s => {
-      const dist = Math.sqrt(Math.pow(s.lat - lat, 2) + Math.pow(s.lng - lng, 2));
-      if (dist < minDist) { minDist = dist; closest = s.name; }
-    });
-    setNearestStation(closest);
-  }, []);
-
-  const onCenterChanged = useCallback((map) => {
-    if (!map) return;
-    const c = map.getCenter();
-    findNearestStation(c.lat(), c.lng());
-  }, [findNearestStation]);
 
   useEffect(() => {
     const fetchReports = async () => { const { data } = await supabase.from("station_reports").select("*").order("created_at", { ascending: false }); if (data) setReports(data); };
@@ -123,63 +111,80 @@ export default function MapPanel() {
   }
 
   if (!isLoaded) return <div className="w-full h-full flex items-center justify-center text-white">Loading Map...</div>;
-  const activeReportCount = reports.filter(r => r.station_name === nearestStation).length;
+  const activeStationReports = reports.filter(r => r.station_name === infoWindow.station);
 
   return (
     <div className="relative w-full h-full">
-      <GoogleMap mapContainerStyle={containerStyle} center={center} zoom={13} onCenterChanged={onCenterChanged}
-        options={{ streetViewControl: false, mapTypeControl: false, fullscreenControl: false, styles: [{ featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] }, { featureType: "transit", elementType: "labels", stylers: [{ visibility: "off" }] }] }}
-      />
+      <GoogleMap 
+        mapContainerStyle={containerStyle} 
+        center={center} 
+        zoom={13}
+        options={{ 
+          streetViewControl: false, 
+          mapTypeControl: false, 
+          fullscreenControl: false,
+          styles: [
+            { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] }, 
+            { featureType: "transit", elementType: "labels", stylers: [{ visibility: "off" }] }
+          ] 
+        }}
+      >
+        {stations.map((station) => (
+          <Marker 
+            key={station.name} 
+            position={{ lat: station.lat, lng: station.lng }} 
+            icon={reports.some(r => r.station_name === station.name) ? redIcon : blueIcon} 
+            onClick={() => setInfoWindow({ open: true, station: station.name, position: { lat: station.lat, lng: station.lng } })} 
+          />
+        ))}
 
-      {nearestStation && (
-        <div className="absolute bottom-28 left-1/2 -translate-x-1/2 z-[999999] w-auto">
-          <div className="bg-black/70 backdrop-blur-xl border border-white/20 rounded-full px-6 py-3 flex items-center gap-4 shadow-2xl">
-            <div className="flex items-center gap-2">
-              <div className={`w-2.5 h-2.5 rounded-full ${activeReportCount > 0 ? 'bg-red-500 animate-pulse' : 'bg-green-400'}`} />
-              <span className="text-white font-medium text-sm whitespace-nowrap">Nearest: <span className="font-bold">{nearestStation}</span></span>
-              {activeReportCount > 0 && (<span className="text-red-400 text-xs font-bold bg-red-500/20 px-2 py-0.5 rounded-full">{activeReportCount} issues</span>)}
+        {infoWindow.open && (
+          <InfoWindow 
+            position={infoWindow.position} 
+            onCloseClick={() => setInfoWindow({ open: false, station: "", position: null })}
+            options={{ maxWidth: 250 }}
+          >
+            <div className="w-52 p-1">
+              <h4 className="font-bold text-gray-800 text-sm mb-2 border-b pb-1">{infoWindow.station}</h4>
+              {activeStationReports.length > 0 ? (
+                <div className="space-y-2 mb-3 max-h-40 overflow-y-auto">
+                  <p className="text-red-600 text-xs font-bold">⚠️ Active Reports:</p>
+                  {activeStationReports.map((r) => (
+                    <div key={r.id} className="bg-red-50 border border-red-200 rounded p-1.5 text-xs text-gray-700">
+                      <span className="font-bold capitalize text-red-500">• {r.report_type}</span>
+                      {r.message && <p className="mt-0.5 text-gray-600">{r.message}</p>}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-green-600 text-xs mb-3 font-medium">✅ No active reports</p>
+              )}
+              <button 
+                onClick={() => setReportModal({ open: true, station: infoWindow.station })} 
+                className="w-full text-xs text-white font-semibold bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded text-center"
+              >
+                + Add Report
+              </button>
             </div>
-            <button onClick={() => setReportModal({ open: true, station: nearestStation })} className={`px-4 py-1.5 rounded-full text-xs font-bold transition-colors ${activeReportCount > 0 ? 'bg-red-600 hover:bg-red-500 text-white' : 'bg-white/20 hover:bg-white/30 text-white'}`}>Report</button>
-          </div>
-        </div>
-      )}
+          </InfoWindow>
+        )}
+      </GoogleMap>
 
       <StationReportModal stationName={reportModal.station} isOpen={reportModal.open} onClose={() => setReportModal({ open: false, station: "" })} />
 
-      {/* CUSTOM LIVE ICON BUTTON */}
       <button onClick={() => setOpen(!open)} className="absolute bottom-5 right-5 z-[999999] bg-white hover:bg-gray-100 p-2.5 rounded-full shadow-xl transition-colors border border-gray-200">
         <img src={liveIcon} alt="Live Chat" className="w-9 h-9 object-contain" />
       </button>
 
-      {/* --- WHITE THEME CHAT WINDOW --- */}
       {open && (
-        <div className="absolute bottom-20 right-5 w-80 h-96 bg-white border border-gray-200 rounded-2xl shadow-2xl z-[999999] flex flex-col overflow-hidden">
-          
-          {/* Chat Header */}
-          <div className="p-3 bg-gray-50 border-b border-gray-200">
-            <p className="font-bold text-sm" style={{ color: lineTextColors[line] || '#000' }}>
-              {line.charAt(0).toUpperCase() + line.slice(1)} Live
-            </p>
-            <select 
-              value={line} 
-              onChange={(e) => setLine(e.target.value)} 
-              className="w-full mt-2 bg-white text-gray-700 border border-gray-300 rounded-lg p-2 text-xs outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="bakerloo">Bakerloo Live</option>
-              <option value="central">Central Live</option>
-              <option value="circle">Circle Live</option>
-              <option value="district">District Live</option>
-              <option value="hammersmith-city">Hammersmith & City Live</option>
-              <option value="jubilee">Jubilee Live</option>
-              <option value="metropolitan">Metropolitan Live</option>
-              <option value="northern">Northern Live</option>
-              <option value="piccadilly">Piccadilly Live</option>
-              <option value="victoria">Victoria Live</option>
-              <option value="waterloo-city">Waterloo & City Live</option>
+        <div className="absolute bottom-20 right-5 w-80 h-96 bg-white border border-gray-200 rounded-2xl shadow-2xl z-[999999] flex flex-col overflow-hidden chat-window">
+          <div className="p-3 border-b border-gray-200" style={{ backgroundColor: lineTextColors[line] || '#000' }}>
+            <p className="font-bold text-sm text-white">{line.charAt(0).toUpperCase() + line.slice(1)} Live</p>
+            <select value={line} onChange={(e) => setLine(e.target.value)} className="w-full mt-2 bg-white text-gray-700 border border-gray-300 rounded-lg p-2 text-xs outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="bakerloo">Bakerloo Live</option><option value="central">Central Live</option><option value="circle">Circle Live</option><option value="district">District Live</option><option value="hammersmith-city">Hammersmith & City Live</option><option value="jubilee">Jubilee Live</option><option value="metropolitan">Metropolitan Live</option><option value="northern">Northern Live</option><option value="piccadilly">Piccadilly Live</option><option value="victoria">Victoria Live</option><option value="waterloo-city">Waterloo & City Live</option>
             </select>
           </div>
           
-          {/* Messages Area */}
           <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-gray-50">
             {messages.map((m) => (
               <div key={m.id} className="bg-white rounded-xl shadow-sm border border-gray-100 px-4 py-2">
@@ -191,33 +196,20 @@ export default function MapPanel() {
             <div ref={messagesEndRef} />
           </div>
           
-          {/* Input Area */}
           <div className="flex flex-col bg-white rounded-b-2xl">
             {imagePreview && (
               <div className="px-3 pt-3 flex items-center gap-2">
                 <div className="relative">
                   <img src={imagePreview} className="w-12 h-12 object-cover rounded-lg border border-gray-200" alt="preview" />
-                  <button onClick={() => { setSelectedImage(null); setImagePreview(""); }} className="absolute -top-2 -right-2 bg-gray-800 text-white rounded-full p-0.5 hover:bg-red-600">
-                    <X size={12} />
-                  </button>
+                  <button onClick={() => { setSelectedImage(null); setImagePreview(""); }} className="absolute -top-2 -right-2 bg-gray-800 text-white rounded-full p-0.5 hover:bg-red-600"><X size={12} /></button>
                 </div>
               </div>
             )}
             <div className="flex p-3 border-t border-gray-100">
               <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleImageSelect} />
-              <button onClick={() => fileInputRef.current.click()} className="text-gray-400 hover:text-blue-600 px-2 transition-colors">
-                <ImagePlus size={20} />
-              </button>
-              <input 
-                value={text} 
-                onChange={e => setText(e.target.value)} 
-                onKeyDown={(e) => e.key === "Enter" && sendMessage()} 
-                className="flex-1 bg-gray-100 text-gray-900 placeholder-gray-500 px-4 py-2 rounded-full text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all" 
-                placeholder="Message..." 
-              />
-              <button onClick={sendMessage} className="ml-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-full text-sm font-bold transition-colors">
-                Send
-              </button>
+              <button onClick={() => fileInputRef.current.click()} className="text-gray-400 hover:text-blue-600 px-2 transition-colors"><ImagePlus size={20} /></button>
+              <input value={text} onChange={e => setText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} className="flex-1 bg-gray-100 text-gray-900 placeholder-gray-500 px-4 py-2 rounded-full text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all" placeholder="Message..." />
+              <button onClick={sendMessage} className="ml-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-full text-sm font-bold transition-colors">Send</button>
             </div>
           </div>
         </div>
