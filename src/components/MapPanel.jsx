@@ -224,7 +224,7 @@ export default function MapPanel() {
 
       {/* --- FLOATING CHAT WINDOW (Lifted up to avoid search bar) --- */}
       {open && (
-        <div className="absolute bottom-20 right-4 left-4 sm:bottom-6 sm:right-6 sm:left-auto w-auto sm:w-[340px] h-[60vh] sm:h-[450px] bg-white rounded-2xl shadow-2xl border border-gray-200 z-[999999] flex flex-col overflow-hidden">
+        <div className="absolute bottom-20 left-1/2 -translate-x-1/2 sm:translate-x-0 sm:left-auto sm:right-6 w-[90%] sm:w-[340px] h-[50vh] sm:h-[450px] bg-white rounded-2xl shadow-2xl border border-gray-200 z-[999999] flex flex-col overflow-hidden">
           <div className="text-white px-3 py-2.5 sm:px-4 sm:py-3 flex items-center justify-between shrink-0" style={{ backgroundColor: activeColor }}>
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 bg-white rounded-full animate-pulse"></span>
