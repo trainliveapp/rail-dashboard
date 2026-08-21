@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Heart, Clock, ArrowUpDown, ArrowRight, X, Plus, AlertCircle, LocateFixed, MapPin } from 'lucide-react'
-import { savedJourneys, stations } from '../data/mockData'
+import { Heart, Clock, ArrowUpDown, ArrowRight, X, Plus, AlertCircle, LocateFixed, MapPin, Trash2, Loader } from 'lucide-react'
+import { stations } from '../data/mockData'
 import JourneyResults from './JourneyResults'
 
 function StationField({ label, dotClass, station, query, onQueryChange, onSelect, onClear, placeholder, onUseCurrentLocation, locating }) {
@@ -75,6 +75,16 @@ export default function JourneyPlannerPanel({ planner, onClose }) {
     journey, selectedIndex, setSelectedIndex,
     planning, planError,
     handleSwap, handleUseCurrentLocation, handlePlanJourney, handleBackToSearch,
+    savedJourneys,
+    journeyHistory,
+    loadingSaved,
+    loadingHistory,
+    savingJourney,
+    saveError,
+    handleSaveJourney,
+    handleLoadSavedJourney,
+    handleDeleteSavedJourney,
+    handleToggleFavorite,
   } = planner
 
   return (
@@ -120,24 +130,96 @@ export default function JourneyPlannerPanel({ planner, onClose }) {
             {savedOpen && (
               <>
                 <button aria-label="Close saved journeys" onClick={() => setSavedOpen(false)} className="fixed inset-0 z-40 cursor-default" />
-                <div className="absolute top-full left-0 mt-2 w-full min-w-[280px] bg-white rounded-2xl shadow-xl border border-slate-100 p-4 z-50">
+                <div className="absolute top-full left-0 mt-2 w-full min-w-[280px] bg-white rounded-2xl shadow-xl border border-slate-100 p-4 z-50 max-h-96 overflow-y-auto">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-xs font-bold tracking-widest text-slate-400">SAVED JOURNEYS</h3>
-                    <button className="text-xs font-medium text-blue-600 flex items-center gap-1">
-                      <Plus size={12} /> Save Current
+                    <button
+                      onClick={() => handleSaveJourney(false)}
+                      disabled={savingJourney || !fromStation || !toStation}
+                      className="text-xs font-medium text-blue-600 disabled:text-slate-300 flex items-center gap-1 transition-colors"
+                    >
+                      {savingJourney ? <Loader size={12} className="animate-spin" /> : <Plus size={12} />}
+                      Save Current
                     </button>
                   </div>
-                  <div className="space-y-1">
-                    {savedJourneys.map((j) => (
-                      <div key={j.route} className="flex items-center justify-between gap-2 py-2 border-b border-slate-50 last:border-0">
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-slate-800 truncate">{j.route}</p>
-                          <p className="text-xs text-slate-400 truncate">{j.stations}</p>
+
+                  {saveError && (
+                    <div className="flex items-start gap-2 bg-red-50 border border-red-100 rounded-lg px-2 py-2 mb-3">
+                      <AlertCircle size={12} className="text-red-500 shrink-0 mt-0.5" />
+                      <p className="text-xs text-red-700">{saveError}</p>
+                    </div>
+                  )}
+
+                  {loadingSaved ? (
+                    <div className="flex items-center justify-center py-4">
+                      <Loader size={16} className="text-slate-400 animate-spin" />
+                    </div>
+                  ) : savedJourneys.length === 0 ? (
+                    <p className="text-xs text-slate-400 py-3 text-center">No saved journeys yet</p>
+                  ) : (
+                    <div className="space-y-1 mb-4">
+                      {savedJourneys.map((j) => (
+                        <div key={j.id} className="flex items-center justify-between gap-2 py-2 px-2 hover:bg-slate-50 rounded-lg group">
+                          <button
+                            onClick={() => handleLoadSavedJourney(j)}
+                            className="min-w-0 flex-1 text-left"
+                          >
+                            <p className="text-sm font-medium text-slate-800 truncate">{j.route}</p>
+                            <p className="text-xs text-slate-400 truncate">{j.stations}</p>
+                          </button>
+                          <div className="flex items-center gap-1 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleToggleFavorite(j.id, !j.favorite)
+                              }}
+                              aria-label={`${j.favorite ? 'Remove' : 'Add'} ${j.route} ${j.favorite ? 'from' : 'to'} favourites`}
+                              className="p-1 text-slate-300 hover:text-red-500 transition-colors"
+                            >
+                              <Heart size={14} className={j.favorite ? 'text-red-500 fill-red-500' : ''} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleDeleteSavedJourney(j.id)
+                              }}
+                              aria-label={`Delete saved journey ${j.route}`}
+                              className="p-1 text-slate-300 hover:text-red-500 transition-colors"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
                         </div>
-                        <Heart size={16} className={j.favorite ? 'text-red-500 fill-red-500 shrink-0' : 'text-slate-300 shrink-0'} />
+                      ))}
+                    </div>
+                  )}
+
+                  {loadingHistory ? (
+                    <div className="flex items-center justify-center border-t border-slate-100 pt-3 mt-3">
+                      <Loader size={14} className="text-slate-400 animate-spin" aria-label="Loading recent journeys" />
+                    </div>
+                  ) : journeyHistory.length > 0 && (
+                    <>
+                      <div className="border-t border-slate-100 pt-3 mt-3">
+                        <h4 className="text-xs font-bold tracking-widest text-slate-400 mb-2">RECENT</h4>
+                        <div className="space-y-1">
+                          {journeyHistory.slice(0, 5).map((h) => (
+                            <button
+                              type="button"
+                              key={h.id}
+                              onClick={() => handleLoadSavedJourney(h)}
+                              aria-label={`Load recent journey ${h.route}`}
+                              className="w-full text-left py-1.5 px-2 hover:bg-slate-50 rounded-lg"
+                            >
+                              <p className="text-xs text-slate-600 truncate">{h.route}</p>
+                            </button>
+                          ))}
+                        </div>
                       </div>
-                    ))}
-                  </div>
+                    </>
+                  )}
                 </div>
               </>
             )}

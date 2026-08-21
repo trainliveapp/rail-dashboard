@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { planJourney } from './journeyPlanner'
+import { getSavedJourneys, saveJourney, deleteSavedJourney, toggleFavorite, getJourneyHistory, trackJourneySearch } from './savedJourneys'
 
 // All the journey-planning state used to live inside one component
 // (JourneySheet) that rendered as a single absolutely-positioned overlay on
@@ -11,8 +12,16 @@ import { planJourney } from './journeyPlanner'
 // place. HomeDashboard calls it once and hands the relevant pieces to each.
 export function useJourneyPlanner({ onJourneyPlanned, onDraftChange } = {}) {
   const [expanded, setExpanded] = useState(false)
-  const [journeyTab, setJourneyTab] = useState('saved')
+  const [journeyTab, setJourneyTab] = useState('leave')
   const [savedOpen, setSavedOpen] = useState(false)
+
+  // Saved journeys & history
+  const [savedJourneys, setSavedJourneys] = useState([])
+  const [journeyHistory, setJourneyHistory] = useState([])
+  const [loadingSaved, setLoadingSaved] = useState(false)
+  const [loadingHistory, setLoadingHistory] = useState(false)
+  const [savingJourney, setSavingJourney] = useState(false)
+  const [saveError, setSaveError] = useState('')
 
   const [fromStation, setFromStation] = useState(null)
   const [toStation, setToStation] = useState(null)
@@ -107,6 +116,90 @@ export function useJourneyPlanner({ onJourneyPlanned, onDraftChange } = {}) {
     setSelectedIndex(0)
   }
 
+  // Load saved journeys and history on mount
+  useEffect(() => {
+    const loadSavedData = async () => {
+      setLoadingSaved(true)
+      const { journeys } = await getSavedJourneys()
+      setSavedJourneys(journeys)
+      setLoadingSaved(false)
+    }
+    loadSavedData()
+  }, [])
+
+  useEffect(() => {
+    const loadHistory = async () => {
+      setLoadingHistory(true)
+      const { history } = await getJourneyHistory()
+      setJourneyHistory(history)
+      setLoadingHistory(false)
+    }
+    loadHistory()
+  }, [])
+
+  // Auto-track journey when planned
+  useEffect(() => {
+    if (journey && fromStation && toStation) {
+      trackJourneySearch({ fromStation, toStation })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [journey])
+
+  const handleSaveJourney = async (isFavorite = false) => {
+    if (!fromStation || !toStation) {
+      setSaveError('Pick both stations to save')
+      return
+    }
+    setSavingJourney(true)
+    setSaveError('')
+    const { error } = await saveJourney({
+      fromStation,
+      toStation,
+      isFavorite,
+    })
+    setSavingJourney(false)
+    if (error) {
+      setSaveError(error)
+      return
+    }
+    // Reload saved journeys
+    const { journeys } = await getSavedJourneys()
+    setSavedJourneys(journeys)
+  }
+
+  const handleLoadSavedJourney = (savedJourney) => {
+    setFromStation(savedJourney.fromStation)
+    setFromQuery(savedJourney.fromStation.name)
+    setToStation(savedJourney.toStation)
+    setToQuery(savedJourney.toStation.name)
+    setJourney(null)
+    setSelectedIndex(0)
+    setSavedOpen(false)
+  }
+
+  const handleDeleteSavedJourney = async (journeyId) => {
+    const { error } = await deleteSavedJourney(journeyId)
+    if (error) {
+      setSaveError(error)
+      return
+    }
+    // Reload saved journeys
+    const { journeys } = await getSavedJourneys()
+    setSavedJourneys(journeys)
+  }
+
+  const handleToggleFavorite = async (journeyId, isFavorite) => {
+    const { error } = await toggleFavorite(journeyId, isFavorite)
+    if (error) {
+      setSaveError(error)
+      return
+    }
+    // Update local state
+    setSavedJourneys(
+      savedJourneys.map((j) => (j.id === journeyId ? { ...j, favorite: isFavorite } : j))
+    )
+  }
+
   return {
     expanded, setExpanded,
     journeyTab, setJourneyTab,
@@ -119,5 +212,16 @@ export function useJourneyPlanner({ onJourneyPlanned, onDraftChange } = {}) {
     journey, selectedIndex, setSelectedIndex,
     planning, planError,
     handleSwap, handleUseCurrentLocation, handlePlanJourney, handleBackToSearch,
+    // Saved journeys & history
+    savedJourneys,
+    journeyHistory,
+    loadingSaved,
+    loadingHistory,
+    savingJourney,
+    saveError,
+    handleSaveJourney,
+    handleLoadSavedJourney,
+    handleDeleteSavedJourney,
+    handleToggleFavorite,
   }
 }

@@ -143,6 +143,7 @@ export default function HomeDashboard() {
           liveLocation={liveLocation}
           onGetDirections={(station) => {
             planner.setToStation(station)
+            planner.setToQuery(station.name)
             planner.setExpanded(true)
           }}
           className="h-full"
