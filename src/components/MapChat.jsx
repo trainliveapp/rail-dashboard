@@ -120,10 +120,8 @@ async function sendMessage() {
       {!open && (
 
         <button
-  onClick={() => {
-    console.log("BUTTON CLICKED");
-    sendMessage();
-  }}
+  onClick={() => setOpen(true)}
+  aria-label="Open LiveChat"
 
   className="
   ml-2
@@ -133,7 +131,8 @@ async function sendMessage() {
   rounded
   "
 >
-  <Send size={16}/>
+  <MessageCircle size={16}/>
+  <span>LiveChat</span>
 </button>
 
       )}

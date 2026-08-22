@@ -1,14 +1,28 @@
 import { useRef, useEffect, useState, useMemo } from 'react'
 import { MapContainer, TileLayer, Polyline, Marker, Popup, Tooltip, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
-import { Plus, Minus, LocateFixed } from 'lucide-react'
+import { Plus, Minus, LocateFixed, Flag, ThumbsUp } from 'lucide-react'
 import { lines, housingPins, coffeePins, liveEventPin, stations } from '../data/mockData'
 import { tubeLineGeometry } from '../data/tubeLineGeometry'
 import { getStationScores } from '../lib/stationRatings'
+import { getStationUpdates, subscribeToStationUpdates, confirmUpdate } from '../lib/stationUpdates'
+import ReportIssueModal from './ReportIssueModal'
 import StationPopup from './StationPopup'
 import StationQuickReportModal from './StationQuickReportModal'
 
 const CENTER = [51.5246, -0.1339]
+const trackedLines = ['victoria', 'jubilee', 'central', 'northern', 'piccadilly']
+const lineColors = { victoria: '#0098D4', jubilee: '#A0A5A9', central: '#DC241F', northern: '#1A1A1A', piccadilly: '#003688' }
+
+function trainIcon(lineId) {
+  const color = lineColors[lineId] || '#334155'
+  return L.divIcon({
+    html: `<div style="width:24px;height:24px;border-radius:50%;background:${color};border:3px solid white;box-shadow:0 1px 4px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;color:white;font-size:12px">●</div>`,
+    className: '',
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+  })
+}
 
 // A journey's line highlight should only light up the stretch of track
 // actually being used, not the entire line across London, this bounds the
@@ -215,7 +229,7 @@ export default function MapPanel({
   highlightLines = [],
   route = null,
   liveLocation = null,
-  onGetDirections = () => {},
+  onGetDirections = null,
   className = 'h-[420px] lg:h-[520px]',
 }) {
   const mapRef = useRef(null)
@@ -223,10 +237,78 @@ export default function MapPanel({
   const [followSuspended, setFollowSuspended] = useState(false)
   const [zoom, setZoom] = useState(16)
   const [reportingStation, setReportingStation] = useState(null)
+  const [reportModalOpen, setReportModalOpen] = useState(false)
+  const [communityReports, setCommunityReports] = useState([])
+  const [confirmingReport, setConfirmingReport] = useState(null)
+  const [liveTrains, setLiveTrains] = useState([])
 
   useEffect(() => {
     getStationScores(stations.map((s) => s.id)).then(setStationScores)
   }, [])
+
+  useEffect(() => {
+    const fetchLiveTrains = async () => {
+      const results = await Promise.all(trackedLines.map(async (lineId) => {
+        try {
+          const response = await fetch(`https://api.tfl.gov.uk/Line/${lineId}/VehiclePositions/inbound`)
+          const data = await response.json()
+          return (Array.isArray(data) ? data.flat() : []).map((train) => ({ ...train, lineId }))
+        } catch {
+          return []
+        }
+      }))
+      setLiveTrains(results.flat().filter((train) => train.latitude && train.longitude))
+    }
+    fetchLiveTrains()
+    const interval = setInterval(fetchLiveTrains, 5000)
+    return () => clearInterval(interval)
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    getStationUpdates(stations.map((s) => s.name)).then((rows) => {
+      if (!cancelled) setCommunityReports(rows.filter((row) => row.kind === 'report' && row.status !== 'RESOLVED' && row.status !== 'EXPIRED'))
+    }).catch(() => {})
+    const unsubscribe = subscribeToStationUpdates(stations.map((s) => s.name), (row) => {
+      if (row.kind !== 'report') return
+      setCommunityReports((prev) => [row, ...prev.filter((item) => !(item.stationName === row.stationName && item.category === row.category))])
+    })
+    return () => {
+      cancelled = true
+      unsubscribe()
+    }
+  }, [])
+
+  const groupedReports = useMemo(() => {
+    const grouped = new Map()
+    for (const report of communityReports) {
+      const station = stations.find((item) => item.name === report.stationName)
+      if (!station) continue
+      const key = `${station.id}:${report.category}`
+      const existing = grouped.get(key)
+      if (!existing) grouped.set(key, { ...report, station, reportCount: 1 })
+      else grouped.set(key, {
+        ...existing,
+        reportCount: existing.reportCount + 1,
+        confirms: Math.max(existing.confirms || 0, report.confirms || 0),
+        ...(new Date(report.createdAt) > new Date(existing.createdAt) ? report : {}),
+      })
+    }
+    return [...grouped.values()]
+  }, [communityReports])
+
+  const handleConfirmReport = async (report) => {
+    if (confirmingReport) return
+    setConfirmingReport(report.id)
+    try {
+      await confirmUpdate(report.id)
+      setCommunityReports((prev) => prev.map((item) => item.id === report.id ? { ...item, confirms: item.confirms + 1 } : item))
+    } catch {
+      // The pin remains usable if the network request fails.
+    } finally {
+      setConfirmingReport(null)
+    }
+  }
 
   // A new live-tracked journey should resume auto-follow, even if the user
   // had paused it (by dragging) on a previous one.
@@ -297,6 +379,10 @@ export default function MapPanel({
           maxNativeZoom={19}
           maxZoom={19}
         />
+
+        {liveTrains.map((train, index) => (
+          <Marker key={train.vehicleId || `${train.lineId}-${index}`} position={[train.latitude, train.longitude]} icon={trainIcon(train.lineId)} />
+        ))}
 
         {routeFitPoints.length > 0 && <RouteFit points={routeFitPoints} />}
         {route?.originStation && route?.destinationStation && (
@@ -382,6 +468,25 @@ export default function MapPanel({
             </Marker>
           ))}
 
+        {zoom >= STATION_VISIBLE_ZOOM && groupedReports.map((report) => (
+          <Marker key={`report-${report.id}`} position={[report.station.lat, report.station.lng]} icon={badgeIcon('report', '#dc2626', 32)} zIndexOffset={500}>
+            <Popup minWidth={240}>
+              <div className="text-sm text-slate-800">
+                <p className="font-bold text-red-600 mb-1">Community report</p>
+                <p className="font-semibold">{report.label || report.category}</p>
+                <p className="text-slate-500">{report.station.name}</p>
+                {report.description && <p className="mt-2">{report.description}</p>}
+                <div className="flex items-center justify-between gap-2 mt-3 text-xs text-slate-400">
+                  <span>{report.reportCount} report{report.reportCount === 1 ? '' : 's'} · {report.status || 'ACTIVE'}</span>
+                  <button type="button" onClick={() => handleConfirmReport(report)} disabled={confirmingReport === report.id} className="flex items-center gap-1 text-blue-700 disabled:opacity-50">
+                    <ThumbsUp size={12} /> {report.confirms || 0} confirm
+                  </button>
+                </div>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
+
         {/* Disruption markers removed for now, scatterMarkers below is
             hardcoded demo data with made-up locations, not real incidents.
             Wiring in real disruptions is realistic though: TfL's Line
@@ -431,6 +536,9 @@ export default function MapPanel({
 
 
       <div className="absolute right-3 top-3 z-[1000] flex flex-col gap-1.5 sm:gap-2">
+        <button aria-label="Report an issue" onClick={() => setReportModalOpen(true)} className="w-8 h-8 sm:w-10 sm:h-10 bg-red-600 hover:bg-red-700 shadow-sm rounded-lg flex items-center justify-center text-white">
+          <Flag size={15} />
+        </button>
         <button aria-label="Zoom in" onClick={() => mapRef.current?.zoomIn()} className="w-8 h-8 sm:w-10 sm:h-10 bg-white shadow-sm rounded-lg flex items-center justify-center text-slate-600 active:bg-slate-50">
           <Plus size={15} />
         </button>
@@ -468,6 +576,7 @@ export default function MapPanel({
       {reportingStation && (
         <StationQuickReportModal station={reportingStation} onClose={() => setReportingStation(null)} />
       )}
+      {reportModalOpen && <ReportIssueModal onClose={() => setReportModalOpen(false)} />}
     </div>
   )
 }

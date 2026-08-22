@@ -1,12 +1,11 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Menu, X, Map, Search, CalendarDays, Bell, HelpCircle, LogOut } from 'lucide-react'
+import { Menu, X, Map, CalendarDays, Bell, HelpCircle, LogOut } from 'lucide-react'
 import logo from '../assets/logo.png'
 import { useAuth } from '../lib/AuthContext'
 
 const navItems = [
   { label: 'Live Map', icon: Map, href: '/' },
-  { label: 'Journey Planner', icon: Search },
   { label: 'Calendar Sync', icon: CalendarDays },
   { label: 'Alerts & Reports', icon: Bell, href: '/alerts' },
   { divider: true },

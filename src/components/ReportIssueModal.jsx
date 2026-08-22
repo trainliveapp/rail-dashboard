@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import {
-  X, Coins, Car, HandCoins, Hand, TrainFront, Users, UsersRound,
-  CheckCircle2, Radiation, ShieldAlert, PersonStanding, HeartPulse,
+  X, Clock3, Ban, Construction, Users, Ticket, Accessibility, Sparkles,
+  ShieldAlert, Megaphone, CloudRain, CircleHelp,
   TrainFront as TrainIcon, MapPin, LocateFixed, ArrowRight, Check, Loader2,
 } from 'lucide-react'
 import { reportCategories, stations } from '../data/mockData'
@@ -9,7 +9,7 @@ import { findNearestStation } from '../lib/geo'
 import { postReport } from '../lib/stationUpdates'
 import { useAuth } from '../lib/AuthContext'
 
-const icons = { Coins, Car, HandCoins, Hand, TrainFront, Users, UsersRound, CheckCircle2, Radiation, ShieldAlert, PersonStanding, HeartPulse }
+const icons = { Clock3, Ban, Construction, Users, Ticket, Accessibility, Sparkles, ShieldAlert, Megaphone, CloudRain, CircleHelp }
 
 // Category -> badge styling shown on the report in JourneyResults. Most
 // categories are informational (blue), a few carry more weight and get the
@@ -30,6 +30,7 @@ export default function ReportIssueModal({ onClose }) {
   const { user } = useAuth()
   const [category, setCategory] = useState('revenue')
   const [where, setWhere] = useState('train')
+  const [message, setMessage] = useState('')
   const [locationQuery, setLocationQuery] = useState('')
   const [matchedStation, setMatchedStation] = useState(null)
   const [showStationList, setShowStationList] = useState(false)
@@ -86,7 +87,7 @@ export default function ReportIssueModal({ onClose }) {
         category,
         label: cat.label.toUpperCase(),
         tone: categoryTone[category] || 'blue',
-        message: `${cat.label} reported ${where === 'train' ? 'on the train' : 'at the station'}.`,
+        message: message.trim() || `${cat.label} reported ${where === 'train' ? 'on the train' : 'at the station'}.`,
         whereOn: where,
       })
       setSubmitted(true)
@@ -100,7 +101,7 @@ export default function ReportIssueModal({ onClose }) {
 
   if (submitted) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40">
+      <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-900/40">
         <div className="bg-slate-50 rounded-3xl shadow-2xl w-full max-w-[420px] p-8 text-center">
           <div className="w-14 h-14 rounded-full bg-blue-600 flex items-center justify-center mx-auto mb-4">
             <Check size={26} className="text-white" strokeWidth={3} />
@@ -113,7 +114,7 @@ export default function ReportIssueModal({ onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40">
+    <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-900/40">
       <form onSubmit={handleSubmit} className="bg-slate-50 rounded-3xl shadow-2xl w-full max-w-[620px] max-h-[90vh] overflow-y-auto p-8">
         <div className="flex items-start justify-between mb-6">
           <div>
@@ -166,6 +167,17 @@ export default function ReportIssueModal({ onClose }) {
             <MapPin size={16} /> At Station
           </button>
         </div>
+
+        <label htmlFor="report-description" className="text-sm font-semibold text-slate-800 mb-2 block">Description <span className="font-normal text-slate-400">(Optional)</span></label>
+        <textarea
+          id="report-description"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder="Add a short description"
+          rows={3}
+          maxLength={500}
+          className="w-full bg-white border border-slate-200 rounded-2xl px-4 py-3 text-sm outline-none resize-none mb-5"
+        />
 
         <h3 className="text-sm font-semibold text-slate-800 mb-2">Add Your Location <span className="font-normal text-slate-400">(Optional)</span></h3>
         <div className="relative mb-2">

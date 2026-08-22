@@ -30,6 +30,7 @@ function mapRow(row) {
     locationText: row.location_text,
     initial: (row.author_initial || '?').toUpperCase(),
     confirms: row.confirms,
+    status: row.status || 'ACTIVE',
     createdAt: row.created_at,
     minutesAgo: minutesAgo(row.created_at),
   }

@@ -87,13 +87,15 @@ export default function StationReportSummary({ station, onReportIssue, onGetDire
           ))}
         </div>
 
-        <button
-          type="button"
-          onClick={() => onGetDirections(station)}
-          className="w-full flex items-center justify-center gap-2 bg-blue-900 hover:bg-blue-950 transition-colors text-white text-sm font-semibold py-2.5 rounded-full mb-2"
-        >
-          <Navigation size={14} /> Get Directions
-        </button>
+        {onGetDirections && (
+          <button
+            type="button"
+            onClick={() => onGetDirections(station)}
+            className="w-full flex items-center justify-center gap-2 bg-blue-900 hover:bg-blue-950 transition-colors text-white text-sm font-semibold py-2.5 rounded-full mb-2"
+          >
+            <Navigation size={14} /> Get Directions
+          </button>
+        )}
         <button
           type="button"
           onClick={() => onReportIssue(station)}

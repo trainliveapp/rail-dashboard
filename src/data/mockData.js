@@ -576,18 +576,18 @@ export const stations = [
 ]
 
 export const reportCategories = [
-  { key: 'revenue', label: 'Revenue Protection', icon: 'Coins' },
-  { key: 'btp', label: 'British Transport Police', icon: 'Car' },
-  { key: 'beggars', label: 'Beggars', icon: 'HandCoins' },
-  { key: 'threat', label: 'Threatening Behavior & Violence', icon: 'Hand' },
-  { key: 'fault', label: 'Train Fault', icon: 'TrainFront' },
-  { key: 'crowded_train', label: 'Crowded Train', icon: 'Users' },
-  { key: 'crowded_platform', label: 'Crowded Platform', icon: 'UsersRound' },
-  { key: 'accessibility', label: 'Accessibility Issues', icon: 'CheckCircle2' },
-  { key: 'hazards', label: 'Hazards', icon: 'Radiation' },
-  { key: 'harassment', label: 'Sexual Harassment', icon: 'ShieldAlert' },
-  { key: 'drunk', label: 'Drunk & Disorderly', icon: 'PersonStanding' },
-  { key: 'vulnerable', label: 'Vulnerable Person & Mental Health', icon: 'HeartPulse' },
+  { key: 'train_delay', label: 'Train delay', icon: 'Clock3' },
+  { key: 'train_cancelled', label: 'Train cancelled', icon: 'Ban' },
+  { key: 'platform_blocked', label: 'Platform/access blocked', icon: 'Construction' },
+  { key: 'crowding', label: 'Crowding', icon: 'Users' },
+  { key: 'ticket_machine', label: 'Ticket machine/barrier problem', icon: 'Ticket' },
+  { key: 'lift_escalator', label: 'Lift/escalator problem', icon: 'Accessibility' },
+  { key: 'cleanliness', label: 'Cleanliness', icon: 'Sparkles' },
+  { key: 'safety_security', label: 'Safety/security concern', icon: 'ShieldAlert' },
+  { key: 'information_problem', label: 'Information board/announcement problem', icon: 'Megaphone' },
+  { key: 'accessibility', label: 'Accessibility issue', icon: 'Accessibility' },
+  { key: 'weather_flooding', label: 'Weather/flooding disruption', icon: 'CloudRain' },
+  { key: 'other', label: 'Other', icon: 'CircleHelp' },
 ]
 
 export const savedJourneys = [

@@ -4,7 +4,7 @@ import NavBar from '../components/NavBar'
 import JourneySearchBar from '../components/JourneySearchBar'
 import JourneyPlannerPanel from '../components/JourneyPlannerPanel'
 import SidebarBottom from '../components/SidebarBottom'
-import MapPanel from '../components/MapPanel'
+import MapPanel from '../components/MapPanel.leaflet.backup'
 import MapChat from '../components/MapChat'
 import FeatureCards from '../components/FeatureCards'
 import DepartureBoards from '../components/DepartureBoards'
@@ -41,10 +41,8 @@ export default function HomeDashboard() {
   // is actually planned, this is what makes the map react as you pick
   // stations instead of staying blank until you hit "Plan Journey".
   const [draftStations, setDraftStations] = useState(null)
-  // All the search/results state (previously local to the JourneySheet
-  // overlay) now lives in this shared hook, so the collapsed search bar
-  // (stays on the map) and the expanded planner (now below the map, not on
-  // top of it) can both read/drive the same state.
+  // All search/results state lives in this shared hook so the collapsed
+  // search bar and expanded planner can share the same journey selection.
   const planner = useJourneyPlanner({ onJourneyPlanned: setPlannedJourney, onDraftChange: setDraftStations })
   // The user's real position, drives the moving arrow on the map. Starts
   // tracking as soon as "current location" is in use anywhere, or a
@@ -114,11 +112,6 @@ export default function HomeDashboard() {
   const toggleLine = (name) =>
     setActiveLines((prev) => (prev.includes(name) ? prev.filter((l) => l !== name) : [...prev, name]))
 
-  useEffect(() => {
-    if (!planner.expanded) return
-    document.getElementById('journey-planner')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }, [planner.expanded])
-
   // The planned journey (once it exists) always wins, it has the real
   // route legs to highlight. Before that, fall back to whatever's been
   // picked so far so the map isn't just sitting empty.
@@ -148,17 +141,23 @@ export default function HomeDashboard() {
           }}
           className="h-full"
         />
-        <JourneySearchBar
-          fromStation={planner.fromStation}
-          toStation={planner.toStation}
-          onExpand={() => planner.setExpanded(true)}
-        />
+        {planner.expanded ? (
+          <div className="absolute top-4 left-3 right-3 z-[1100] max-h-[calc(100%-2rem)] overflow-y-auto lg:left-1/2 lg:right-auto lg:w-[min(640px,calc(100%-2rem))] lg:-translate-x-1/2">
+            <JourneyPlannerPanel planner={planner} onClose={() => planner.setExpanded(false)} />
+          </div>
+        ) : (
+          <JourneySearchBar
+            fromStation={planner.fromStation}
+            toStation={planner.toStation}
+            onExpand={() => planner.setExpanded(true)}
+          />
+        )}
+        <div className="absolute bottom-4 left-4 z-[1000]">
+          <MapChat />
+        </div>
       </div>
 
       <div className="px-4 sm:px-6 lg:px-8 py-6 space-y-6 max-w-6xl mx-auto w-full">
-        {planner.expanded && (
-          <JourneyPlannerPanel planner={planner} onClose={() => planner.setExpanded(false)} />
-        )}
         <SidebarBottom nearby={nearby} toggleNearby={toggleNearby} layers={layers} toggleLayer={toggleLayer} className="border border-slate-200 rounded-xl" />
         <DepartureBoards />
         <FeatureCards />
