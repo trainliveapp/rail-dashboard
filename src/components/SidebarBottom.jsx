@@ -32,26 +32,29 @@ export default function SidebarBottom({ nearby, toggleNearby, layers, toggleLaye
   if (!mapOpen) return null
 
   return (
-    <div className={`bg-white px-5 py-5 space-y-6 ${className}`}>
-      <section>
-        <h2 className="text-xs font-bold tracking-widest text-slate-400 mb-1">NEARBY</h2>
-        <div className="divide-y divide-slate-50">
-          {nearby.map((item, i) => (
-            <ToggleRow key={item.label} {...item} onChange={() => toggleNearby(i)} />
-          ))}
-        </div>
-      </section>
+    <></>
+    // <div className={`bg-white px-5 py-5 space-y-6 ${className}`}>
+    //   {/*
+    //   <section>
+    //     <h2 className="text-xs font-bold tracking-widest text-slate-400 mb-1">NEARBY</h2>
+    //     <div className="divide-y divide-slate-50">
+    //       {nearby.map((item, i) => (
+    //         <ToggleRow key={item.label} {...item} onChange={() => toggleNearby(i)} />
+    //       ))}
+    //     </div>
+    //   </section>
 
-      <hr className="border-slate-100" />
+    //   <hr className="border-slate-100" />
+    //   */}
 
-      <section>
-        <h2 className="text-xs font-bold tracking-widest text-slate-400 mb-1">MAP LAYERS</h2>
-        <div className="divide-y divide-slate-50">
-          {layers.map((item, i) => (
-            <ToggleRow key={item.label} {...item} onChange={() => toggleLayer(i)} />
-          ))}
-        </div>
-      </section>
-    </div>
+    //   {/* <section>
+    //     <h2 className="text-xs font-bold tracking-widest text-slate-400 mb-1">MAP LAYERS</h2>
+    //     <div className="divide-y divide-slate-50">
+    //       {layers.map((item, i) => (
+    //         <ToggleRow key={item.label} {...item} onChange={() => toggleLayer(i)} />
+    //       ))}
+    //     </div>
+    //   </section> */}
+    // </div>
   )
 }

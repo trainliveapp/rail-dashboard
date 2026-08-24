@@ -26,7 +26,7 @@ const categoryTone = {
   crowded_platform: 'amber',
 }
 
-export default function ReportIssueModal({ onClose }) {
+export default function ReportIssueModal({ onClose, onReportSubmitted }) {
   const { user } = useAuth()
   const [category, setCategory] = useState('revenue')
   const [where, setWhere] = useState('train')
@@ -81,7 +81,7 @@ export default function ReportIssueModal({ onClose }) {
     setSubmitting(true)
     const cat = reportCategories.find((c) => c.key === category)
     try {
-      await postReport({
+      const report = {
         stationName: matchedStation?.name || null,
         locationText: matchedStation ? null : locationQuery.trim() || null,
         category,
@@ -89,7 +89,9 @@ export default function ReportIssueModal({ onClose }) {
         tone: categoryTone[category] || 'blue',
         message: message.trim() || `${cat.label} reported ${where === 'train' ? 'on the train' : 'at the station'}.`,
         whereOn: where,
-      })
+      }
+      await postReport(report)
+      onReportSubmitted?.(report)
       setSubmitted(true)
       setTimeout(onClose, 1400)
     } catch (err) {

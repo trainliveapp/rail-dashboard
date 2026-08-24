@@ -84,6 +84,18 @@ function badgeIcon(type, color, size = 28) {
   })
 }
 
+function reportMarkerIcon(count, color = '#dc2626') {
+  return L.divIcon({
+    html: `<div style="position:relative;width:34px;height:34px;">
+      <div style="width:34px;height:34px;border-radius:9999px;background:${color};display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.35);border:2px solid white;">${ICONS.report}</div>
+      <div style="position:absolute;top:-7px;right:-8px;min-width:18px;height:18px;padding:0 4px;border-radius:9999px;background:#0f172a;color:white;border:2px solid white;font:700 10px/14px system-ui;text-align:center;">${count}</div>
+    </div>`,
+    className: '',
+    iconSize: [34, 34],
+    iconAnchor: [17, 17],
+  })
+}
+
 function priceIcon(price) {
   return L.divIcon({
     html: `<div style="display:flex;align-items:center;gap:6px;">
@@ -248,19 +260,17 @@ export default function MapPanel({
 
   useEffect(() => {
     const fetchLiveTrains = async () => {
-      const results = await Promise.all(trackedLines.map(async (lineId) => {
-        try {
-          const response = await fetch(`https://api.tfl.gov.uk/Line/${lineId}/VehiclePositions/inbound`)
-          const data = await response.json()
-          return (Array.isArray(data) ? data.flat() : []).map((train) => ({ ...train, lineId }))
-        } catch {
-          return []
-        }
-      }))
-      setLiveTrains(results.flat().filter((train) => train.latitude && train.longitude))
+      try {
+        const response = await fetch(`https://api.tfl.gov.uk/Line/${trackedLines.join(',')}/VehiclePositions`)
+        if (!response.ok) return
+        const data = await response.json()
+        setLiveTrains((Array.isArray(data) ? data : []).filter((train) => train.latitude && train.longitude))
+      } catch {
+        // Keep the last successful positions when TfL is unavailable.
+      }
     }
     fetchLiveTrains()
-    const interval = setInterval(fetchLiveTrains, 5000)
+    const interval = setInterval(fetchLiveTrains, 30000)
     return () => clearInterval(interval)
   }, [])
 
@@ -284,18 +294,37 @@ export default function MapPanel({
     for (const report of communityReports) {
       const station = stations.find((item) => item.name === report.stationName)
       if (!station) continue
-      const key = `${station.id}:${report.category}`
+      const key = station.id
       const existing = grouped.get(key)
-      if (!existing) grouped.set(key, { ...report, station, reportCount: 1 })
+      if (!existing) grouped.set(key, { ...report, station, reportCount: 1, categories: report.category ? [report.category] : [] })
       else grouped.set(key, {
         ...existing,
         reportCount: existing.reportCount + 1,
         confirms: Math.max(existing.confirms || 0, report.confirms || 0),
+        categories: report.category && !existing.categories.includes(report.category)
+          ? [...existing.categories, report.category]
+          : existing.categories,
         ...(new Date(report.createdAt) > new Date(existing.createdAt) ? report : {}),
       })
     }
     return [...grouped.values()]
   }, [communityReports])
+
+  const handleReportSubmitted = (report) => {
+    if (!report.stationName) return
+    setCommunityReports((prev) => [
+      {
+        ...report,
+        id: `local-${Date.now()}`,
+        kind: 'report',
+        tone: report.tone || 'blue',
+        status: 'ACTIVE',
+        confirms: 0,
+        createdAt: new Date().toISOString(),
+      },
+      ...prev,
+    ])
+  }
 
   const handleConfirmReport = async (report) => {
     if (confirmingReport) return
@@ -469,12 +498,13 @@ export default function MapPanel({
           ))}
 
         {zoom >= STATION_VISIBLE_ZOOM && groupedReports.map((report) => (
-          <Marker key={`report-${report.id}`} position={[report.station.lat, report.station.lng]} icon={badgeIcon('report', '#dc2626', 32)} zIndexOffset={500}>
+          <Marker key={`report-${report.station.id}`} position={[report.station.lat, report.station.lng]} icon={reportMarkerIcon(report.reportCount, report.tone === 'rose' ? '#be123c' : report.tone === 'amber' ? '#d97706' : '#2563eb')} zIndexOffset={500}>
             <Popup minWidth={240}>
               <div className="text-sm text-slate-800">
-                <p className="font-bold text-red-600 mb-1">Community report</p>
+                <p className="font-bold text-red-600 mb-1">{report.reportCount} community report{report.reportCount === 1 ? '' : 's'}</p>
                 <p className="font-semibold">{report.label || report.category}</p>
                 <p className="text-slate-500">{report.station.name}</p>
+                {report.categories.length > 1 && <p className="text-xs text-slate-500 mt-1">{report.categories.join(' · ')}</p>}
                 {report.description && <p className="mt-2">{report.description}</p>}
                 <div className="flex items-center justify-between gap-2 mt-3 text-xs text-slate-400">
                   <span>{report.reportCount} report{report.reportCount === 1 ? '' : 's'} · {report.status || 'ACTIVE'}</span>
@@ -563,7 +593,7 @@ export default function MapPanel({
         </button>
       </div>
 
-      <div className="hidden sm:block absolute bottom-24 left-3 z-[1000] bg-white shadow-sm rounded-xl px-4 py-3 text-xs text-slate-600">
+      {/* <div className="hidden sm:block absolute bottom-24 left-3 z-[1000] bg-white shadow-sm rounded-xl px-4 py-3 text-xs text-slate-600">
         <p className="font-bold tracking-widest text-[10px] text-slate-400 mb-2">LEGEND</p>
         <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
           <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-red-600" /> Delay</span>
@@ -571,12 +601,17 @@ export default function MapPanel({
           <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-violet-600" /> Report</span>
           <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-500" /> On time</span>
         </div>
-      </div>
+      </div> */}
 
       {reportingStation && (
         <StationQuickReportModal station={reportingStation} onClose={() => setReportingStation(null)} />
       )}
-      {reportModalOpen && <ReportIssueModal onClose={() => setReportModalOpen(false)} />}
+      {reportModalOpen && (
+        <ReportIssueModal
+          onClose={() => setReportModalOpen(false)}
+          onReportSubmitted={handleReportSubmitted}
+        />
+      )}
     </div>
   )
 }

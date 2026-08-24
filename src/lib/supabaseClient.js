@@ -37,6 +37,8 @@ function createNoopSupabaseClient() {
       getSession: async () => ({ data: { session: null }, error: null }),
       onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }),
       signOut: async () => ({ error: null }),
+      signUp: async () => ({ data: { session: null }, error: new Error(missingConfigMessage) }),
+      signInWithPassword: async () => ({ data: { session: null }, error: new Error(missingConfigMessage) }),
     },
     channel: () => ({
       on() {

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 
 const glow = { textShadow: '0 0 6px rgba(251,191,36,0.55)' }
 const boardFont = { fontFamily: 'var(--font-board)' }
+const departuresApiUrl = import.meta.env.VITE_DEPARTURES_API_URL
 
 function BigClock() {
   const [time, setTime] = useState(new Date())
@@ -97,6 +98,8 @@ export default function DepartureBoards() {
   const [boards, setBoards] = useState([])
 
   useEffect(() => {
+    if (!departuresApiUrl) return
+
     // Function to fetch and filter the boards
     const fetchBoards = () => {
       const now = new Date()
@@ -106,8 +109,11 @@ export default function DepartureBoards() {
 
       Promise.allSettled(
         BOARDS.map(board => 
-          fetch(`http://localhost:8000/unified-board/${board.id}`)
-            .then(res => res.json())
+          fetch(`${departuresApiUrl}/unified-board/${board.id}`)
+            .then(res => {
+              if (!res.ok) throw new Error(`Departure board request failed: ${res.status}`)
+              return res.json()
+            })
             .then(data => {
               // As time passes, past trains drop off, and future trains appear automatically!
               let futureTrains = data.filter(train => {
@@ -133,48 +139,49 @@ export default function DepartureBoards() {
     fetchBoards()
 
     // THEN, re-fetch every 60 seconds so the board updates automatically!
-    const interval = setInterval(fetchBoards, 10000)
+    const interval = setInterval(fetchBoards, 60000)
 
     // Clean up the timer when the component unmounts
     return () => clearInterval(interval)
   }, [])
 
   return (
-    <section>
-      <h2 className="text-2xl font-bold text-slate-900 mb-1">Live Departure Boards</h2>
-      <p className="text-sm text-slate-500 mb-4">Real-time data powered by TrainLive API.</p>
+//     <section>
+//       <h2 className="text-2xl font-bold text-slate-900 mb-1">Live Departure Boards</h2>
+//       <p className="text-sm text-slate-500 mb-4">Real-time data powered by TrainLive API.</p>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {boards.map((boardData) => {
-          const [featured, ...rest] = boardData.departures
-          return (
-<div key={boardData.station} className="relative bg-neutral-800 rounded-2xl p-2.5 shadow-lg">
-              {['top-1.5 left-1.5', 'top-1.5 right-1.5', 'bottom-1.5 left-1.5', 'bottom-1.5 right-1.5'].map((pos) => (
-  <span key={pos} className={`absolute ${pos} w-1.5 h-1.5 rounded-full bg-neutral-600`} />
-))}
-              <div className="bg-black rounded-xl overflow-hidden">
-                <div className="flex items-start justify-between p-4 pb-2 border-b border-neutral-800">
-                  <h3 className="font-semibold text-amber-500 tracking-wide" style={boardFont}>{boardData.station}</h3>
-                  <span className="flex items-center gap-1 text-xs font-medium text-emerald-400">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> LIVE
-                  </span>
-                </div>
-                {featured && <FeaturedDeparture dep={featured} />}
-                {rest.length > 0 && (
-                  <div className="px-3 pt-1 pb-1 border-t border-neutral-800 max-h-48 overflow-y-auto">
-                    {rest.map((dep, i) => <CompactDeparture key={i} dep={dep} />)}
-                  </div>
-                )}
-                <BigClock />
-              </div>
-              <div className="flex items-center justify-between px-2 pt-2 text-[9px] font-medium text-neutral-500 tracking-widest">
-                <span>LIVE DEPARTURES</span>
-                <span>RAIL INFO · SYS 3.2</span>
-              </div>
-            </div>
-          )
-        })}
-      </div>
-    </section>
+//       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+//         {boards.map((boardData) => {
+//           const [featured, ...rest] = boardData.departures
+//           return (
+// <div key={boardData.station} className="relative bg-neutral-800 rounded-2xl p-2.5 shadow-lg">
+//               {['top-1.5 left-1.5', 'top-1.5 right-1.5', 'bottom-1.5 left-1.5', 'bottom-1.5 right-1.5'].map((pos) => (
+//   <span key={pos} className={`absolute ${pos} w-1.5 h-1.5 rounded-full bg-neutral-600`} />
+// ))}
+//               <div className="bg-black rounded-xl overflow-hidden">
+//                 <div className="flex items-start justify-between p-4 pb-2 border-b border-neutral-800">
+//                   <h3 className="font-semibold text-amber-500 tracking-wide" style={boardFont}>{boardData.station}</h3>
+//                   <span className="flex items-center gap-1 text-xs font-medium text-emerald-400">
+//                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> LIVE
+//                   </span>
+//                 </div>
+//                 {featured && <FeaturedDeparture dep={featured} />}
+//                 {rest.length > 0 && (
+//                   <div className="px-3 pt-1 pb-1 border-t border-neutral-800 max-h-48 overflow-y-auto">
+//                     {rest.map((dep, i) => <CompactDeparture key={i} dep={dep} />)}
+//                   </div>
+//                 )}
+//                 <BigClock />
+//               </div>
+//               {/* <div className="flex items-center justify-between px-2 pt-2 text-[9px] font-medium text-neutral-500 tracking-widest">
+//                 <span>LIVE DEPARTURES</span>
+//                 <span>RAIL INFO · SYS 3.2</span>
+//               </div> */}
+//             </div>
+//           )
+//         })}
+//       </div>
+//     </section>
+<></>
   )
 }
