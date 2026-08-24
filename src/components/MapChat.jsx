@@ -16,9 +16,6 @@ const TUBE_LINES = [
   "elizabeth"
 ];
 export default function MapChat() {
-
-  console.log("🔥 MAPCHAT LOADED");
-
   const [open, setOpen] = useState(false);
   const [line, setLine] = useState("central");
   const [messages, setMessages] = useState([]);
@@ -88,10 +85,7 @@ export default function MapChat() {
 
 
 async function sendMessage() {
-  console.log("SEND BUTTON CLICKED", text);
-
   if (!text.trim()) {
-    console.log("EMPTY MESSAGE");
     return;
   }
 
@@ -103,8 +97,6 @@ async function sendMessage() {
       line: line
     });
 
-  console.log("INSERT RESULT", error);
-
   if (error) {
     console.error(error);
     return;
@@ -114,215 +106,105 @@ async function sendMessage() {
 }
 
   return (
-
     <>
-
       {!open && (
-
         <button
-  onClick={() => setOpen(true)}
-  aria-label="Open LiveChat"
-
-  className="
-  ml-2
-  bg-blue-600
-  text-white
-  px-3
-  rounded
-  "
->
-  <MessageCircle size={16}/>
-  <span>LiveChat</span>
-</button>
-
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label="Open live chat"
+          className="group flex items-center gap-2.5 rounded-full bg-slate-950 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-950/25 transition-transform hover:-translate-y-0.5 hover:bg-blue-700 active:translate-y-0"
+        >
+          <span className="relative flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 transition-colors group-hover:bg-blue-400">
+            <MessageCircle size={17} strokeWidth={2.25} />
+            <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-slate-950 bg-emerald-400" />
+          </span>
+          <span>Live chat</span>
+        </button>
       )}
-
-
 
       {open && (
-
-        <div
-
-          className="
-          fixed
-          right-5
-          bottom-5
-          z-[2000]
-          w-80
-          h-96
-          bg-white
-          rounded-xl
-          shadow-2xl
-          flex
-          flex-col
-          "
-
-        >
-
-
-          <div className="
-          flex
-          justify-between
-          items-center
-          p-3
-          border-b
-          ">
-
-
-            <h3 className="font-bold">
-
-              🚇 {line}
-
-            </h3>
-
-
-            <button
-              onClick={() => setOpen(false)}
-            >
-
-              <X/>
-
-            </button>
-
-
-          </div>
-
-
-
-
-          <select
-
-            value={line}
-
-            onChange={(e)=>setLine(e.target.value)}
-
-            className="
-            m-2
-            border
-            rounded
-            p-2
-            "
-
-          >
-
-            {TUBE_LINES.map(item => (
-
-              <option key={item} value={item}>
-
-                {item}
-
-              </option>
-
-            ))}
-
-          </select>
-
-
-
-
-
-          <div className="
-          flex-1
-          overflow-y-auto
-          p-3
-          ">
-
-
-            {messages.map((m,index)=>(
-
-              <div
-
-                key={index}
-
-                className="
-                mb-2
-                bg-gray-100
-                rounded
-                p-2
-                "
-
-              >
-
-                <b>{m.username}</b>
-
-                <p>{m.message}</p>
-
-
+        <div className="fixed bottom-5 right-5 z-[2000] flex h-[min(520px,calc(100vh-2rem))] w-[min(380px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-950/20">
+          <div className="flex items-center justify-between bg-slate-950 px-4 py-4 text-white">
+            <div className="flex items-center gap-3">
+              <span className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600">
+                <MessageCircle size={20} />
+                <span className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full border-2 border-blue-600 bg-emerald-400" />
+              </span>
+              <div>
+                <h3 className="text-sm font-bold">Live chat</h3>
+                <p className="mt-0.5 text-xs capitalize text-slate-300">{line} line community</p>
               </div>
-
-            ))}
-
-
-          </div>
-
-
-
-
-
-          <div className="
-          flex
-          p-2
-          border-t
-          ">
-
-
-            <input
-
-              className="
-              flex-1
-              border
-              rounded
-              px-2
-              "
-
-              value={text}
-
-              onChange={(e)=>setText(e.target.value)}
-
-              onKeyDown={(e)=>{
-
-                if(e.key==="Enter"){
-
-                  sendMessage();
-
-                }
-
-              }}
-
-              placeholder="Send message..."
-
-            />
-
-
+            </div>
             <button
-
-              onClick={sendMessage}
-
-              className="
-              ml-2
-              bg-blue-600
-              text-white
-              px-3
-              rounded
-              "
-
+              type="button"
+              onClick={() => setOpen(false)}
+              aria-label="Close live chat"
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-300 transition-colors hover:bg-white/10 hover:text-white"
             >
-
-              <Send size={16}/>
-
+              <X size={19} />
             </button>
-
-
           </div>
 
+          <div className="border-b border-slate-100 bg-slate-50 px-4 py-3">
+            <label htmlFor="chat-line" className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-slate-400">
+              Chat channel
+            </label>
+            <select
+              id="chat-line"
+              value={line}
+              onChange={(e) => setLine(e.target.value)}
+              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium capitalize text-slate-800 outline-none transition-shadow focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+            >
+              {TUBE_LINES.map((item) => (
+                <option key={item} value={item}>{item} line</option>
+              ))}
+            </select>
+          </div>
 
+          <div className="flex-1 overflow-y-auto bg-white px-4 py-4">
+            {messages.length === 0 ? (
+              <div className="flex h-full flex-col items-center justify-center px-6 text-center">
+                <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+                  <MessageCircle size={22} />
+                </span>
+                <p className="text-sm font-semibold text-slate-800">Start the conversation</p>
+                <p className="mt-1 text-xs leading-relaxed text-slate-400">Share a delay, ask a question, or help another passenger.</p>
+              </div>
+            ) : (
+              messages.map((message, index) => (
+                <div key={message.id || index} className="mb-3 max-w-[88%] rounded-xl rounded-tl-sm bg-slate-100 px-3 py-2.5 last:mb-0">
+                  <p className="mb-1 text-[11px] font-bold text-blue-700">{message.username}</p>
+                  <p className="break-words text-sm leading-relaxed text-slate-700">{message.message}</p>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="border-t border-slate-100 bg-slate-50 p-3">
+            <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-1.5 pl-3 shadow-sm focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/15">
+              <input
+                aria-label="Chat message"
+                className="min-w-0 flex-1 bg-transparent py-1.5 text-sm text-slate-800 outline-none placeholder:text-slate-400"
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") sendMessage() }}
+                placeholder="Write a message..."
+              />
+              <button
+                type="button"
+                onClick={sendMessage}
+                aria-label="Send message"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white transition-colors hover:bg-blue-700 disabled:bg-slate-300"
+                disabled={!text.trim()}
+              >
+                <Send size={16} />
+              </button>
+            </div>
+          </div>
         </div>
-
       )}
-
-
     </>
 
-  );
+  )
 
 }

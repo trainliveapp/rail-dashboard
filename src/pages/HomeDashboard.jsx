@@ -141,7 +141,7 @@ export default function HomeDashboard() {
           }}
           className="h-full"
         />
-        {planner.expanded ? (
+        {false && (planner.expanded ? (
           <div className="absolute top-4 left-3 right-3 z-[1100] max-h-[calc(100%-2rem)] overflow-y-auto lg:left-1/2 lg:right-auto lg:w-[min(640px,calc(100%-2rem))] lg:-translate-x-1/2">
             <JourneyPlannerPanel planner={planner} onClose={() => planner.setExpanded(false)} />
           </div>
@@ -151,7 +151,7 @@ export default function HomeDashboard() {
             toStation={planner.toStation}
             onExpand={() => planner.setExpanded(true)}
           />
-        )}
+        ))}
         <div className="absolute bottom-4 left-4 z-[1000]">
           <MapChat />
         </div>

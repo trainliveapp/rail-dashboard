@@ -86,6 +86,7 @@ export default function SidebarTop({ className = '', onSearch }) {
         )}
       </div>
 
+      {false && <>
       {/* Plan journey */}
       <div className="px-5 py-5">
         <section>
@@ -192,6 +193,7 @@ export default function SidebarTop({ className = '', onSearch }) {
           </button>
         </section>
       </div>
+      </>}
     </div>
   )
 }
