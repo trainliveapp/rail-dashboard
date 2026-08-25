@@ -8,7 +8,7 @@ function tallyByCategory(reports) {
   const counts = {}
   for (const cat of stationReportCategories) counts[cat.key] = 0
   for (const r of reports) {
-    if (r.kind === 'report' && counts[r.category] !== undefined) counts[r.category] += 1
+    if (r.kind === 'report' && ['ACTIVE', 'CONFIRMED'].includes(r.status) && counts[r.category] !== undefined) counts[r.category] += 1
   }
   return counts
 }

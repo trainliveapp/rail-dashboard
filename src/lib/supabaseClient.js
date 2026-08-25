@@ -7,6 +7,27 @@ const missingConfigMessage =
 
 function createNoopChain() {
   const chain = {
+    select() {
+      return chain
+    },
+    in() {
+      return chain
+    },
+    eq() {
+      return chain
+    },
+    order() {
+      return chain
+    },
+    limit() {
+      return chain
+    },
+    maybeSingle() {
+      return chain
+    },
+    single() {
+      return chain
+    },
     then(onFulfilled, onRejected) {
       return Promise.resolve({ data: null, error: new Error(missingConfigMessage) }).then(
         onFulfilled,
@@ -59,8 +80,10 @@ function createNoopSupabaseClient() {
   }
 }
 
+const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey)
+
 const supabase =
-  supabaseUrl && supabaseAnonKey
+  isSupabaseConfigured
     ? createClient(supabaseUrl, supabaseAnonKey, {
         auth: {
           flowType: 'pkce',
@@ -74,4 +97,4 @@ const supabase =
         return createNoopSupabaseClient()
       })()
 
-export { supabase }
+export { supabase, isSupabaseConfigured }

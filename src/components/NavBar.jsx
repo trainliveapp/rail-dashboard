@@ -72,11 +72,7 @@ export default function NavBar() {
               </>
             )}
           </div>
-        ) : (
-          <Link to="/signin" className="bg-blue-700 hover:bg-blue-800 transition-colors text-white text-sm font-semibold px-4 py-2 rounded-full">
-            Sign in
-          </Link>
-        )}
+        ) : null}
 
         {menuOpen && (
           <>

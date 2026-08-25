@@ -68,9 +68,6 @@ export default function FloatingTopBar() {
         )}
       </div>
 
-      <Link to="/signin" className="bg-blue-700 hover:bg-blue-800 transition-colors text-white text-sm font-semibold px-5 py-2.5 rounded-full shadow-lg shrink-0">
-        Sign in
-      </Link>
     </div>
   )
 }

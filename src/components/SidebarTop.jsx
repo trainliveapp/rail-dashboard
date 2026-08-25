@@ -30,7 +30,7 @@ export default function SidebarTop({ className = '', onSearch }) {
 
   return (
     <div className={`bg-white ${className}`}>
-      {/* Logo + sign in */}
+      {/* Logo */}
       <div className="relative flex items-center justify-between px-5 py-4 border-b border-slate-100">
         <div className="flex items-center gap-3">
           <button
@@ -43,10 +43,6 @@ export default function SidebarTop({ className = '', onSearch }) {
           </button>
           <img src={logo} alt="TrainLive" className="h-10 w-auto" />
         </div>
-        <Link to="/signin" className="bg-blue-600 hover:bg-blue-700 transition-colors text-white text-sm font-medium px-4 py-2 rounded-full">
-          Sign in
-        </Link>
-
         {menuOpen && (
           <>
             <button

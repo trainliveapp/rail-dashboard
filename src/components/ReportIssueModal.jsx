@@ -7,7 +7,6 @@ import {
 import { reportCategories, stations } from '../data/mockData'
 import { findNearestStation } from '../lib/geo'
 import { postReport } from '../lib/stationUpdates'
-import { useAuth } from '../lib/AuthContext'
 
 const icons = { Clock3, Ban, Construction, Users, Ticket, Accessibility, Sparkles, ShieldAlert, Megaphone, CloudRain, CircleHelp }
 
@@ -27,8 +26,7 @@ const categoryTone = {
 }
 
 export default function ReportIssueModal({ onClose, onReportSubmitted }) {
-  const { user } = useAuth()
-  const [category, setCategory] = useState('revenue')
+  const [category, setCategory] = useState('train_delay')
   const [where, setWhere] = useState('train')
   const [message, setMessage] = useState('')
   const [locationQuery, setLocationQuery] = useState('')
@@ -73,10 +71,6 @@ export default function ReportIssueModal({ onClose, onReportSubmitted }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!user) {
-      setError('Sign in to submit a report.')
-      return
-    }
     setError('')
     setSubmitting(true)
     const cat = reportCategories.find((c) => c.key === category)
@@ -127,12 +121,6 @@ export default function ReportIssueModal({ onClose, onReportSubmitted }) {
             <X size={16} />
           </button>
         </div>
-
-        {!user && (
-          <div className="bg-amber-50 border border-amber-100 rounded-xl px-3 py-2.5 mb-5 text-xs text-amber-700">
-            Sign in to submit a report, other riders won't see it otherwise.
-          </div>
-        )}
 
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
           {reportCategories.map((cat) => {

@@ -2,14 +2,12 @@ import { useEffect, useState } from 'react'
 import { Info, MapPin, Check, Loader2 } from 'lucide-react'
 import { stationReportCategories } from '../data/mockData'
 import { getStationUpdates, postReport } from '../lib/stationUpdates'
-import { useAuth } from '../lib/AuthContext'
 
 // The category-picker that opens after tapping "Report Issue" on a
 // station's summary card. Deliberately simpler than the full
 // ReportIssueModal, the station is already known from the map, so there's
 // no location search here, just pick what's happening and confirm.
 export default function StationQuickReportModal({ station, onClose }) {
-  const { user } = useAuth()
   const [selected, setSelected] = useState(null)
   const [counts, setCounts] = useState({})
   const [submitting, setSubmitting] = useState(false)
@@ -29,10 +27,6 @@ export default function StationQuickReportModal({ station, onClose }) {
 
   const handleConfirm = async () => {
     if (!selected) return
-    if (!user) {
-      setError('Sign in to submit a report.')
-      return
-    }
     setSubmitting(true)
     setError('')
     try {

@@ -36,6 +36,10 @@ function mapRow(row) {
   }
 }
 
+function isVisibleUpdate(row) {
+  return row.kind === 'chat' || row.status === 'ACTIVE' || row.status === 'CONFIRMED'
+}
+
 // Everything currently posted for the stations a journey option passes
 // through, newest first. Called once when a journey is selected.
 export async function getStationUpdates(stationNames) {
@@ -49,7 +53,7 @@ export async function getStationUpdates(stationNames) {
     .limit(20)
 
   if (error) throw error
-  return data.map(mapRow)
+  return data.map(mapRow).filter(isVisibleUpdate)
 }
 
 // Keeps the feed live: any row inserted for one of these stations while the
@@ -83,10 +87,9 @@ export function subscribeToStationUpdates(stationNames, onInsert) {
 export async function postReport({ stationName, locationText, category, label, tone, message, whereOn }) {
   const { data: sessionData } = await supabase.auth.getSession()
   const user = sessionData.session?.user
-  if (!user) throw new Error('Sign in to submit a report.')
   if (!stationName && !locationText) throw new Error('Add a location for this report.')
 
-  const { error } = await supabase.from('station_updates').insert({
+  const { data, error } = await supabase.from('station_updates').insert({
     station_name: stationName,
     kind: 'report',
     category,
@@ -95,11 +98,12 @@ export async function postReport({ stationName, locationText, category, label, t
     message,
     where_on: whereOn,
     location_text: locationText || null,
-    author_id: user.id,
-    author_initial: (user.email || '?')[0],
-  })
+    author_id: user?.id || null,
+    author_initial: user ? (user.email || '?')[0] : 'A',
+  }).select('*').single()
 
   if (error) throw error
+  return mapRow(data)
 }
 
 // Used by a chat-style composer at a station, short freeform updates for

@@ -11,18 +11,7 @@ import StationPopup from './StationPopup'
 import StationQuickReportModal from './StationQuickReportModal'
 
 const CENTER = [51.5246, -0.1339]
-const trackedLines = ['victoria', 'jubilee', 'central', 'northern', 'piccadilly']
 const lineColors = { victoria: '#0098D4', jubilee: '#A0A5A9', central: '#DC241F', northern: '#1A1A1A', piccadilly: '#003688' }
-
-function trainIcon(lineId) {
-  const color = lineColors[lineId] || '#334155'
-  return L.divIcon({
-    html: `<div style="width:24px;height:24px;border-radius:50%;background:${color};border:3px solid white;box-shadow:0 1px 4px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;color:white;font-size:12px">●</div>`,
-    className: '',
-    iconSize: [24, 24],
-    iconAnchor: [12, 12],
-  })
-}
 
 // A journey's line highlight should only light up the stretch of track
 // actually being used, not the entire line across London, this bounds the
@@ -252,26 +241,9 @@ export default function MapPanel({
   const [reportModalOpen, setReportModalOpen] = useState(false)
   const [communityReports, setCommunityReports] = useState([])
   const [confirmingReport, setConfirmingReport] = useState(null)
-  const [liveTrains, setLiveTrains] = useState([])
 
   useEffect(() => {
     getStationScores(stations.map((s) => s.id)).then(setStationScores)
-  }, [])
-
-  useEffect(() => {
-    const fetchLiveTrains = async () => {
-      try {
-        const response = await fetch(`https://api.tfl.gov.uk/Line/${trackedLines.join(',')}/VehiclePositions`)
-        if (!response.ok) return
-        const data = await response.json()
-        setLiveTrains((Array.isArray(data) ? data : []).filter((train) => train.latitude && train.longitude))
-      } catch {
-        // Keep the last successful positions when TfL is unavailable.
-      }
-    }
-    fetchLiveTrains()
-    const interval = setInterval(fetchLiveTrains, 30000)
-    return () => clearInterval(interval)
   }, [])
 
   useEffect(() => {
@@ -315,14 +287,14 @@ export default function MapPanel({
     setCommunityReports((prev) => [
       {
         ...report,
-        id: `local-${Date.now()}`,
+        id: report.id || `local-${Date.now()}`,
         kind: 'report',
         tone: report.tone || 'blue',
         status: 'ACTIVE',
         confirms: 0,
-        createdAt: new Date().toISOString(),
+        createdAt: report.createdAt || new Date().toISOString(),
       },
-      ...prev,
+      ...prev.filter((item) => item.id !== report.id),
     ])
   }
 
@@ -408,10 +380,6 @@ export default function MapPanel({
           maxNativeZoom={19}
           maxZoom={19}
         />
-
-        {liveTrains.map((train, index) => (
-          <Marker key={train.vehicleId || `${train.lineId}-${index}`} position={[train.latitude, train.longitude]} icon={trainIcon(train.lineId)} />
-        ))}
 
         {routeFitPoints.length > 0 && <RouteFit points={routeFitPoints} />}
         {route?.originStation && route?.destinationStation && (

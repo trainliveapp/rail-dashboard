@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient'
+import { supabase, isSupabaseConfigured } from './supabaseClient'
 
 // Submits a rating. Only send keys for categories the person actually
 // rated, exactly like the spec's request body, partial ratings are fine.
@@ -18,6 +18,10 @@ export async function submitStationRating(stationId, ratings) {
 // One station's score. Returns an "unrated" shape (nulls, count 0) if the
 // station has no ratings yet, rather than throwing, matching the spec.
 export async function getStationScore(stationId) {
+  if (!isSupabaseConfigured) {
+    return { stationId, overallScore: null, ratingCount: 0, categoryScores: null }
+  }
+
   const { data, error } = await supabase
     .from('station_scores')
     .select('*')
@@ -47,7 +51,7 @@ export async function getStationScore(stationId) {
 // Bulk fetch for the map, one request for every visible station marker
 // instead of one request per marker, per the spec's note on this.
 export async function getStationScores(stationIds) {
-  if (!stationIds.length) return {}
+  if (!stationIds.length || !isSupabaseConfigured) return {}
 
   const { data, error } = await supabase
     .from('station_scores')

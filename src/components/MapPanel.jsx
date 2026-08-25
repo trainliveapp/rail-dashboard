@@ -5,11 +5,6 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { supabase } from "../supabase";
 
-// --- PASTE YOUR TFL KEYS HERE ---
-const TFL_APP_ID = "Trainlive"; 
-const TFL_APP_KEY = "8b6f63a1976948fa99108d128fb9a1f1";
-// ----------------------------------
-
 const center = [51.5074, -0.1278];
 
 const lines = [
@@ -67,39 +62,6 @@ export default function MapPanel() {
   const [imagePreview, setImagePreview] = useState("");
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
-
-  // --- LIVE TRAIN FETCH ---
-  useEffect(() => {
-    const fetchLiveTrains = async () => {
-      try {
-        const keyString = (TFL_APP_ID !== "YOUR_TFL_APP_ID") 
-          ? `?app_id=${TFL_APP_ID}&app_key=${TFL_APP_KEY}` 
-          : "";
-
-        const promises = trackedLines.map(lineId =>
-          fetch(`https://api.tfl.gov.uk/Line/${lineId}/VehiclePositions/inbound${keyString}`)
-            .then(res => res.json())
-            .then(data => {
-              const vehicles = Array.isArray(data) ? data.flat() : [];
-              return vehicles.map(v => ({ ...v, lineId }));
-            })
-            .catch(() => [])
-        );
-
-        const results = await Promise.all(promises);
-        const allTrains = results.flat().filter(t => t.latitude && t.longitude);
-        
-        setLiveTrains(allTrains);
-        setTrainCount(allTrains.length);
-      } catch (err) {
-        console.error("Train fetch error:", err);
-      }
-    };
-
-    fetchLiveTrains();
-    const interval = setInterval(fetchLiveTrains, 5000);
-    return () => clearInterval(interval);
-  }, []);
 
   // --- REPORTS SYNC ---
   useEffect(() => {

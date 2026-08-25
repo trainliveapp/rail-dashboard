@@ -1,13 +1,4 @@
-import { useNavigate } from 'react-router-dom'
-
 export default function WelcomeScreen({ onDismiss }) {
-  const navigate = useNavigate()
-
-  const go = (path) => {
-    onDismiss()
-    navigate(path)
-  }
-
   const continueAsGuest = () => onDismiss()
 
   return (
@@ -42,13 +33,6 @@ export default function WelcomeScreen({ onDismiss }) {
           className="w-full bg-blue-600 hover:bg-blue-500 transition-colors text-white font-semibold py-3.5 rounded-full"
         >
           Get started
-        </button>
-        <button
-          type="button"
-          onClick={() => go('/signin')}
-          className="w-full bg-white/10 hover:bg-white/15 transition-colors text-white font-medium py-3.5 rounded-full"
-        >
-          Log in
         </button>
         <p className="text-center text-xs text-white/40 pt-1">
           By continuing you agree to TrainLive's Terms of Service and Privacy Policy
