@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { MessageCircle, X, Send } from "lucide-react";
 import { supabase } from "../supabase";
+import liveIcon from "./live-icon.png";
 
 
 const TUBE_LINES = [
@@ -112,11 +113,11 @@ async function sendMessage() {
           type="button"
           onClick={() => setOpen(true)}
           aria-label="Open live chat"
-          className="group flex items-center gap-2.5 rounded-full bg-slate-950 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-950/25 transition-transform hover:-translate-y-0.5 hover:bg-blue-700 active:translate-y-0"
+          className="group flex items-center gap-2.5 rounded-full border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-md shadow-slate-200/80 transition-transform hover:-translate-y-0.5 hover:bg-slate-50 active:translate-y-0"
         >
-          <span className="relative flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 transition-colors group-hover:bg-blue-400">
-            <MessageCircle size={17} strokeWidth={2.25} />
-            <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-slate-950 bg-emerald-400" />
+          <span className="relative flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 transition-colors group-hover:bg-slate-200 overflow-hidden">
+            <img src={liveIcon} alt="Live chat" className="h-6 w-6 object-contain" />
+            <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-400" />
           </span>
           <span>Live chat</span>
         </button>
@@ -124,15 +125,15 @@ async function sendMessage() {
 
       {open && (
         <div className="fixed bottom-5 right-5 z-[2000] flex h-[min(520px,calc(100vh-2rem))] w-[min(380px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-950/20">
-          <div className="flex items-center justify-between bg-slate-950 px-4 py-4 text-white">
+          <div className="flex items-center justify-between bg-white px-4 py-4 text-slate-900 border-b border-slate-200">
             <div className="flex items-center gap-3">
-              <span className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600">
-                <MessageCircle size={20} />
-                <span className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full border-2 border-blue-600 bg-emerald-400" />
+              <span className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 overflow-hidden border border-slate-200">
+                <img src={liveIcon} alt="Live chat" className="h-6 w-6 object-contain" />
+                <span className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-400" />
               </span>
               <div>
                 <h3 className="text-sm font-bold">Live chat</h3>
-                <p className="mt-0.5 text-xs capitalize text-slate-300">{line} line community</p>
+                <p className="mt-0.5 text-xs capitalize text-slate-500">{line} line community</p>
               </div>
             </div>
             <button
