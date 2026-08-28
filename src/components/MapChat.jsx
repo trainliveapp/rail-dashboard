@@ -14,7 +14,9 @@ const TUBE_LINES = [
   "circle",
   "metropolitan",
   "bakerloo",
-  "elizabeth"
+  "elizabeth",
+  "south western railway",
+  "great western railway"
 ];
 export default function MapChat() {
   const [open, setOpen] = useState(false);
