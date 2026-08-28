@@ -22,10 +22,15 @@ export default function StationReportModal({ stationName, isOpen, onClose }) {
     e.preventDefault();
     setSubmitting(true);
 
-    const { error } = await supabase.from("station_reports").insert({
+    const { error } = await supabase.from("station_updates").insert({
       station_name: stationName,
-      report_type: type,
-      message: message.trim(),
+      kind: "report",
+      category: type,
+      label: type.toUpperCase(),
+      tone: "blue",
+      message: message.trim() || `${type} reported at ${stationName}.`,
+      status: "ACTIVE",
+      author_initial: "A",
     });
 
     if (!error) {

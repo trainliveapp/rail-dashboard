@@ -66,13 +66,13 @@ export default function MapPanel() {
   // --- REPORTS SYNC ---
   useEffect(() => {
     const fetchReports = async () => {
-      const { data } = await supabase.from("station_reports").select("*").order("created_at", { ascending: false });
+      const { data } = await supabase.from("station_updates").select("*").eq("kind", "report").order("created_at", { ascending: false });
       if (data) setReports(data);
     };
     fetchReports();
 
     const channel = supabase.channel("public-reports")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "station_reports" }, (payload) => {
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "station_updates", filter: "kind=eq.report" }, (payload) => {
         setReports((prev) => [payload.new, ...prev]);
       }).subscribe();
 
@@ -120,7 +120,16 @@ export default function MapPanel() {
 
   const submitReport = async () => {
     if (!reportText.trim()) return;
-    await supabase.from("station_reports").insert({ station_name: reportModal.station, message: reportText, username: "TrainLive User" });
+    await supabase.from("station_updates").insert({
+      station_name: reportModal.station,
+      kind: "report",
+      category: "other",
+      label: "REPORT",
+      tone: "blue",
+      message: reportText,
+      author_initial: "A",
+      status: "ACTIVE",
+    });
     setReportText("");
     setReportModal({ open: false, station: "" });
   };
