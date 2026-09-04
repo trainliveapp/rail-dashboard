@@ -17,8 +17,7 @@ const TUBE_LINES = [
   "great western railway",
 ];
 
-const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
-const ACCEPTED_MEDIA_TYPES = ["image/jpeg", "image/png", "image/webp", "video/mp4", "video/webm", "video/quicktime"];
+const MAX_FILE_SIZE = 50 * 1024 * 1024;
 export default function MapChat() {
   const [open, setOpen] = useState(false);
   const [line, setLine] = useState("central");
@@ -27,6 +26,7 @@ export default function MapChat() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
   const [imageError, setImageError] = useState("");
+  const [selectedIsVideo, setSelectedIsVideo] = useState(false);
   const [sending, setSending] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const fileInputRef = useRef(null);
@@ -35,21 +35,25 @@ export default function MapChat() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (!ACCEPTED_MEDIA_TYPES.includes(file.type)) {
-      setImageError("Choose a JPG, PNG, WEBP, MP4, WEBM or MOV file.");
+    const isImage = ["image/jpeg", "image/png", "image/webp"].includes(file.type);
+    const isVideo = file.type.startsWith("video/");
+
+    if (!isImage && !isVideo) {
+      setImageError("Please select a JPG, PNG, WEBP or video file.");
       event.target.value = "";
       return;
     }
 
-    if (file.size > MAX_IMAGE_SIZE) {
-      setImageError("Image must be under 5MB.");
+    if (file.size > MAX_FILE_SIZE) {
+      setImageError("File must be under 50MB.");
       event.target.value = "";
       return;
     }
 
     setImageError("");
     setSelectedImage(file);
-    setImagePreview(URL.createObjectURL(file));
+    setSelectedIsVideo(isVideo);
+    setImagePreview(isVideo ? "" : URL.createObjectURL(file));
     event.target.value = "";
   };
 
@@ -57,6 +61,7 @@ export default function MapChat() {
     setSelectedImage(null);
     setImagePreview("");
     setImageError("");
+    setSelectedIsVideo(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -83,48 +88,14 @@ export default function MapChat() {
 
 
 
-  useEffect(() => {
+useEffect(() => {
+  if (!open) return;
 
-    if (!open) return;
-
-
-    loadMessages();
-
-
-    const channel = supabase
-      .channel("chat-" + line)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "chat_messages",
-          filter: `line=eq.${line}`
-        },
-        (payload) => {
-
-          setMessages(prev => [
-            ...prev,
-            payload.new
-          ]);
-
-        }
-      )
-      .subscribe();
+  loadMessages();
+}, [open, line]);
 
 
-
-    return () => {
-
-      supabase.removeChannel(channel);
-
-    };
-
-
-  }, [open, line]);
-
-
-  async function sendMessage() {
+   async function sendMessage() {
     if (sending) return;
     if (!text.trim() && !selectedImage) return;
 
@@ -133,20 +104,35 @@ export default function MapChat() {
 
     try {
       let imageUrl = null;
+      let videoUrl = null;
 
-      if (selectedImage) {
+    if (selectedImage) {
         const fileName = `${Date.now()}_${selectedImage.name.replace(/\s+/g, "-")}`;
+
+        const bucket = selectedImage.type.startsWith("video/")
+          ? "chat-videos"
+          : "chat-images";
+
         const { error: uploadError } = await supabase.storage
-          .from("chat-images")
-          .upload(fileName, selectedImage, { contentType: selectedImage.type, upsert: false });
+          .from(bucket)
+          .upload(fileName, selectedImage, {
+            contentType: selectedImage.type,
+            upsert: false,
+          });
 
         if (uploadError) {
           throw uploadError;
         }
 
-        const { data: publicUrlData } = supabase.storage.from("chat-images").getPublicUrl(fileName);
-        imageUrl = publicUrlData?.publicUrl || null;
-        if (selectedImage.type.startsWith("video/")) imageUrl = `video:${imageUrl}`;
+        const { data: publicUrlData } = supabase.storage
+          .from(bucket)
+          .getPublicUrl(fileName);
+
+        if (selectedImage.type.startsWith("video/")) {
+          videoUrl = publicUrlData?.publicUrl || null;
+        } else {
+          imageUrl = publicUrlData?.publicUrl || null;
+        }
       }
 
       const payload = {
@@ -154,16 +140,24 @@ export default function MapChat() {
         message: text.trim(),
         line,
         image_url: imageUrl,
+        video_url: videoUrl,
       };
 
-      const { error } = await supabase.from("chat_messages").insert(payload);
-      if (error) throw error;
+      const { error } = await supabase
+        .from("chat_messages")
+        .insert(payload);
+
+      if (error) {
+        throw error;
+      }
 
       setText("");
       clearSelectedImage();
+
     } catch (error) {
-      console.error(error);
+      console.error("Chat upload/send error:", error);
       setImageError(error?.message || "Could not send your message.");
+
     } finally {
       setSending(false);
     }
@@ -241,25 +235,39 @@ export default function MapChat() {
                   {message.message && (
                     <p className="break-words text-sm leading-relaxed text-slate-700">{message.message}</p>
                   )}
-                  {message.image_url?.startsWith("video:") ? (
-                    <video src={message.image_url.slice(6)} controls className="mt-2 max-h-40 w-full rounded-lg" />
-                  ) : message.image_url ? (
-                    <img src={message.image_url} alt="Shared in chat" className="mt-2 max-h-40 w-full rounded-lg object-cover" loading="lazy" />
-                  ) : null}
+                  {message.image_url && (
+                    <img
+                      src={message.image_url}
+                      alt="Shared in chat"
+                      className="mt-2 max-h-40 w-full rounded-lg object-cover"
+                      loading="lazy"
+                    />
+                  )}
+                  {message.video_url && (
+                    <video
+                      src={message.video_url}
+                      controls
+                      className="mt-2 max-h-52 w-full rounded-lg"
+                    />
+                  )}
                 </div>
               ))
             )}
           </div>
 
-          {imagePreview && (
+          {selectedImage && (
             <div className="flex items-center gap-3 border-t border-slate-100 bg-slate-50 px-3 py-2">
-              {selectedImage?.type.startsWith("video/") ? (
-                <video src={imagePreview} className="h-12 w-12 rounded-lg object-cover" />
+              {selectedIsVideo ? (
+                <video
+                  src={URL.createObjectURL(selectedImage)}
+                  className="h-12 w-16 rounded-lg object-cover"
+                  muted
+                />
               ) : (
                 <img src={imagePreview} alt="Selected preview" className="h-12 w-12 rounded-lg object-cover" />
               )}
-              <div className="min-w-0 flex-1 text-xs text-slate-500 truncate">{selectedImage?.name}</div>
-              <button type="button" onClick={clearSelectedImage} className="text-slate-400 hover:text-red-500" aria-label="Remove image">
+              <div className="min-w-0 flex-1 text-xs text-slate-500 truncate">{selectedImage.name}</div>
+              <button type="button" onClick={clearSelectedImage} className="text-slate-400 hover:text-red-500" aria-label="Remove attachment">
                 <X size={16} />
               </button>
             </div>
@@ -280,7 +288,7 @@ export default function MapChat() {
               />
               <button
                 type="button"
-                aria-label="Attach image"
+                aria-label="Attach image or video"
                 onClick={() => fileInputRef.current?.click()}
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
               >

@@ -377,12 +377,12 @@ export default function MapPanel({
       <MapContainer center={CENTER} zoom={16} zoomControl={false} className="w-full h-full">
         <MapBridge mapRef={mapRef} />
         <ZoomTracker onZoomChange={setZoom} />
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-          maxNativeZoom={19}
-          maxZoom={19}
-        />
+        
+<TileLayer
+  url={`https://api.thunderforest.com/transport-dark/{z}/{x}/{y}.png?apikey=${import.meta.env.VITE_THUNDERFOREST_API_KEY}`}
+  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; Thunderforest'
+  maxZoom={22}
+/>
 
         {routeFitPoints.length > 0 && <RouteFit points={routeFitPoints} />}
         {route?.originStation && route?.destinationStation && (

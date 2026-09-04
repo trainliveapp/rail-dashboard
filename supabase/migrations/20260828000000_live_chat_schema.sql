@@ -4,8 +4,11 @@ create table if not exists public.chat_messages (
   message text not null,
   line text not null,
   image_url text,
+  video_url text,
   created_at timestamptz not null default now()
 );
+
+alter table public.chat_messages add column if not exists video_url text;
 
 create index if not exists idx_chat_messages_line_created_at
   on public.chat_messages (line, created_at asc);
