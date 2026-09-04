@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ImagePlus, X, MapPin, Minus, Plus } from "lucide-react";
+import { ImagePlus, X, MapPin, Minus, Plus, Sun, Moon } from "lucide-react";
 import {
   MapContainer,
   TileLayer,
@@ -13,6 +13,19 @@ import "leaflet/dist/leaflet.css";
 import { supabase } from "../supabase";
 
 const CENTER = [51.5074, -0.1278];
+const MAP_THEMES = {
+  light: {
+    label: "Light map",
+    url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    attribution: "&copy; OpenStreetMap contributors",
+  },
+  dark: {
+    label: "Dark map",
+    url: "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",
+    attribution: "Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ",
+  },
+};
+const RAILWAY_TILES = "https://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png";
 
 const lines = [
   { id: "bakerloo", name: "Bakerloo", color: "#B36305" },
@@ -142,8 +155,24 @@ export default function MapPanel({
 
   const [sending, setSending] = useState(false);
   const [imageError, setImageError] = useState("");
+  const [mapTheme, setMapTheme] = useState(() => {
+    try {
+      return localStorage.getItem("trainlive-map-theme") || "light";
+    } catch {
+      return "light";
+    }
+  });
 
   const fileInputRef = useRef(null);
+
+  const selectMapTheme = (theme) => {
+    setMapTheme(theme);
+    try {
+      localStorage.setItem("trainlive-map-theme", theme);
+    } catch {
+      // The map still works when storage is unavailable.
+    }
+  };
 
   /* -----------------------------------------------------------
    * LOCATION BUTTON HANDLER
@@ -405,9 +434,16 @@ export default function MapPanel({
         <MapBridge mapRef={mapRef} />
 
         <TileLayer
-          url={`https://api.thunderforest.com/transport-dark/{z}/{x}/{y}.png?apikey=${import.meta.env.VITE_THUNDERFOREST_API_KEY}`}
-          attribution="&copy; Thunderforest &copy; OpenStreetMap contributors"
-          maxZoom={22}
+          key={mapTheme}
+          url={MAP_THEMES[mapTheme].url}
+          attribution={MAP_THEMES[mapTheme].attribution}
+          maxZoom={20}
+        />
+        <TileLayer
+          url={RAILWAY_TILES}
+          attribution="&copy; OpenRailwayMap &copy; OpenStreetMap contributors"
+          maxZoom={20}
+          opacity={0.9}
         />
 
         {/* USER LOCATION MARKER - driven by either parent's
@@ -456,6 +492,47 @@ export default function MapPanel({
           pointerEvents: "none",
         }}
       >
+        <div
+          role="group"
+          aria-label="Map theme"
+          style={{
+            position: "absolute",
+            top: "10px",
+            right: "60px",
+            display: "flex",
+            overflow: "hidden",
+            borderRadius: "7px",
+            background: "white",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.35)",
+            pointerEvents: "auto",
+          }}
+        >
+          {Object.entries(MAP_THEMES).map(([theme, settings]) => {
+            const Icon = theme === "light" ? Sun : Moon;
+            return (
+              <button
+                key={theme}
+                type="button"
+                onClick={() => selectMapTheme(theme)}
+                title={settings.label}
+                aria-label={settings.label}
+                aria-pressed={mapTheme === theme}
+                style={{
+                  ...mapBtnStyle,
+                  width: "40px",
+                  border: "none",
+                  borderRadius: 0,
+                  boxShadow: "none",
+                  background: mapTheme === theme ? "#2563eb" : "white",
+                  color: mapTheme === theme ? "white" : "#475569",
+                }}
+              >
+                <Icon size={17} />
+              </button>
+            );
+          })}
+        </div>
+
         {/* LOCATION BUTTON (top-right) */}
         <button
           type="button"

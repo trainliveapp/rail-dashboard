@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState, useMemo } from 'react'
 import { MapContainer, TileLayer, Polyline, Marker, Popup, Tooltip, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
-import { Plus, Minus, LocateFixed, Flag, ThumbsUp } from 'lucide-react'
+import { Plus, Minus, LocateFixed, Flag, ThumbsUp, Sun, Moon } from 'lucide-react'
 import { lines, housingPins, coffeePins, liveEventPin, stations } from '../data/mockData'
 import { tubeLineGeometry } from '../data/tubeLineGeometry'
 import { getStationScores } from '../lib/stationRatings'
@@ -11,6 +11,19 @@ import StationPopup from './StationPopup'
 import StationQuickReportModal from './StationQuickReportModal'
 
 const CENTER = [51.5246, -0.1339]
+const MAP_THEMES = {
+  light: {
+    label: 'Light map',
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution: '&copy; OpenStreetMap contributors',
+  },
+  dark: {
+    label: 'Dark map',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+    attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
+  },
+}
+const RAILWAY_TILES = 'https://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png'
 const lineColors = { victoria: '#0098D4', jubilee: '#A0A5A9', central: '#DC241F', northern: '#1A1A1A', piccadilly: '#003688' }
 
 // A journey's line highlight should only light up the stretch of track
@@ -130,6 +143,21 @@ function stationIcon(score, size = 18) {
   })
 }
 
+const kewBridgeStation = {
+  id: 'kew-bridge',
+  name: 'Kew Bridge',
+  lat: 51.4768,
+  lng: -0.2877,
+  lines: ['National Rail'],
+}
+
+const kewBridgeIcon = L.divIcon({
+  html: '<div style="width:14px;height:14px;border-radius:9999px;background:#dc2626;border:3px solid white;box-shadow:0 1px 4px rgba(0,0,0,.45);"></div>',
+  className: '',
+  iconSize: [14, 14],
+  iconAnchor: [7, 7],
+})
+
 function ratingIcon(rating, color = '#7f1d1d') {
   return L.divIcon({
     html: `<div style="position:relative;width:36px;height:36px;">
@@ -244,6 +272,22 @@ export default function MapPanel({
   const [reportModalOpen, setReportModalOpen] = useState(false)
   const [communityReports, setCommunityReports] = useState([])
   const [confirmingReport, setConfirmingReport] = useState(null)
+  const [mapTheme, setMapTheme] = useState(() => {
+    try {
+      return localStorage.getItem('trainlive-map-theme') || 'light'
+    } catch {
+      return 'light'
+    }
+  })
+
+  const selectMapTheme = (theme) => {
+    setMapTheme(theme)
+    try {
+      localStorage.setItem('trainlive-map-theme', theme)
+    } catch {
+      // The map still works when storage is unavailable.
+    }
+  }
 
   useEffect(() => {
     getStationScores(stations.map((s) => s.id)).then(setStationScores)
@@ -378,11 +422,27 @@ export default function MapPanel({
         <MapBridge mapRef={mapRef} />
         <ZoomTracker onZoomChange={setZoom} />
         
-<TileLayer
-  url={`https://api.thunderforest.com/transport-dark/{z}/{x}/{y}.png?apikey=${import.meta.env.VITE_THUNDERFOREST_API_KEY}`}
-  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; Thunderforest'
-  maxZoom={22}
-/>
+        <TileLayer
+          key={mapTheme}
+          url={MAP_THEMES[mapTheme].url}
+          attribution={MAP_THEMES[mapTheme].attribution}
+          maxZoom={20}
+        />
+        <TileLayer
+          url={RAILWAY_TILES}
+          attribution='&copy; OpenRailwayMap &copy; OpenStreetMap contributors'
+          maxZoom={20}
+          opacity={0.9}
+        />
+
+        {zoom >= STATION_VISIBLE_ZOOM && (
+          <Marker
+            position={[kewBridgeStation.lat, kewBridgeStation.lng]}
+            icon={kewBridgeIcon}
+            eventHandlers={{ click: () => setReportingStation(kewBridgeStation) }}
+            title="Kew Bridge"
+          />
+        )}
 
         {routeFitPoints.length > 0 && <RouteFit points={routeFitPoints} />}
         {route?.originStation && route?.destinationStation && (
@@ -537,6 +597,24 @@ export default function MapPanel({
 
 
       <div className="absolute right-3 top-3 z-[1000] flex flex-col gap-1.5 sm:gap-2">
+        <div className="flex overflow-hidden rounded-lg bg-white shadow-sm" role="group" aria-label="Map theme">
+          {Object.entries(MAP_THEMES).map(([theme, settings]) => {
+            const Icon = theme === 'light' ? Sun : Moon
+            return (
+              <button
+                key={theme}
+                type="button"
+                aria-label={settings.label}
+                aria-pressed={mapTheme === theme}
+                title={settings.label}
+                onClick={() => selectMapTheme(theme)}
+                className={`flex h-8 w-8 items-center justify-center sm:h-10 sm:w-10 ${mapTheme === theme ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}
+              >
+                <Icon size={15} />
+              </button>
+            )
+          })}
+        </div>
         <button aria-label="Report an issue" onClick={() => setReportModalOpen(true)} className="w-8 h-8 sm:w-10 sm:h-10 bg-red-600 hover:bg-red-700 shadow-sm rounded-lg flex items-center justify-center text-white">
           <Flag size={15} />
         </button>
