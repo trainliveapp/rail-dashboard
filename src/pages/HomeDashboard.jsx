@@ -11,6 +11,7 @@ import DepartureBoards from '../components/DepartureBoards'
 import NextDeparturesPanel from '../components/NextDeparturesPanel'
 import SustainabilityBanner from '../components/SustainabilityBanner'
 import Footer from '../components/Footer'
+import AdSlot from '../components/AdSlot'
 import { nearbyToggles, mapLayerToggles } from '../data/mockData'
 import { useJourneyPlanner } from '../lib/useJourneyPlanner'
 
@@ -48,6 +49,8 @@ export default function HomeDashboard() {
   // tracking as soon as "current location" is in use anywhere, or a
   // journey's been planned, not run for free just browsing the network map.
   const [liveLocation, setLiveLocation] = useState(null)
+  const [liveLocationEnabled, setLiveLocationEnabled] = useState(false)
+  const [liveLocationError, setLiveLocationError] = useState('')
   const watchIdRef = useRef(null)
   const prevFixRef = useRef(null)
 
@@ -60,7 +63,7 @@ export default function HomeDashboard() {
     draftStations?.toStation?.id === 'current-location' ||
     plannedJourney?.originStation?.id === 'current-location' ||
     plannedJourney?.destinationStation?.id === 'current-location'
-  const wantsLiveLocation = hasPlannedJourney || usingCurrentLocation
+  const wantsLiveLocation = liveLocationEnabled || hasPlannedJourney || usingCurrentLocation
 
   useEffect(() => {
     if (!wantsLiveLocation) {
@@ -70,9 +73,15 @@ export default function HomeDashboard() {
       }
       prevFixRef.current = null
       setLiveLocation(null)
+      setLiveLocationError('')
       return
     }
-    if (!navigator.geolocation) return
+    if (!navigator.geolocation) {
+      setLiveLocationError('Location is not available on this device.')
+      return
+    }
+
+    setLiveLocationError('')
 
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
@@ -92,6 +101,7 @@ export default function HomeDashboard() {
         setLiveLocation({ lat, lng, heading: resolvedHeading })
       },
       (err) => {
+        setLiveLocationError(err.message || 'Could not get your location.')
         console.warn('Live location unavailable:', err.message)
       },
       { enableHighAccuracy: true, maximumAge: 4000, timeout: 10000 }
@@ -134,6 +144,9 @@ export default function HomeDashboard() {
           highlightLines={plannedJourney?.selectedOption?.lines || []}
           route={mapRoute}
           liveLocation={liveLocation}
+          liveLocationEnabled={liveLocationEnabled}
+          liveLocationError={liveLocationError}
+          onToggleLiveLocation={() => setLiveLocationEnabled((enabled) => !enabled)}
           onGetDirections={(station) => {
             planner.setToStation(station)
             planner.setToQuery(station.name)
@@ -158,9 +171,11 @@ export default function HomeDashboard() {
       </div>
 
       <div className="px-4 sm:px-6 lg:px-8 py-6 space-y-6 max-w-6xl mx-auto w-full">
+        <AdSlot />
         <SidebarBottom nearby={nearby} toggleNearby={toggleNearby} layers={layers} toggleLayer={toggleLayer} className="border border-slate-200 rounded-xl" />
         <DepartureBoards />
         <FeatureCards />
+        <AdSlot size="rail" />
         <NextDeparturesPanel />
         <SustainabilityBanner />
         <Footer />

@@ -230,6 +230,9 @@ export default function MapPanel({
   highlightLines = [],
   route = null,
   liveLocation = null,
+  liveLocationEnabled = false,
+  liveLocationError = '',
+  onToggleLiveLocation = null,
   onGetDirections = null,
   className = 'h-[420px] lg:h-[520px]',
 }) {
@@ -544,17 +547,18 @@ export default function MapPanel({
           <Minus size={15} />
         </button>
         <button
-          aria-label="Recenter map"
+          aria-label={liveLocationEnabled ? 'Hide my live location' : 'Show my live location'}
+          aria-pressed={liveLocationEnabled}
+          title={liveLocationError || (liveLocationEnabled ? 'Hide my live location' : 'Show my live location')}
           onClick={() => {
+            onToggleLiveLocation?.()
             if (liveLocation) {
               mapRef.current?.panTo([liveLocation.lat, liveLocation.lng], { animate: true })
               setFollowSuspended(false)
-            } else {
-              mapRef.current?.setView(CENTER, 16)
             }
           }}
           className={`w-8 h-8 sm:w-10 sm:h-10 shadow-sm rounded-lg flex items-center justify-center active:bg-slate-50 ${
-            liveLocation && followSuspended ? 'bg-blue-600 text-white' : 'bg-white text-slate-600'
+            liveLocationEnabled ? 'bg-blue-600 text-white' : 'bg-white text-slate-600'
           }`}
         >
           <LocateFixed size={15} />

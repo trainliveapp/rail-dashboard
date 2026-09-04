@@ -48,11 +48,11 @@ export default function StationReportSummary({ station, onReportIssue, onGetDire
   const stationLines = (station.lines || []).map((name) => lines.find((l) => l.name === name)).filter(Boolean)
 
   return (
-    <div className="-m-3 w-72">
-      <div className="rounded-t-xl px-4 pt-4 pb-3 bg-gradient-to-br from-blue-900 to-blue-600">
+    <div className="-m-3 w-[min(18rem,calc(100vw-2rem))]">
+      <div className="rounded-t-xl px-3 py-3 sm:px-4 sm:pt-4 sm:pb-3 bg-gradient-to-br from-blue-900 to-blue-600">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <h3 className="text-white font-bold text-lg leading-tight truncate">{station.name}</h3>
+            <h3 className="text-white font-bold text-base sm:text-lg leading-tight truncate">{station.name}</h3>
             <div className="flex flex-wrap gap-1 mt-1.5">
               {stationLines.map((line) => (
                 <span key={line.name} className="text-[10px] font-semibold text-white px-2 py-0.5 rounded-full" style={{ backgroundColor: `${line.color}cc` }}>
@@ -67,7 +67,7 @@ export default function StationReportSummary({ station, onReportIssue, onGetDire
         </div>
       </div>
 
-      <div className="px-4 py-3 bg-white">
+      <div className="px-3 py-3 sm:px-4 sm:py-3 bg-white max-h-[48vh] overflow-y-auto">
         <div className="flex items-center gap-2 mb-3 text-sm">
           <span className={`w-2 h-2 rounded-full shrink-0 ${total === 0 ? 'bg-emerald-500' : 'bg-amber-500'}`} />
           <span className="text-slate-600">
@@ -75,11 +75,11 @@ export default function StationReportSummary({ station, onReportIssue, onGetDire
           </span>
         </div>
 
-        <div className="space-y-2 mb-4">
+        <div className="space-y-1.5 sm:space-y-2 mb-4">
           {stationReportCategories.map((cat) => (
             <div key={cat.key} className="flex items-center justify-between">
-              <span className="flex items-center gap-2.5 text-sm text-slate-700">
-                <span className="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center text-sm shrink-0">{cat.emoji}</span>
+              <span className="flex items-center gap-2 text-xs sm:text-sm text-slate-700">
+                <span className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-slate-50 flex items-center justify-center text-xs sm:text-sm shrink-0">{cat.emoji}</span>
                 {cat.label}
               </span>
               <span className="font-bold text-red-500">{counts[cat.key]}</span>

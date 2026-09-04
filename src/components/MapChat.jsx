@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { MessageCircle, X, Send, Paperclip, Loader2 } from "lucide-react";
+import { MessageCircle, X, Send, Paperclip, Loader2, Share2 } from "lucide-react";
 import { supabase } from "../supabase";
 import liveIcon from "./live-icon.png";
 
@@ -14,12 +14,11 @@ const TUBE_LINES = [
   "metropolitan",
   "bakerloo",
   "elizabeth",
-  "south western railway",
   "great western railway",
 ];
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
-const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const ACCEPTED_MEDIA_TYPES = ["image/jpeg", "image/png", "image/webp", "video/mp4", "video/webm", "video/quicktime"];
 export default function MapChat() {
   const [open, setOpen] = useState(false);
   const [line, setLine] = useState("central");
@@ -29,14 +28,15 @@ export default function MapChat() {
   const [imagePreview, setImagePreview] = useState("");
   const [imageError, setImageError] = useState("");
   const [sending, setSending] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const fileInputRef = useRef(null);
 
   const handleImageSelection = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-      setImageError("Image must be JPG, PNG or WEBP.");
+    if (!ACCEPTED_MEDIA_TYPES.includes(file.type)) {
+      setImageError("Choose a JPG, PNG, WEBP, MP4, WEBM or MOV file.");
       event.target.value = "";
       return;
     }
@@ -146,6 +146,7 @@ export default function MapChat() {
 
         const { data: publicUrlData } = supabase.storage.from("chat-images").getPublicUrl(fileName);
         imageUrl = publicUrlData?.publicUrl || null;
+        if (selectedImage.type.startsWith("video/")) imageUrl = `video:${imageUrl}`;
       }
 
       const payload = {
@@ -240,14 +241,11 @@ export default function MapChat() {
                   {message.message && (
                     <p className="break-words text-sm leading-relaxed text-slate-700">{message.message}</p>
                   )}
-                  {message.image_url && (
-                    <img
-                      src={message.image_url}
-                      alt="Shared in chat"
-                      className="mt-2 max-h-40 w-full rounded-lg object-cover"
-                      loading="lazy"
-                    />
-                  )}
+                  {message.image_url?.startsWith("video:") ? (
+                    <video src={message.image_url.slice(6)} controls className="mt-2 max-h-40 w-full rounded-lg" />
+                  ) : message.image_url ? (
+                    <img src={message.image_url} alt="Shared in chat" className="mt-2 max-h-40 w-full rounded-lg object-cover" loading="lazy" />
+                  ) : null}
                 </div>
               ))
             )}
@@ -255,7 +253,11 @@ export default function MapChat() {
 
           {imagePreview && (
             <div className="flex items-center gap-3 border-t border-slate-100 bg-slate-50 px-3 py-2">
-              <img src={imagePreview} alt="Selected preview" className="h-12 w-12 rounded-lg object-cover" />
+              {selectedImage?.type.startsWith("video/") ? (
+                <video src={imagePreview} className="h-12 w-12 rounded-lg object-cover" />
+              ) : (
+                <img src={imagePreview} alt="Selected preview" className="h-12 w-12 rounded-lg object-cover" />
+              )}
               <div className="min-w-0 flex-1 text-xs text-slate-500 truncate">{selectedImage?.name}</div>
               <button type="button" onClick={clearSelectedImage} className="text-slate-400 hover:text-red-500" aria-label="Remove image">
                 <X size={16} />
@@ -272,7 +274,7 @@ export default function MapChat() {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/jpeg,image/png,image/webp"
+                accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime"
                 className="hidden"
                 onChange={handleImageSelection}
               />
@@ -283,6 +285,15 @@ export default function MapChat() {
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
               >
                 <Paperclip size={16} />
+              </button>
+              <button
+                type="button"
+                aria-label="Share TrainLive"
+                aria-expanded={shareOpen}
+                onClick={() => setShareOpen((open) => !open)}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
+              >
+                <Share2 size={16} />
               </button>
               <input
                 aria-label="Chat message"
@@ -302,6 +313,30 @@ export default function MapChat() {
                 {sending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
               </button>
             </div>
+            {shareOpen && (
+              <div className="mt-2 grid grid-cols-5 gap-1.5" role="menu" aria-label="Share on social media">
+                {[
+                  ['X', 'https://twitter.com/intent/tweet?text=Join%20TrainLive%20live%20chat&url='],
+                  ['Instagram', 'https://www.instagram.com/?url='],
+                  ['TikTok', 'https://www.tiktok.com/upload?lang=en'],
+                  ['Facebook', 'https://www.facebook.com/sharer/sharer.php?u='],
+                  ['LinkedIn', 'https://www.linkedin.com/sharing/share-offsite/?url='],
+                ].map(([label, base]) => (
+                  <button
+                    key={label}
+                    type="button"
+                    role="menuitem"
+                    aria-label={`Share on ${label}`}
+                    title={`Share on ${label}`}
+                    onClick={() => window.open(`${base}${encodeURIComponent(window.location.href)}`, '_blank', 'noopener,noreferrer')}
+                    className="flex items-center justify-center gap-1 rounded-lg border border-slate-200 bg-white px-1.5 py-2 text-[10px] font-semibold text-slate-600 hover:border-blue-300 hover:text-blue-700"
+                  >
+                    <span className="text-[10px] font-bold">{label === 'Instagram' ? 'IG' : label === 'Facebook' ? 'f' : label === 'LinkedIn' ? 'in' : label === 'TikTok' ? 'TT' : 'X'}</span>
+                    <span className="sr-only sm:not-sr-only">{label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
