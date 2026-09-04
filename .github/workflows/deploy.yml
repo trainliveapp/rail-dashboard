@@ -36,6 +36,7 @@ jobs:
           VITE_TRANSPORTAPI_APP_ID: ${{ secrets.VITE_TRANSPORTAPI_APP_ID }}
           VITE_TRANSPORTAPI_APP_KEY: ${{ secrets.VITE_TRANSPORTAPI_APP_KEY }}
           VITE_GOOGLE_MAPS_API_KEY: ${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
+          VITE_THUNDERFOREST_API_KEY: ${{ secrets.VITE_THUNDERFOREST_API_KEY }}
         run: npm run build
 
       - name: Upload build output
