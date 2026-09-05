@@ -294,6 +294,11 @@ export default function MapPanel({
     getStationScores(stations.map((s) => s.id)).then(setStationScores)
   }, [])
 
+  const stationIcons = useMemo(
+    () => Object.fromEntries(stations.map((station) => [station.id, stationIcon(stationScores[station.id])])),
+    [stationScores]
+  )
+
   useEffect(() => {
     let cancelled = false
     getStationUpdates(stations.map((s) => s.name)).then((rows) => {
@@ -507,7 +512,7 @@ export default function MapPanel({
 
         {zoom >= STATION_VISIBLE_ZOOM &&
           stations.map((s) => (
-            <Marker key={s.id} position={[s.lat, s.lng]} icon={stationIcon(stationScores[s.id])}>
+            <Marker key={s.id} position={[s.lat, s.lng]} icon={stationIcons[s.id]}>
               <Tooltip
                 direction="top"
                 permanent
