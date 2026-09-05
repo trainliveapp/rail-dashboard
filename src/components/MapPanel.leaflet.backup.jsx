@@ -517,7 +517,7 @@ export default function MapPanel({
               >
                 {s.name}
               </Tooltip>
-              <Popup minWidth={260}>
+              <Popup minWidth={260} className="station-popup">
                 <StationPopup
                   stationId={s.id}
                   stationName={s.name}

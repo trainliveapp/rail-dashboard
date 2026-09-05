@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useMap } from 'react-leaflet'
-import { X, Navigation } from 'lucide-react'
+import { Navigation } from 'lucide-react'
 import { stationReportCategories, lines } from '../data/mockData'
 import { getStationUpdates, subscribeToStationUpdates } from '../lib/stationUpdates'
 
@@ -19,7 +18,6 @@ function tallyByCategory(reports) {
 // journey planner's live feed reads from, so a report made here is the
 // same report someone travelling through this station would see there.
 export default function StationReportSummary({ station, onReportIssue, onGetDirections, onRate }) {
-  const map = useMap()
   const [reports, setReports] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -49,8 +47,8 @@ export default function StationReportSummary({ station, onReportIssue, onGetDire
 
   return (
     <div className="-m-3 w-[min(18rem,calc(100vw-2rem))]">
-      <div className="rounded-t-xl px-3 py-3 sm:px-4 sm:pt-4 sm:pb-3 bg-gradient-to-br from-blue-900 to-blue-600">
-        <div className="flex items-start justify-between gap-2">
+      <div className="rounded-t-xl px-3 py-3 pr-10 sm:px-4 sm:pt-4 sm:pb-3 sm:pr-10 bg-gradient-to-br from-blue-900 to-blue-600">
+        <div className="flex items-start gap-2">
           <div className="min-w-0">
             <h3 className="text-white font-bold text-base sm:text-lg leading-tight truncate">{station.name}</h3>
             <div className="flex flex-wrap gap-1 mt-1.5">
@@ -61,9 +59,6 @@ export default function StationReportSummary({ station, onReportIssue, onGetDire
               ))}
             </div>
           </div>
-          <button type="button" onClick={() => map.closePopup()} aria-label="Close" className="w-7 h-7 rounded-full bg-white/20 hover:bg-white/30 transition-colors flex items-center justify-center text-white shrink-0">
-            <X size={14} />
-          </button>
         </div>
       </div>
 

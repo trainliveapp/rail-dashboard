@@ -122,3 +122,29 @@ button:disabled,
 .station-label::before {
   display: none !important; /* Removes the tooltip arrow */
 }
+
+.station-popup .leaflet-popup-close-button {
+  top: 10px !important;
+  right: 10px !important;
+  z-index: 2;
+  width: 28px !important;
+  height: 28px !important;
+  padding: 0 !important;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white !important;
+  font-size: 20px !important;
+  line-height: 28px !important;
+  text-align: center;
+}
+.station-popup .leaflet-popup-content-wrapper {
+  padding: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.station-popup .leaflet-popup-content {
+  margin: 0 !important;
+}
+.station-popup .leaflet-popup-close-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
