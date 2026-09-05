@@ -261,6 +261,7 @@ export default function MapPanel({
   liveLocationEnabled = false,
   liveLocationError = '',
   onToggleLiveLocation = null,
+  onLocateLiveLocation = null,
   onGetDirections = null,
   className = 'h-[420px] lg:h-[520px]',
 }) {
@@ -625,11 +626,16 @@ export default function MapPanel({
           <Minus size={15} />
         </button>
         <button
+          type="button"
           aria-label={liveLocationEnabled ? 'Hide my live location' : 'Show my live location'}
           aria-pressed={liveLocationEnabled}
           title={liveLocationError || (liveLocationEnabled ? 'Hide my live location' : 'Show my live location')}
           onClick={() => {
-            onToggleLiveLocation?.()
+            if (liveLocationEnabled) {
+              onToggleLiveLocation?.()
+            } else {
+              onLocateLiveLocation?.()
+            }
             if (liveLocation) {
               mapRef.current?.panTo([liveLocation.lat, liveLocation.lng], { animate: true })
               setFollowSuspended(false)

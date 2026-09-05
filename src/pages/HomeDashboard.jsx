@@ -65,6 +65,29 @@ export default function HomeDashboard() {
     plannedJourney?.destinationStation?.id === 'current-location'
   const wantsLiveLocation = liveLocationEnabled || hasPlannedJourney || usingCurrentLocation
 
+  const locateLiveLocation = () => {
+    if (!navigator.geolocation) {
+      setLiveLocationError('Location is not available on this device.')
+      return
+    }
+
+    setLiveLocationError('')
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLiveLocation({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          heading: Number.isFinite(pos.coords.heading) ? pos.coords.heading : 0,
+        })
+        setLiveLocationEnabled(true)
+      },
+      (err) => {
+        setLiveLocationError(err.message || 'Could not get your location.')
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 4000 }
+    )
+  }
+
   useEffect(() => {
     if (!wantsLiveLocation) {
       if (watchIdRef.current != null) {
@@ -147,6 +170,7 @@ export default function HomeDashboard() {
           liveLocationEnabled={liveLocationEnabled}
           liveLocationError={liveLocationError}
           onToggleLiveLocation={() => setLiveLocationEnabled((enabled) => !enabled)}
+          onLocateLiveLocation={locateLiveLocation}
           onGetDirections={(station) => {
             planner.setToStation(station)
             planner.setToQuery(station.name)
