@@ -332,6 +332,7 @@ export const stations = [
   { id: 'kentish-town', name: 'Kentish Town', lat: 51.55031, lng: -0.14074, lines: ['Northern'] },
   { id: 'kentish-town-west', name: 'Kentish Town West', lat: 51.547075, lng: -0.14675, lines: ['London Overground'] },
   { id: 'kenton', name: 'Kenton', lat: 51.58153, lng: -0.31662, lines: ['Bakerloo', 'London Overground'] },
+  { id: 'kew-bridge', name: 'Kew Bridge', lat: 51.4768, lng: -0.2877, lines: ['National Rail'], operator: 'Great Western Railway' },
   { id: 'kew-gardens', name: 'Kew Gardens', lat: 51.477077, lng: -0.285013, lines: ['District', 'London Overground'] },
   { id: 'kilburn', name: 'Kilburn', lat: 51.547025, lng: -0.205286, lines: ['Jubilee'] },
   { id: 'kilburn-high-road', name: 'Kilburn High Road', lat: 51.537666, lng: -0.191495, lines: ['London Overground'] },

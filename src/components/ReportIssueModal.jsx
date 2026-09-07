@@ -98,7 +98,7 @@ export default function ReportIssueModal({ onClose, onReportSubmitted }) {
   if (submitted) {
     return (
       <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-900/40">
-        <div className="bg-slate-50 rounded-3xl shadow-2xl w-full max-w-[420px] p-8 text-center">
+        <div className="bg-slate-50 rounded-3xl shadow-2xl w-full max-w-[420px] max-h-[calc(100dvh-2rem)] overflow-y-auto p-5 sm:p-8 text-center">
           <div className="w-14 h-14 rounded-full bg-blue-600 flex items-center justify-center mx-auto mb-4">
             <Check size={26} className="text-white" strokeWidth={3} />
           </div>
@@ -111,7 +111,7 @@ export default function ReportIssueModal({ onClose, onReportSubmitted }) {
 
   return (
     <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-900/40">
-      <form onSubmit={handleSubmit} className="bg-slate-50 rounded-3xl shadow-2xl w-full max-w-[620px] max-h-[90vh] overflow-y-auto p-8">
+      <form onSubmit={handleSubmit} className="bg-slate-50 rounded-3xl shadow-2xl w-full max-w-[620px] max-h-[calc(100dvh-2rem)] overflow-y-auto p-4 sm:p-8">
         <div className="flex items-start justify-between mb-6">
           <div>
             <h2 className="text-xl font-bold text-slate-900">What Is Happening?</h2>

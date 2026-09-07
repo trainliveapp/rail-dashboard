@@ -143,21 +143,6 @@ function stationIcon(score, size = 18) {
   })
 }
 
-const kewBridgeStation = {
-  id: 'kew-bridge',
-  name: 'Kew Bridge',
-  lat: 51.4768,
-  lng: -0.2877,
-  lines: ['National Rail'],
-}
-
-const kewBridgeIcon = L.divIcon({
-  html: '<div style="width:14px;height:14px;border-radius:9999px;background:#dc2626;border:3px solid white;box-shadow:0 1px 4px rgba(0,0,0,.45);"></div>',
-  className: '',
-  iconSize: [14, 14],
-  iconAnchor: [7, 7],
-})
-
 function ratingIcon(rating, color = '#7f1d1d') {
   return L.divIcon({
     html: `<div style="position:relative;width:36px;height:36px;">
@@ -440,15 +425,6 @@ export default function MapPanel({
           maxZoom={20}
           opacity={0.9}
         />
-
-        {zoom >= STATION_VISIBLE_ZOOM && (
-          <Marker
-            position={[kewBridgeStation.lat, kewBridgeStation.lng]}
-            icon={kewBridgeIcon}
-            eventHandlers={{ click: () => setReportingStation(kewBridgeStation) }}
-            title="Kew Bridge"
-          />
-        )}
 
         {routeFitPoints.length > 0 && <RouteFit points={routeFitPoints} />}
         {route?.originStation && route?.destinationStation && (

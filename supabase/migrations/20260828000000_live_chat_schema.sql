@@ -9,6 +9,7 @@ create table if not exists public.chat_messages (
 );
 
 alter table public.chat_messages add column if not exists video_url text;
+notify pgrst, 'reload schema';
 
 create index if not exists idx_chat_messages_line_created_at
   on public.chat_messages (line, created_at asc);

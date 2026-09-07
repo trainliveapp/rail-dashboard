@@ -50,7 +50,7 @@ export default function StationQuickReportModal({ station, onClose }) {
   if (submitted) {
     return (
       <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-900/40">
-        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-[380px] p-8 text-center">
+        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-[380px] max-h-[calc(100dvh-2rem)] overflow-y-auto p-5 sm:p-8 text-center">
           <div className="w-14 h-14 rounded-full bg-blue-600 flex items-center justify-center mx-auto mb-4">
             <Check size={26} className="text-white" strokeWidth={3} />
           </div>
@@ -63,7 +63,7 @@ export default function StationQuickReportModal({ station, onClose }) {
 
   return (
     <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-900/40">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-[420px] p-6">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-[420px] max-h-[calc(100dvh-2rem)] overflow-y-auto p-4 sm:p-6">
         <div className="flex items-start gap-3 mb-4">
           <div className="w-10 h-10 rounded-xl bg-blue-700 flex items-center justify-center shrink-0">
             <Info size={18} className="text-white" />

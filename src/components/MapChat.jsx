@@ -140,15 +140,21 @@ useEffect(() => {
         message: text.trim(),
         line,
         image_url: imageUrl,
-        video_url: videoUrl,
+        ...(videoUrl ? { video_url: videoUrl } : {}),
       };
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("chat_messages")
-        .insert(payload);
+        .insert(payload)
+        .select()
+        .single();
 
       if (error) {
         throw error;
+      }
+
+      if (data) {
+        setMessages((prev) => [...prev, data]);
       }
 
       setText("");
