@@ -322,17 +322,22 @@ export default function MapPanel({
 
   const handleReportSubmitted = (report) => {
     if (!report.stationName) return
+    const savedReport = {
+      ...report,
+      id: report.id || `local-${Date.now()}`,
+      kind: 'report',
+      tone: report.tone || 'blue',
+      status: report.status || 'ACTIVE',
+      confirms: report.confirms || 0,
+      createdAt: report.createdAt || new Date().toISOString(),
+    }
+
     setCommunityReports((prev) => [
-      {
-        ...report,
-        id: report.id || `local-${Date.now()}`,
-        kind: 'report',
-        tone: report.tone || 'blue',
-        status: 'ACTIVE',
-        confirms: 0,
-        createdAt: report.createdAt || new Date().toISOString(),
-      },
-      ...prev.filter((item) => item.id !== report.id),
+      savedReport,
+      ...prev.filter((item) => (
+        item.id !== savedReport.id &&
+        !(item.stationName === savedReport.stationName && item.category === savedReport.category)
+      )),
     ])
   }
 

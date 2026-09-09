@@ -1,9 +1,12 @@
 import { supabase } from './supabaseClient'
 
 // Real data layer for the report + live update feed shown in
-// JourneyResults, backed by the station_updates table. Run
-// supabase/station_updates.sql in your Supabase project's SQL editor once
-// before any of this will return data.
+// JourneyResults, backed by the station_updates table. Run the migration in
+// supabase/migrations before enabling station reporting in production.
+
+function isMissingStationUpdatesTable(error) {
+  return error?.code === '42P01' || error?.code === 'PGRST205'
+}
 
 function toneToColor(tone) {
   if (tone === 'rose') return '#be123c'
@@ -52,7 +55,10 @@ export async function getStationUpdates(stationNames) {
     .order('created_at', { ascending: false })
     .limit(20)
 
-  if (error) throw error
+  if (error) {
+    if (isMissingStationUpdatesTable(error)) return []
+    throw error
+  }
   return data.map(mapRow).filter(isVisibleUpdate)
 }
 
@@ -102,7 +108,12 @@ export async function postReport({ stationName, locationText, category, label, t
     author_initial: user ? (user.email || '?')[0] : 'A',
   }).select('*').single()
 
-  if (error) throw error
+  if (error) {
+    if (isMissingStationUpdatesTable(error)) {
+      throw new Error('Station reporting is not configured yet. Run the station reporting migration in Supabase.')
+    }
+    throw error
+  }
   return mapRow(data)
 }
 

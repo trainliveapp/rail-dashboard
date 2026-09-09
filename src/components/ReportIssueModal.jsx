@@ -84,8 +84,8 @@ export default function ReportIssueModal({ onClose, onReportSubmitted }) {
         message: message.trim() || `${cat.label} reported ${where === 'train' ? 'on the train' : 'at the station'}.`,
         whereOn: where,
       }
-      await postReport(report)
-      onReportSubmitted?.(report)
+      const savedReport = await postReport(report)
+      onReportSubmitted?.(savedReport)
       setSubmitted(true)
       setTimeout(onClose, 1400)
     } catch (err) {
