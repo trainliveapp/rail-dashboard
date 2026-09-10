@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { MessageCircle, X, Send, Paperclip, Loader2, Share2 } from "lucide-react";
+import { MessageCircle, X, Send, Paperclip, Camera, Loader2, Share2 } from "lucide-react";
 import { supabase } from "../supabase";
 import liveIcon from "./live-icon.png";
 
@@ -30,6 +30,7 @@ export default function MapChat() {
   const [sending, setSending] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const fileInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
 
   const handleImageSelection = (event) => {
     const file = event.target.files?.[0];
@@ -292,6 +293,14 @@ useEffect(() => {
                 className="hidden"
                 onChange={handleImageSelection}
               />
+              <input
+                ref={cameraInputRef}
+                type="file"
+                accept="image/*,video/*"
+                capture="environment"
+                className="hidden"
+                onChange={handleImageSelection}
+              />
               <button
                 type="button"
                 aria-label="Attach image or video"
@@ -299,6 +308,15 @@ useEffect(() => {
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
               >
                 <Paperclip size={16} />
+              </button>
+              <button
+                type="button"
+                aria-label="Take a photo or video"
+                title="Take a photo or video"
+                onClick={() => cameraInputRef.current?.click()}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
+              >
+                <Camera size={16} />
               </button>
               <button
                 type="button"
