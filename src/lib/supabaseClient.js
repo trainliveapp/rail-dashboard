@@ -40,6 +40,9 @@ function createNoopSupabaseClient() {
       select() {
         return this;
       },
+      single() {
+        return this;
+      },
       insert() {
         return this;
       },
