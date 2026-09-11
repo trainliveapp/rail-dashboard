@@ -577,21 +577,11 @@ export const stations = [
 ]
 
 export const reportCategories = [
-  { key: 'train_delay', label: 'Train delay', icon: 'Clock3' },
-  { key: 'train_cancelled', label: 'Train cancelled', icon: 'Ban' },
-  { key: 'platform_blocked', label: 'Platform/access blocked', icon: 'Construction' },
-  { key: 'crowding', label: 'Crowding', icon: 'Users' },
-  { key: 'ticket_machine', label: 'Ticket machine/barrier problem', icon: 'Ticket' },
-  { key: 'lift_escalator', label: 'Lift/escalator problem', icon: 'Accessibility' },
-  { key: 'cleanliness', label: 'Cleanliness', icon: 'Sparkles' },
-  { key: 'safety_security', label: 'Safety/security concern', icon: 'ShieldAlert' },
-  { key: 'information_problem', label: 'Information board/announcement problem', icon: 'Megaphone' },
-  { key: 'accessibility', label: 'Accessibility issue', icon: 'Accessibility' },
-  { key: 'weather_flooding', label: 'Weather/flooding disruption', icon: 'CloudRain' },
-  { key: 'btp', label: 'BTP/security incident', icon: 'ShieldAlert' },
-  { key: 'antisocial', label: 'Anti-social behaviour', icon: 'ShieldAlert' },
-  { key: 'revenue', label: 'Revenue protection', icon: 'Ticket' },
-  { key: 'other', label: 'Other', icon: 'CircleHelp' },
+  { key: 'police', label: 'Police', icon: 'ShieldAlert' },
+  { key: 'revenue', label: 'Revenue Protection', icon: 'Ticket' },
+  { key: 'antisocial', label: 'Anti Social Behaviour', icon: 'ShieldAlert' },
+  { key: 'harassment_violence', label: 'Harassment & Violence', icon: 'ShieldAlert' },
+  { key: 'fare_dodgers', label: 'Fare Dodgers', icon: 'Ticket' },
 ]
 
 export const savedJourneys = [
@@ -642,21 +632,11 @@ export const liveFeed = [
 ]
 
 export const stationReportCategories = [
-  { key: 'train_delay', label: 'Train delay', emoji: '\u23f1\ufe0f', tone: 'amber' },
-  { key: 'train_cancelled', label: 'Train cancelled', emoji: '\ud83d\udeab', tone: 'rose' },
-  { key: 'platform_blocked', label: 'Platform/access blocked', emoji: '\ud83d\udea7', tone: 'rose' },
-  { key: 'crowding', label: 'Crowding', emoji: '\ud83d\udc65', tone: 'amber' },
-  { key: 'ticket_machine', label: 'Ticket machine/barrier problem', emoji: '\ud83c\udfab', tone: 'amber' },
-  { key: 'lift_escalator', label: 'Lift/escalator problem', emoji: '\u267f', tone: 'amber' },
-  { key: 'cleanliness', label: 'Cleanliness', emoji: '\u2728', tone: 'blue' },
-  { key: 'safety_security', label: 'Safety/security concern', emoji: '\ud83d\udee1\ufe0f', tone: 'rose' },
-  { key: 'information_problem', label: 'Information board/announcement problem', emoji: '\ud83d\udce2', tone: 'blue' },
-  { key: 'accessibility', label: 'Accessibility issue', emoji: '\u267f', tone: 'amber' },
-  { key: 'weather_flooding', label: 'Weather/flooding disruption', emoji: '\ud83c\udf27\ufe0f', tone: 'rose' },
-  { key: 'btp', label: 'BTP/security incident', emoji: '\ud83d\udc6e', tone: 'blue' },
-  { key: 'antisocial', label: 'Anti-social behaviour', emoji: '\ud83d\udea8', tone: 'rose' },
-  { key: 'revenue', label: 'Revenue protection', emoji: '\ud83c\udfab', tone: 'amber' },
-  { key: 'other', label: 'Other', emoji: '\u2754', tone: 'blue' },
+  { key: 'police', label: 'Police', emoji: '\ud83d\udee1\ufe0f', tone: 'rose' },
+  { key: 'revenue', label: 'Revenue Protection', emoji: '\ud83c\udfab', tone: 'amber' },
+  { key: 'antisocial', label: 'Anti Social Behaviour', emoji: '\ud83d\udea8', tone: 'rose' },
+  { key: 'harassment_violence', label: 'Harassment & Violence', emoji: '\ud83d\udee1\ufe0f', tone: 'rose' },
+  { key: 'fare_dodgers', label: 'Fare Dodgers', emoji: '\ud83c\udfab', tone: 'amber' },
 ]
 
 export const featureCards = [

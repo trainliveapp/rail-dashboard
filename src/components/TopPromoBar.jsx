@@ -39,7 +39,7 @@ export default function TopPromoBar() {
 
       <div className="flex items-center gap-3 shrink-0 pr-4">
         <button className="bg-white/15 hover:bg-white/25 transition-colors rounded-full px-3 py-1 text-xs font-medium flex items-center gap-1 whitespace-nowrap">
-          Get Deal <ArrowRight size={12} />
+          Avvisso Rewards <ArrowRight size={12} />
         </button>
         <button onClick={() => setVisible(false)} aria-label="Dismiss banner" className="text-white/70 hover:text-white">
           <X size={16} />

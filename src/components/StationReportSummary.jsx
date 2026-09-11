@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { Navigation } from 'lucide-react'
 import { stationReportCategories, lines } from '../data/mockData'
 import { getStationUpdates, subscribeToStationUpdates } from '../lib/stationUpdates'
 
@@ -17,7 +16,7 @@ function tallyByCategory(reports) {
 // something new. Counts come from the same station_updates table the
 // journey planner's live feed reads from, so a report made here is the
 // same report someone travelling through this station would see there.
-export default function StationReportSummary({ station, onReportIssue, onGetDirections, onRate }) {
+export default function StationReportSummary({ station, onReportIssue, onRate }) {
   const [reports, setReports] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -82,15 +81,6 @@ export default function StationReportSummary({ station, onReportIssue, onGetDire
           ))}
         </div>
 
-        {onGetDirections && (
-          <button
-            type="button"
-            onClick={() => onGetDirections(station)}
-            className="w-full flex items-center justify-center gap-2 bg-blue-900 hover:bg-blue-950 transition-colors text-white text-sm font-semibold py-2.5 rounded-full mb-2"
-          >
-            <Navigation size={14} /> Get Directions
-          </button>
-        )}
         <button
           type="button"
           onClick={() => onReportIssue(station)}

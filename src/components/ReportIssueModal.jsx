@@ -14,15 +14,11 @@ const icons = { Clock3, Ban, Construction, Users, Ticket, Accessibility, Sparkle
 // categories are informational (blue), a few carry more weight and get the
 // amber/rose treatment already used elsewhere in the app for warnings.
 const categoryTone = {
+  police: 'rose',
   revenue: 'amber',
-  btp: 'rose',
-  threat: 'rose',
-  harassment: 'rose',
-  hazards: 'rose',
-  vulnerable: 'rose',
-  fault: 'amber',
-  crowded_train: 'amber',
-  crowded_platform: 'amber',
+  antisocial: 'rose',
+  harassment_violence: 'rose',
+  fare_dodgers: 'amber',
 }
 
 export default function ReportIssueModal({ onClose, onReportSubmitted }) {
