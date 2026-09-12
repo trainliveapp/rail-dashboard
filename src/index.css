@@ -10,6 +10,34 @@ body {
   font-family: var(--font-sans);
 }
 
+.chatter-icon {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: transparent;
+}
+
+.chatter-icon__core {
+  width: 60%;
+  height: 60%;
+  border-radius: 9999px;
+  background: #ff4d1f;
+  box-shadow: 0 0 0 0 rgba(255, 132, 38, 0.95), 0 0 0.7rem rgba(255, 77, 31, 0.6);
+  animation: chatter-pulse 1.8s ease-out infinite;
+}
+
+@keyframes chatter-pulse {
+  0%, 45% {
+    box-shadow: 0 0 0 0 rgba(255, 132, 38, 0.95), 0 0 0.7rem rgba(255, 77, 31, 0.6);
+  }
+  75%, 100% {
+    box-shadow: 0 0 0 1rem rgba(255, 132, 38, 0), 0 0 1.4rem rgba(255, 77, 31, 0);
+  }
+}
+
 /* Tailwind v4's Preflight deliberately removes the browser default
    cursor:pointer on <button>, matching native app conventions rather than
    web ones, every button in this app was affected: zoom controls, the

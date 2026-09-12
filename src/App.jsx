@@ -9,16 +9,12 @@ import CreatePasswordPage from './pages/CreatePasswordPage'
 import AlertsPage from './pages/AlertsPage'
 import SplashScreen from './components/SplashScreen'
 import PretPromoScreen from './components/PretPromoScreen'
-import WelcomeScreen from './components/WelcomeScreen'
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true)
   const [fadingOut, setFadingOut] = useState(false)
   const [showPromo, setShowPromo] = useState(true)
   const [promoFadingOut, setPromoFadingOut] = useState(false)
-  const [showWelcome, setShowWelcome] = useState(
-    () => localStorage.getItem('trainlive_onboarded') !== 'true'
-  )
 
   useEffect(() => {
     const fadeTimer = setTimeout(() => setFadingOut(true), 2000)
@@ -41,17 +37,6 @@ export default function App() {
 
   if (showSplash) return <SplashScreen fadingOut={fadingOut} />
   if (showPromo) return <PretPromoScreen fadingOut={promoFadingOut} />
-
-  if (showWelcome) {
-    return (
-      <WelcomeScreen
-        onDismiss={() => {
-          localStorage.setItem('trainlive_onboarded', 'true')
-          setShowWelcome(false)
-        }}
-      />
-    )
-  }
 
   return (
     <Routes>

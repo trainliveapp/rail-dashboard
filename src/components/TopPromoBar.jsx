@@ -12,6 +12,8 @@ const deals = [
   { shop: 'Knoops', pct: '40%' },
 ]
 
+
+
 export default function TopPromoBar() {
   const [visible, setVisible] = useState(true)
   if (!visible) return null

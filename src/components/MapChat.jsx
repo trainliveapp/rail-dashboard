@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { MessageCircle, X, Send, Paperclip, Camera, Loader2, Share2 } from "lucide-react";
 import { supabase } from "../supabase";
-import liveIcon from "./live-icon.png";
+import { lineTextColors } from "./lineColors";
 
 const TUBE_LINES = [
   "central",
@@ -18,6 +18,11 @@ const TUBE_LINES = [
 ];
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
+const CHAT_LINE_COLORS = {
+  ...lineTextColors,
+  "great western railway": "#4b1f4f",
+};
+
 export default function MapChat() {
   const [open, setOpen] = useState(false);
   const [line, setLine] = useState("central");
@@ -176,14 +181,12 @@ useEffect(() => {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          aria-label="Open live chat"
-          className="group flex items-center gap-2.5 rounded-full border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-md shadow-slate-200/80 transition-transform hover:-translate-y-0.5 hover:bg-slate-50 active:translate-y-0"
+          aria-label="Open chatter"
+          className="group flex h-20 w-20 items-center justify-center rounded-full p-1 transition-transform hover:-translate-y-0.5 active:translate-y-0"
         >
-          <span className="relative flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 transition-colors group-hover:bg-slate-200 overflow-hidden">
-            <img src={liveIcon} alt="Live chat" className="h-6 w-6 object-contain" />
-            <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-400" />
+          <span className="relative flex h-16 w-16 items-center justify-center overflow-hidden">
+            <span className="chatter-icon" aria-hidden="true"><span className="chatter-icon__core" /></span>
           </span>
-          <span>Live chat</span>
         </button>
       )}
 
@@ -191,19 +194,18 @@ useEffect(() => {
         <div className="fixed bottom-5 right-5 z-[2000] flex h-[min(520px,calc(100vh-2rem))] w-[min(380px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-950/20">
           <div className="flex items-center justify-between bg-white px-4 py-4 text-slate-900 border-b border-slate-200">
             <div className="flex items-center gap-3">
-              <span className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 overflow-hidden border border-slate-200">
-                <img src={liveIcon} alt="Live chat" className="h-6 w-6 object-contain" />
-                <span className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-400" />
+              <span className="relative flex h-14 w-14 items-center justify-center overflow-hidden">
+                <span className="chatter-icon" aria-hidden="true"><span className="chatter-icon__core" /></span>
               </span>
               <div>
-                <h3 className="text-sm font-bold">Live chat</h3>
+                <h3 className="text-sm font-bold">chatter</h3>
                 <p className="mt-0.5 text-xs capitalize text-slate-500">{line} line community</p>
               </div>
             </div>
             <button
               type="button"
               onClick={() => setOpen(false)}
-              aria-label="Close live chat"
+              aria-label="Close chatter"
               className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-300 transition-colors hover:bg-white/10 hover:text-white"
             >
               <X size={19} />
@@ -218,10 +220,17 @@ useEffect(() => {
               id="chat-line"
               value={line}
               onChange={(e) => setLine(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium capitalize text-slate-800 outline-none transition-shadow focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium capitalize text-white outline-none transition-shadow focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              style={{ backgroundColor: CHAT_LINE_COLORS[line] || "#334155" }}
             >
               {TUBE_LINES.map((item) => (
-                <option key={item} value={item}>{item} line</option>
+                <option
+                  key={item}
+                  value={item}
+                  style={{ backgroundColor: CHAT_LINE_COLORS[item] || "#334155", color: "#fff" }}
+                >
+                  {item} line
+                </option>
               ))}
             </select>
           </div>

@@ -679,9 +679,9 @@ export const featureCards = [
   },
   {
     icon: 'MessageSquare',
-    image: 'live-chat',
+    image: 'chatter',
     iconColor: 'text-indigo-600',
-    title: 'Live Chat',
+    title: 'chatter',
     description: 'Chat with the community and get real-time travel updates.',
     linkText: 'Join chat',
   },
