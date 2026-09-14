@@ -304,7 +304,7 @@ useEffect(() => {
               <input
                 ref={cameraInputRef}
                 type="file"
-                accept="image/*,video/*"
+                accept="image/*"
                 capture="environment"
                 className="hidden"
                 onChange={handleImageSelection}
