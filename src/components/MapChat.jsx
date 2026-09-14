@@ -199,7 +199,6 @@ useEffect(() => {
               </span>
               <div>
                 <h3 className="text-sm font-bold">chatter</h3>
-                <p className="mt-0.5 text-xs capitalize text-slate-500">{line} line community</p>
               </div>
             </div>
             <button
