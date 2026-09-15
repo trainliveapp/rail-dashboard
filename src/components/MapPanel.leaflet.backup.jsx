@@ -497,8 +497,8 @@ export default function MapPanel({
               <Tooltip
                 direction="top"
                 permanent
-                offset={[0, -12]}
-                className="!bg-transparent !border-0 !shadow-none !text-[11px] !font-semibold !text-slate-800"
+                offset={[0, -24]}
+                className="!bg-transparent !border-0 !shadow-none !text-[11px] !font-semibold !text-slate-800 !whitespace-nowrap"
                 style={{ textShadow: '0 0 3px white, 0 0 3px white, 0 1px 2px white' }}
               >
                 {s.name}
