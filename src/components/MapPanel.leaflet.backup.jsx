@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState, useMemo } from 'react'
 import { MapContainer, TileLayer, Polyline, Marker, Popup, Tooltip, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
-import { Plus, Minus, LocateFixed, Volume2, ThumbsUp, Sun, Moon } from 'lucide-react'
+import { Plus, Minus, LocateFixed, Flag, ThumbsUp, Sun, Moon } from 'lucide-react'
 import { lines, housingPins, coffeePins, liveEventPin, stations } from '../data/mockData'
 import { tubeLineGeometry } from '../data/tubeLineGeometry'
 import { getStationScores } from '../lib/stationRatings'
@@ -603,7 +603,7 @@ export default function MapPanel({
           })}
         </div>
         <button aria-label="Report an issue" onClick={() => setReportModalOpen(true)} className="w-8 h-8 sm:w-10 sm:h-10 bg-red-600 hover:bg-red-700 shadow-sm rounded-lg flex items-center justify-center text-white">
-          <Volume2 size={15} />
+          <Flag size={15} />
         </button>
         <button aria-label="Zoom in" onClick={() => mapRef.current?.zoomIn()} className="w-8 h-8 sm:w-10 sm:h-10 bg-white shadow-sm rounded-lg flex items-center justify-center text-slate-600 active:bg-slate-50">
           <Plus size={15} />

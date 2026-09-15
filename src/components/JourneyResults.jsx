@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { ArrowLeft, Clock, ArrowRightLeft, Footprints, Volume2, MapPin, ChevronDown, ThumbsUp } from 'lucide-react'
+import { ArrowLeft, Clock, ArrowRightLeft, Footprints, Flag, MapPin, ChevronDown, ThumbsUp } from 'lucide-react'
 import { getStationUpdates, subscribeToStationUpdates, confirmUpdate } from '../lib/stationUpdates'
 
 const tagStyles = {
@@ -89,7 +89,7 @@ function AlertBanner({ report, onConfirm, confirming }) {
           className="flex items-center gap-1.5 rounded-full px-2.5 py-1 font-semibold shrink-0"
           style={{ fontSize: '11px', backgroundColor: tone.bg, color: tone.text }}
         >
-          <Volume2 size={11} /> {report.label}
+          <Flag size={11} /> {report.label}
         </span>
         <span className="text-xs text-slate-400 truncate">near {report.stationName || report.locationText}</span>
       </div>
