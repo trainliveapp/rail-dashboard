@@ -11,16 +11,16 @@ const alertIcons = { LogOut, ArrowLeftRight, PoundSterling, CreditCard }
 const settingIcons = { LogOut, ArrowLeftRight, PoundSterling, CreditCard, Clock, ShieldCheck, Wrench, RefreshCw, Users, Globe }
 
 const typeStyles = {
-  urgent: 'text-red-600 bg-red-50',
-  action: 'text-amber-600 bg-amber-50',
-  fare: 'text-purple-600 bg-purple-50',
-  mismatch: 'text-red-600 bg-red-50',
+  urgent: 'text-yellow-800 bg-yellow-50',
+  action: 'text-amber-800 bg-amber-50',
+  fare: 'text-blue-700 bg-blue-50',
+  mismatch: 'text-yellow-800 bg-yellow-50',
 }
 const badgeStyles = {
-  urgent: 'bg-red-600 text-white',
-  action: 'bg-amber-500 text-white',
-  fare: 'bg-purple-600 text-white',
-  mismatch: 'bg-red-600 text-white',
+  urgent: 'bg-yellow-500 text-slate-950',
+  action: 'bg-amber-500 text-slate-950',
+  fare: 'bg-blue-600 text-white',
+  mismatch: 'bg-yellow-500 text-slate-950',
 }
 
 function AlertCard({ alert }) {
@@ -52,7 +52,7 @@ function AlertCard({ alert }) {
       <span className="inline-block text-xs bg-slate-100 text-slate-500 px-2.5 py-1 rounded-full mb-4">{alert.tag}</span>
 
       <div className={`grid gap-3 ${alert.secondaryLabel ? 'grid-cols-2' : 'grid-cols-1'}`}>
-        <button className="bg-blue-600 hover:bg-blue-700 transition-colors text-white text-sm font-medium py-2.5 rounded-lg">
+        <button className="bg-brand-amber hover:bg-yellow-300 transition-colors text-brand-ink text-sm font-medium py-2.5 rounded-lg">
           {alert.primaryLabel}
         </button>
         {alert.secondaryLabel && (
@@ -89,7 +89,7 @@ function AlertsTab() {
       </div>
 
       <p className="flex items-center gap-2 text-sm text-slate-500 mb-5">
-        <TriangleAlert size={15} className="text-red-500" /> Red means it needs your action now. Everything else is just for your information.
+        <TriangleAlert size={15} className="text-yellow-600" /> Yellow means it needs your attention. Blue marks trusted service information.
       </p>
 
       <div className="space-y-4">
@@ -120,7 +120,7 @@ function ToggleRow({ icon, label, enabled }) {
         role="switch"
         aria-checked={on}
         onClick={() => setOn((o) => !o)}
-        className={`w-10 h-5 rounded-full transition-colors relative shrink-0 ${on ? 'bg-blue-600' : 'bg-slate-200'}`}
+        className={`w-10 h-5 rounded-full transition-colors relative shrink-0 ${on ? 'bg-brand-amber' : 'bg-slate-200'}`}
       >
         <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${on ? 'translate-x-5' : ''}`} />
       </button>
@@ -136,7 +136,7 @@ function SettingsTab() {
           <h2 className="font-semibold text-slate-900">1. What would you like to alerts for?</h2>
           <span className="flex items-center gap-2 text-sm text-slate-500">
             All
-            <span className="w-10 h-5 rounded-full bg-blue-600 relative">
+            <span className="w-10 h-5 rounded-full bg-brand-amber relative">
               <span className="absolute top-0.5 left-5 w-4 h-4 bg-white rounded-full shadow" />
             </span>
           </span>
@@ -166,7 +166,7 @@ function SettingsTab() {
                 </div>
               ))}
             </div>
-            <button className="text-sm font-medium text-blue-600 mt-3 flex items-center gap-1"><Plus size={13} /> Add another route</button>
+            <button className="text-sm font-medium text-brand-ink mt-3 flex items-center gap-1"><Plus size={13} /> Add another route</button>
           </div>
 
           <div className="bg-white border border-slate-200 rounded-xl p-5">
@@ -183,7 +183,7 @@ function SettingsTab() {
                 </div>
               ))}
             </div>
-            <button className="text-sm font-medium text-blue-600 mt-3 flex items-center gap-1"><Plus size={13} /> Add another station</button>
+            <button className="text-sm font-medium text-brand-ink mt-3 flex items-center gap-1"><Plus size={13} /> Add another station</button>
           </div>
         </div>
       </section>
@@ -195,7 +195,7 @@ function SettingsTab() {
           {[{ label: 'App notifications', on: false }, { label: 'Email', on: true }, { label: 'SMS', on: false }].map((c) => (
             <div key={c.label} className="bg-white border border-slate-200 rounded-xl px-5 py-4 flex items-center justify-between">
               <span className="text-sm text-slate-700">{c.label}</span>
-              <span className={`w-10 h-5 rounded-full relative ${c.on ? 'bg-blue-600' : 'bg-slate-200'}`}>
+              <span className={`w-10 h-5 rounded-full relative ${c.on ? 'bg-brand-amber' : 'bg-slate-200'}`}>
                 <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow ${c.on ? 'left-5' : 'left-0.5'}`} />
               </span>
             </div>
@@ -210,7 +210,7 @@ function SettingsTab() {
           <div className="flex items-center gap-3">
             <div className="text-sm"><span className="text-slate-400 block text-xs">From</span><span className="border border-slate-200 rounded-lg px-3 py-1.5 block mt-1">23:00</span></div>
             <div className="text-sm"><span className="text-slate-400 block text-xs">To</span><span className="border border-slate-200 rounded-lg px-3 py-1.5 block mt-1">06:00</span></div>
-            <span className="w-10 h-5 rounded-full bg-blue-600 relative"><span className="absolute top-0.5 left-5 w-4 h-4 bg-white rounded-full shadow" /></span>
+            <span className="w-10 h-5 rounded-full bg-brand-amber relative"><span className="absolute top-0.5 left-5 w-4 h-4 bg-white rounded-full shadow" /></span>
           </div>
         </div>
 
@@ -256,13 +256,13 @@ export default function AlertsPage() {
           <div className="flex items-center gap-6 border-b border-slate-200 mb-6">
             <button
               onClick={() => setTab('alerts')}
-              className={`pb-3 text-sm font-medium border-b-2 -mb-px ${tab === 'alerts' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500'}`}
+              className={`pb-3 text-sm font-medium border-b-2 -mb-px ${tab === 'alerts' ? 'border-brand-amber text-brand-ink' : 'border-transparent text-slate-500'}`}
             >
               Alerts
             </button>
             <button
               onClick={() => setTab('settings')}
-              className={`pb-3 text-sm font-medium border-b-2 -mb-px ${tab === 'settings' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500'}`}
+              className={`pb-3 text-sm font-medium border-b-2 -mb-px ${tab === 'settings' ? 'border-brand-amber text-brand-ink' : 'border-transparent text-slate-500'}`}
             >
               Notification Settings
             </button>

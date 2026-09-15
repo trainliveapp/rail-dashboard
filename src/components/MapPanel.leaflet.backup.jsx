@@ -239,6 +239,8 @@ const STATION_VISIBLE_ZOOM = 14
 export default function MapPanel({
   layers,
   nearby,
+  mapTheme = 'dark',
+  onMapThemeChange = null,
   activeLines = [],
   highlightLines = [],
   route = null,
@@ -258,23 +260,6 @@ export default function MapPanel({
   const [reportModalOpen, setReportModalOpen] = useState(false)
   const [communityReports, setCommunityReports] = useState([])
   const [confirmingReport, setConfirmingReport] = useState(null)
-  const [mapTheme, setMapTheme] = useState(() => {
-    try {
-      return localStorage.getItem('trainlive-map-theme') || 'light'
-    } catch {
-      return 'light'
-    }
-  })
-
-  const selectMapTheme = (theme) => {
-    setMapTheme(theme)
-    try {
-      localStorage.setItem('trainlive-map-theme', theme)
-    } catch {
-      // The map still works when storage is unavailable.
-    }
-  }
-
   useEffect(() => {
     getStationScores(stations.map((s) => s.id)).then(setStationScores)
   }, [])
@@ -516,10 +501,10 @@ export default function MapPanel({
           ))}
 
         {zoom >= STATION_VISIBLE_ZOOM && groupedReports.map((report) => (
-          <Marker key={`report-${report.station.id}`} position={[report.station.lat, report.station.lng]} icon={reportMarkerIcon(report.reportCount, report.tone === 'rose' ? '#be123c' : report.tone === 'amber' ? '#d97706' : '#2563eb')} zIndexOffset={500}>
+          <Marker key={`report-${report.station.id}`} position={[report.station.lat, report.station.lng]} icon={reportMarkerIcon(report.reportCount, report.tone === 'rose' ? '#ca8a04' : report.tone === 'amber' ? '#d97706' : '#2563eb')} zIndexOffset={500}>
             <Popup minWidth={240}>
               <div className="text-sm text-slate-800">
-                <p className="font-bold text-red-600 mb-1">{report.reportCount} community report{report.reportCount === 1 ? '' : 's'}</p>
+                <p className="font-bold text-yellow-700 mb-1">{report.reportCount} community report{report.reportCount === 1 ? '' : 's'}</p>
                 <p className="font-semibold">{report.label || report.category}</p>
                 <p className="text-slate-500">{report.station.name}</p>
                 {report.categories.length > 1 && <p className="text-xs text-slate-500 mt-1">{report.categories.join(' · ')}</p>}
@@ -584,25 +569,7 @@ export default function MapPanel({
 
 
       <div className="absolute right-3 top-3 z-[1000] flex flex-col gap-1.5 sm:gap-2">
-        <div className="flex overflow-hidden rounded-lg bg-white shadow-sm" role="group" aria-label="Map theme">
-          {Object.entries(MAP_THEMES).map(([theme, settings]) => {
-            const Icon = theme === 'light' ? Sun : Moon
-            return (
-              <button
-                key={theme}
-                type="button"
-                aria-label={settings.label}
-                aria-pressed={mapTheme === theme}
-                title={settings.label}
-                onClick={() => selectMapTheme(theme)}
-                className={`flex h-8 w-8 items-center justify-center sm:h-10 sm:w-10 ${mapTheme === theme ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}
-              >
-                <Icon size={15} />
-              </button>
-            )
-          })}
-        </div>
-        <button aria-label="Report an issue" onClick={() => setReportModalOpen(true)} className="w-8 h-8 sm:w-10 sm:h-10 bg-red-600 hover:bg-red-700 shadow-sm rounded-lg flex items-center justify-center text-white">
+        <button aria-label="Report an issue" onClick={() => setReportModalOpen(true)} className="w-8 h-8 sm:w-10 sm:h-10 bg-brand-amber hover:bg-yellow-300 shadow-sm rounded-lg flex items-center justify-center text-brand-ink">
           <Flag size={15} />
         </button>
         <button aria-label="Zoom in" onClick={() => mapRef.current?.zoomIn()} className="w-8 h-8 sm:w-10 sm:h-10 bg-white shadow-sm rounded-lg flex items-center justify-center text-slate-600 active:bg-slate-50">
@@ -628,7 +595,7 @@ export default function MapPanel({
             }
           }}
           className={`w-8 h-8 sm:w-10 sm:h-10 shadow-sm rounded-lg flex items-center justify-center active:bg-slate-50 ${
-            liveLocationEnabled ? 'bg-blue-600 text-white' : 'bg-white text-slate-600'
+            liveLocationEnabled ? 'bg-brand-amber text-brand-ink' : 'bg-white text-brand-ink'
           }`}
         >
           <LocateFixed size={15} />

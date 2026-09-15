@@ -3,9 +3,9 @@ import { ChevronDown, ChevronUp, Calendar, Clock, Users, MapPin } from 'lucide-r
 import { disruptions, events } from '../data/mockData'
 
 const levelStyles = {
-  severe: { dot: 'bg-red-600', bg: 'bg-red-50', text: 'text-red-700' },
-  minor: { dot: 'bg-amber-500', bg: 'bg-amber-50', text: 'text-amber-700' },
-  planned: { dot: 'bg-sky-500', bg: 'bg-sky-50', text: 'text-sky-700' },
+  severe: { dot: 'bg-yellow-500', bg: 'bg-yellow-50', text: 'text-yellow-800' },
+  minor: { dot: 'bg-amber-500', bg: 'bg-amber-50', text: 'text-amber-800' },
+  planned: { dot: 'bg-blue-500', bg: 'bg-blue-50', text: 'text-blue-700' },
 }
 
 function DisruptionItem({ item }) {

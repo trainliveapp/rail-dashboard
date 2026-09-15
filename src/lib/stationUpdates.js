@@ -9,7 +9,7 @@ function isMissingStationUpdatesTable(error) {
 }
 
 function toneToColor(tone) {
-  if (tone === 'rose') return '#be123c'
+  if (tone === 'rose') return '#ca8a04'
   if (tone === 'amber') return '#b45309'
   return '#1d4ed8'
 }

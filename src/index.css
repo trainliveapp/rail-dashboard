@@ -4,10 +4,20 @@
 @theme {
   --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
   --font-board: 'Share Tech Mono', ui-monospace, monospace;
+  --color-brand-amber: #F5B800;
+  --color-brand-ink: #111827;
+  --color-brand-page: #F8FAFC;
+  --color-brand-slate: #334155;
+  --color-brand-line: #E2E8F0;
+  --color-brand-live: #DC2626;
+  --color-brand-success: #16A34A;
+  --color-brand-surface: #FFFFFF;
 }
 
 body {
   font-family: var(--font-sans);
+  background-color: var(--color-brand-page);
+  color: var(--color-brand-ink);
 }
 
 .chatter-icon {
@@ -24,17 +34,17 @@ body {
   width: 60%;
   height: 60%;
   border-radius: 9999px;
-  background: #ff4d1f;
-  box-shadow: 0 0 0 0 rgba(255, 132, 38, 0.95), 0 0 0.7rem rgba(255, 77, 31, 0.6);
+  background: #f97316;
+  box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.95), 0 0 0.7rem rgba(249, 115, 22, 0.6);
   animation: chatter-pulse 1.0s ease-out infinite;
 }
 
 @keyframes chatter-pulse {
   0%, 45% {
-    box-shadow: 0 0 0 0 rgba(255, 132, 38, 0.95), 0 0 0.7rem rgba(255, 77, 31, 0.6);
+    box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.95), 0 0 0.7rem rgba(249, 115, 22, 0.6);
   }
   75%, 100% {
-    box-shadow: 0 0 0 1rem rgba(255, 132, 38, 0), 0 0 1.4rem rgba(255, 77, 31, 0);
+    box-shadow: 0 0 0 1rem rgba(249, 115, 22, 0), 0 0 1.4rem rgba(249, 115, 22, 0);
   }
 }
 

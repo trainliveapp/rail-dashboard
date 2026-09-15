@@ -35,6 +35,13 @@ export default function HomeDashboard() {
   const [layers, setLayers] = useState(mapLayerToggles)
   // Lives here now so NavBar's line chips and the map itself always agree.
   const [activeLines, setActiveLines] = useState([])
+  const [mapTheme, setMapTheme] = useState(() => {
+    try {
+      return localStorage.getItem('trainlive-map-theme') || 'dark'
+    } catch {
+      return 'dark'
+    }
+  })
   // Same reasoning: the journey sheet and the map both need to know about
   // the current planned journey, so it lives here, not in either one.
   const [plannedJourney, setPlannedJourney] = useState(null)
@@ -144,6 +151,14 @@ export default function HomeDashboard() {
     setLayers((prev) => prev.map((item, idx) => (idx === i ? { ...item, enabled: !item.enabled } : item)))
   const toggleLine = (name) =>
     setActiveLines((prev) => (prev.includes(name) ? prev.filter((l) => l !== name) : [...prev, name]))
+  const selectMapTheme = (theme) => {
+    setMapTheme(theme)
+    try {
+      localStorage.setItem('trainlive-map-theme', theme)
+    } catch {
+      // The map still works when storage is unavailable.
+    }
+  }
 
   // The planned journey (once it exists) always wins, it has the real
   // route legs to highlight. Before that, fall back to whatever's been
@@ -157,12 +172,14 @@ export default function HomeDashboard() {
   return (
     <div className="min-h-screen bg-slate-50 overflow-x-hidden">
       <TopPromoBar />
-      <NavBar activeLines={activeLines} onToggleLine={toggleLine} />
+      <NavBar mapTheme={mapTheme} onMapThemeChange={selectMapTheme} />
 
       <div className="relative h-[65vh] sm:h-[75vh] lg:h-[calc(100vh-130px)] min-h-[420px] w-full">
         <MapPanel
           layers={layers}
           nearby={nearby}
+          mapTheme={mapTheme}
+          onMapThemeChange={selectMapTheme}
           activeLines={activeLines}
           highlightLines={plannedJourney?.selectedOption?.lines || []}
           route={mapRoute}

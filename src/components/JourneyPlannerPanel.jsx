@@ -41,10 +41,10 @@ function StationField({ label, dotClass, station, query, onQueryChange, onSelect
               disabled={locating}
               className="w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 flex items-center gap-2.5 border-b border-slate-50"
             >
-              <span className="w-7 h-7 rounded-full bg-blue-50 flex items-center justify-center text-blue-700 shrink-0">
+              <span className="w-7 h-7 rounded-full bg-amber-50 flex items-center justify-center text-amber-800 shrink-0">
                 <LocateFixed size={14} />
               </span>
-              <span className="font-medium text-blue-700">{locating ? 'Finding you…' : 'Use current location'}</span>
+              <span className="font-medium text-brand-ink">{locating ? 'Finding you…' : 'Use current location'}</span>
             </button>
           )}
           {matches.map((s) => (
@@ -113,7 +113,7 @@ export default function JourneyPlannerPanel({ planner, onClose }) {
                 setJourneyTab('saved')
                 setSavedOpen((o) => (journeyTab === 'saved' ? !o : true))
               }}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-semibold rounded-full transition-colors ${journeyTab === 'saved' ? 'bg-blue-700 text-white shadow-sm' : 'text-slate-500'}`}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-semibold rounded-full transition-colors ${journeyTab === 'saved' ? 'bg-brand-amber text-brand-ink shadow-sm' : 'text-brand-slate'}`}
             >
               <Heart size={14} /> Saved Journey
             </button>
@@ -122,7 +122,7 @@ export default function JourneyPlannerPanel({ planner, onClose }) {
                 setJourneyTab('leave')
                 setSavedOpen(false)
               }}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-semibold rounded-full transition-colors ${journeyTab === 'leave' ? 'bg-blue-700 text-white shadow-sm' : 'text-slate-500'}`}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-semibold rounded-full transition-colors ${journeyTab === 'leave' ? 'bg-brand-amber text-brand-ink shadow-sm' : 'text-brand-slate'}`}
             >
               <Clock size={14} /> Leave now
             </button>
@@ -278,7 +278,7 @@ export default function JourneyPlannerPanel({ planner, onClose }) {
             <button
               onClick={handleSwap}
               aria-label="Swap stations"
-              className="absolute right-4 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white border border-slate-200 shadow-md flex items-center justify-center text-blue-700"
+              className="absolute right-4 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white border border-brand-line shadow-md flex items-center justify-center text-brand-ink"
             >
               <ArrowUpDown size={15} />
             </button>
@@ -287,7 +287,7 @@ export default function JourneyPlannerPanel({ planner, onClose }) {
           <button
             onClick={handlePlanJourney}
             disabled={planning}
-            className="w-full max-w-md bg-blue-700 hover:bg-blue-800 disabled:bg-blue-400 transition-colors text-white font-semibold text-base py-3.5 rounded-full flex items-center justify-between px-6"
+            className="w-full max-w-md bg-brand-amber hover:bg-yellow-300 disabled:bg-slate-300 disabled:text-slate-500 transition-colors text-brand-ink font-semibold text-base py-3.5 rounded-full flex items-center justify-between px-6"
           >
             {planning ? 'Planning…' : 'Plan Journey'} <ArrowRight size={18} />
           </button>

@@ -63,7 +63,7 @@ export default function StationReportSummary({ station, onReportIssue, onRate })
 
       <div className="px-3 py-3 sm:px-4 sm:py-3 bg-white max-h-[48vh] overflow-y-auto">
         <div className="flex items-center gap-2 mb-3 text-sm">
-          <span className={`w-2 h-2 rounded-full shrink-0 ${total === 0 ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+          <span className={`w-2 h-2 rounded-full shrink-0 ${total === 0 ? 'bg-blue-500' : 'bg-yellow-500'}`} />
           <span className="text-slate-600">
             {loading ? 'Checking for reports\u2026' : total === 0 ? 'No active reports' : `${total} active report${total > 1 ? 's' : ''}`}
           </span>
@@ -76,7 +76,7 @@ export default function StationReportSummary({ station, onReportIssue, onRate })
                 <span className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-slate-50 flex items-center justify-center text-xs sm:text-sm shrink-0">{cat.emoji}</span>
                 {cat.label}
               </span>
-              <span className="font-bold text-red-500">{counts[cat.key]}</span>
+              <span className="font-bold text-yellow-700">{counts[cat.key]}</span>
             </div>
           ))}
         </div>
@@ -84,7 +84,7 @@ export default function StationReportSummary({ station, onReportIssue, onRate })
         <button
           type="button"
           onClick={() => onReportIssue(station)}
-          className="w-full bg-red-600 hover:bg-red-700 transition-colors text-white text-sm font-semibold py-2.5 rounded-full mb-2"
+          className="w-full bg-yellow-500 hover:bg-yellow-400 transition-colors text-slate-950 text-sm font-semibold py-2.5 rounded-full mb-2"
         >
           Report Issue
         </button>

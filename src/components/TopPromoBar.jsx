@@ -22,7 +22,7 @@ export default function TopPromoBar() {
   const track = [...deals, ...deals]
 
   return (
-    <div className="bg-blue-900 text-white text-sm py-2.5 flex items-center gap-3 overflow-hidden">
+    <div className="bg-brand-amber text-brand-ink text-sm py-2.5 flex items-center gap-3 overflow-hidden">
       {/* min-w-0 is the important part here: without it, a flex child is never
           allowed to shrink below its content size, so the wide scrolling
           track underneath would force this whole bar (and the page) wider
@@ -33,17 +33,17 @@ export default function TopPromoBar() {
             <span key={i} className="flex items-center gap-2 shrink-0">
               <Tag size={14} className="shrink-0" />
               <span className="font-semibold">{deal.pct} Off at {deal.shop}</span>
-              <span className="text-white/70">, grab &amp; go</span>
+              <span className="text-brand-ink/70">, grab &amp; go</span>
             </span>
           ))}
         </div>
       </div>
 
       <div className="flex items-center gap-3 shrink-0 pr-4">
-        <button className="bg-white/15 hover:bg-white/25 transition-colors rounded-full px-3 py-1 text-xs font-medium flex items-center gap-1 whitespace-nowrap">
+        <button className="bg-brand-ink text-white hover:bg-slate-800 transition-colors rounded-full px-3 py-1 text-xs font-medium flex items-center gap-1 whitespace-nowrap">
           Avviso Rewards <ArrowRight size={12} />
         </button>
-        <button onClick={() => setVisible(false)} aria-label="Dismiss banner" className="text-white/70 hover:text-white">
+        <button onClick={() => setVisible(false)} aria-label="Dismiss banner" className="text-brand-ink/70 hover:text-brand-ink">
           <X size={16} />
         </button>
       </div>

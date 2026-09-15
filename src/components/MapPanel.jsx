@@ -157,7 +157,7 @@ export default function MapPanel({
   const [imageError, setImageError] = useState("");
   const [mapTheme, setMapTheme] = useState(() => {
     try {
-      return localStorage.getItem("trainlive-map-theme") || "light";
+      return localStorage.getItem("trainlive-map-theme") || "dark";
     } catch {
       return "light";
     }

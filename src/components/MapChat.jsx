@@ -237,7 +237,7 @@ useEffect(() => {
           <div className="flex-1 overflow-y-auto bg-white px-4 py-4">
             {messages.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center px-6 text-center">
-                <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+                <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-amber-50 text-amber-800">
                   <MessageCircle size={22} />
                 </span>
                 <p className="text-sm font-semibold text-slate-800">Start the conversation</p>
@@ -246,7 +246,7 @@ useEffect(() => {
             ) : (
               messages.map((message, index) => (
                 <div key={message.id || index} className="mb-3 max-w-[88%] rounded-xl rounded-tl-sm bg-slate-100 px-3 py-2.5 last:mb-0">
-                  <p className="mb-1 text-[11px] font-bold text-blue-700">{message.username}</p>
+                  <p className="mb-1 text-[11px] font-bold text-brand-ink">{message.username}</p>
                   {message.message && (
                     <p className="break-words text-sm leading-relaxed text-slate-700">{message.message}</p>
                   )}
@@ -282,7 +282,7 @@ useEffect(() => {
                 <img src={imagePreview} alt="Selected preview" className="h-12 w-12 rounded-lg object-cover" />
               )}
               <div className="min-w-0 flex-1 text-xs text-slate-500 truncate">{selectedImage.name}</div>
-              <button type="button" onClick={clearSelectedImage} className="text-slate-400 hover:text-red-500" aria-label="Remove attachment">
+              <button type="button" onClick={clearSelectedImage} className="text-slate-400 hover:text-brand-live" aria-label="Remove attachment">
                 <X size={16} />
               </button>
             </div>
@@ -347,7 +347,7 @@ useEffect(() => {
                 type="button"
                 onClick={sendMessage}
                 aria-label="Send message"
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white transition-colors hover:bg-blue-700 disabled:bg-slate-300"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-amber text-brand-ink transition-colors hover:bg-yellow-300 disabled:bg-slate-300 disabled:text-slate-500"
                 disabled={sending || (!text.trim() && !selectedImage)}
               >
                 {sending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}

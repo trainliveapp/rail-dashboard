@@ -4,7 +4,7 @@ import {
   Search, Heart, Clock, ArrowUpDown, ArrowRight, Menu, X, Map, CalendarDays, Bell, HelpCircle, Plus,
 } from 'lucide-react'
 import { savedJourneys } from '../data/mockData'
-import logo from '../assets/logo.png'
+import logo from '../assets/logoy.png'
 
 const navItems = [
   { label: 'Live Map', icon: Map, href: '/' },

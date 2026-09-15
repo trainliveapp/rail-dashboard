@@ -3,8 +3,8 @@ import { ArrowLeft, Clock, ArrowRightLeft, Footprints, Flag, MapPin, ChevronDown
 import { getStationUpdates, subscribeToStationUpdates, confirmUpdate } from '../lib/stationUpdates'
 
 const tagStyles = {
-  amber: { bg: '#fffbeb', text: '#b45309', border: '#fde68a' },
-  rose: { bg: '#fff1f2', text: '#be123c', border: '#fecdd3' },
+  amber: { bg: '#fefce8', text: '#a16207', border: '#fde047' },
+  rose: { bg: '#fefce8', text: '#a16207', border: '#fde047' },
   blue: { bg: '#eff6ff', text: '#1d4ed8', border: '#bfdbfe' },
 }
 
@@ -17,7 +17,7 @@ function OptionPill({ option, isBest, selected, onClick }) {
         selected
           ? isBest
             ? 'bg-violet-600 border-violet-600 text-white'
-            : 'bg-blue-700 border-blue-700 text-white'
+            : 'bg-brand-amber border-brand-amber text-brand-ink'
           : 'bg-white border-slate-200 text-slate-700'
       }`}
     >
@@ -57,7 +57,7 @@ function LiveUpdates({ updates }) {
   return (
     <div className="mb-4">
       <p className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 mb-2 tracking-wide">
-        <span className="w-1.5 h-1.5 rounded-full bg-blue-600 inline-block" />
+        <span className="w-1.5 h-1.5 rounded-full bg-brand-amber inline-block" />
         LIVE FROM RIDERS ON THIS ROUTE
       </p>
       <div className="flex gap-2 overflow-x-auto -mx-1 px-1 no-scrollbar">
@@ -100,7 +100,7 @@ function AlertBanner({ report, onConfirm, confirming }) {
           type="button"
           onClick={() => onConfirm(report.id)}
           disabled={confirming}
-          className="flex items-center gap-1 text-xs text-slate-500 hover:text-blue-700 disabled:opacity-50"
+          className="flex items-center gap-1 text-xs text-slate-500 hover:text-brand-ink disabled:opacity-50"
         >
           <ThumbsUp size={11} /> confirmed by {report.confirms} rider{report.confirms === 1 ? '' : 's'}
         </button>
@@ -244,9 +244,9 @@ export default function JourneyResults({ journey, selectedIndex, onSelectIndex, 
             <div key={`${stop.name}-${i}`} className="flex gap-3">
               <div className="flex flex-col items-center pt-1">
                 {stop.isLast ? (
-                  <span className="w-3.5 h-3.5 rounded-md bg-blue-700 shrink-0" />
+                  <span className="w-3.5 h-3.5 rounded-md bg-brand-amber shrink-0" />
                 ) : stop.isFirst ? (
-                  <span className="w-3.5 h-3.5 rounded-full border-2 border-blue-700 bg-white shrink-0" />
+                  <span className="w-3.5 h-3.5 rounded-full border-2 border-brand-amber bg-white shrink-0" />
                 ) : (
                   <span className="w-2.5 h-2.5 rounded-full border-2 border-slate-300 bg-white shrink-0" />
                 )}

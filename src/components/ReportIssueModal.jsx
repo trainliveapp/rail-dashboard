@@ -14,10 +14,10 @@ const icons = { Clock3, Ban, Construction, Users, Ticket, Accessibility, Sparkle
 // categories are informational (blue), a few carry more weight and get the
 // amber/rose treatment already used elsewhere in the app for warnings.
 const categoryTone = {
-  police: 'rose',
+  police: 'amber',
   revenue: 'amber',
-  antisocial: 'rose',
-  harassment_violence: 'rose',
+  antisocial: 'amber',
+  harassment_violence: 'amber',
   fare_dodgers: 'amber',
 }
 
@@ -95,7 +95,7 @@ export default function ReportIssueModal({ onClose, onReportSubmitted }) {
     return (
       <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-900/40">
         <div className="bg-slate-50 rounded-3xl shadow-2xl w-full max-w-[420px] max-h-[calc(100dvh-2rem)] overflow-y-auto p-5 sm:p-8 text-center">
-          <div className="w-14 h-14 rounded-full bg-blue-600 flex items-center justify-center mx-auto mb-4">
+          <div className="w-14 h-14 rounded-full bg-brand-success flex items-center justify-center mx-auto mb-4">
             <Check size={26} className="text-white" strokeWidth={3} />
           </div>
           <h2 className="text-lg font-bold text-slate-900 mb-1">Report submitted</h2>
@@ -127,9 +127,9 @@ export default function ReportIssueModal({ onClose, onReportSubmitted }) {
                 type="button"
                 key={cat.key}
                 onClick={() => setCategory(cat.key)}
-                className={`flex flex-col items-center justify-center text-center gap-2 rounded-xl border px-3 py-4 text-sm font-medium ${active ? 'border-blue-500 bg-blue-50 text-slate-800' : 'border-slate-200 bg-white text-slate-700'}`}
+                className={`flex flex-col items-center justify-center text-center gap-2 rounded-xl border px-3 py-4 text-sm font-medium ${active ? 'border-brand-amber bg-amber-50 text-brand-ink' : 'border-brand-line bg-white text-brand-slate'}`}
               >
-                <Icon size={20} className="text-blue-600" />
+                <Icon size={20} className="text-amber-700" />
                 {cat.label}
               </button>
             )
@@ -141,14 +141,14 @@ export default function ReportIssueModal({ onClose, onReportSubmitted }) {
           <button
             type="button"
             onClick={() => setWhere('train')}
-            className={`flex items-center justify-center gap-2 rounded-full border px-4 py-3 text-sm font-medium ${where === 'train' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-200 bg-white text-slate-600'}`}
+            className={`flex items-center justify-center gap-2 rounded-full border px-4 py-3 text-sm font-medium ${where === 'train' ? 'border-brand-amber bg-amber-50 text-brand-ink' : 'border-brand-line bg-white text-brand-slate'}`}
           >
             <TrainIcon size={16} /> On Train
           </button>
           <button
             type="button"
             onClick={() => setWhere('station')}
-            className={`flex items-center justify-center gap-2 rounded-full border px-4 py-3 text-sm font-medium ${where === 'station' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-200 bg-white text-slate-600'}`}
+            className={`flex items-center justify-center gap-2 rounded-full border px-4 py-3 text-sm font-medium ${where === 'station' ? 'border-brand-amber bg-amber-50 text-brand-ink' : 'border-brand-line bg-white text-brand-slate'}`}
           >
             <MapPin size={16} /> At Station
           </button>
@@ -188,7 +188,7 @@ export default function ReportIssueModal({ onClose, onReportSubmitted }) {
               disabled={locating}
               className="flex items-center justify-center gap-2 bg-white border border-slate-200 rounded-full px-4 py-3 text-sm font-medium text-slate-700 whitespace-nowrap"
             >
-              {locating ? <Loader2 size={15} className="text-blue-600 animate-spin" /> : <LocateFixed size={15} className="text-blue-600" />}
+              {locating ? <Loader2 size={15} className="text-amber-700 animate-spin" /> : <LocateFixed size={15} className="text-amber-700" />}
               {locating ? 'Locating…' : 'Use My Location'}
             </button>
           </div>
@@ -229,7 +229,7 @@ export default function ReportIssueModal({ onClose, onReportSubmitted }) {
         <button
           type="submit"
           disabled={submitting}
-          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 transition-colors text-white font-medium py-3.5 rounded-full flex items-center justify-center gap-2"
+          className="w-full bg-brand-amber hover:bg-yellow-300 disabled:bg-slate-300 disabled:text-slate-500 transition-colors text-brand-ink font-medium py-3.5 rounded-full flex items-center justify-center gap-2"
         >
           {submitting ? 'Submitting…' : 'Submit report'} {!submitting && <ArrowRight size={16} />}
         </button>

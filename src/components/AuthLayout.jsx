@@ -1,5 +1,5 @@
 import authBg from '../assets/auth-bg.png'
-import logo from '../assets/logo.png'
+import logo from '../assets/logoy.png'
 
 export default function AuthLayout({ children, cardWidth = 'max-w-[560px]', backgroundImage, blurBackground = true }) {
   const bgSrc = backgroundImage || authBg

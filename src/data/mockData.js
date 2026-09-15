@@ -626,16 +626,16 @@ export const mapLayerToggles = [
 
 export const liveFeed = [
   { icon: 'AlertTriangle', color: 'bg-slate-800', text: 'Signal failure near Euston', time: '5 min ago', confirmed: 39 },
-  { icon: 'Users', color: 'bg-red-500', text: 'Severe overcrowding at Oxford Circus', time: '6 min ago', confirmed: 40 },
-  { icon: 'Wrench', color: 'bg-purple-500', text: 'Engineering works · Stratford', time: '7 min ago', confirmed: 41 },
-  { icon: 'Megaphone', color: 'bg-sky-500', text: 'Person on track · Vauxhall', time: '8 min ago', confirmed: 42 },
+  { icon: 'Users', color: 'bg-yellow-500', text: 'Severe overcrowding at Oxford Circus', time: '6 min ago', confirmed: 40 },
+  { icon: 'Wrench', color: 'bg-blue-600', text: 'Engineering works · Stratford', time: '7 min ago', confirmed: 41 },
+  { icon: 'Megaphone', color: 'bg-blue-500', text: 'Person on track · Vauxhall', time: '8 min ago', confirmed: 42 },
 ]
 
 export const stationReportCategories = [
-  { key: 'police', label: 'Police', emoji: '\ud83d\udee1\ufe0f', tone: 'rose' },
+  { key: 'police', label: 'Police', emoji: '\ud83d\udee1\ufe0f', tone: 'amber' },
   { key: 'revenue', label: 'Revenue Protection', emoji: '\ud83c\udfab', tone: 'amber' },
-  { key: 'antisocial', label: 'Anti Social Behaviour', emoji: '\ud83d\udea8', tone: 'rose' },
-  { key: 'harassment_violence', label: 'Harassment & Violence', emoji: '\ud83d\udee1\ufe0f', tone: 'rose' },
+  { key: 'antisocial', label: 'Anti Social Behaviour', emoji: '\ud83d\udea8', tone: 'amber' },
+  { key: 'harassment_violence', label: 'Harassment & Violence', emoji: '\ud83d\udee1\ufe0f', tone: 'amber' },
   { key: 'fare_dodgers', label: 'Fare Dodgers', emoji: '\ud83c\udfab', tone: 'amber' },
 ]
 
