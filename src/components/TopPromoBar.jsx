@@ -11,7 +11,7 @@ export default function TopPromoBar() {
   const track = [...liveFeed, ...liveFeed]
 
   return (
-    <div className="bg-brand-amber text-brand-ink text-sm py-2.5 flex items-center gap-3 overflow-hidden">
+    <div className="bg-yellow-400 text-brand-ink text-sm py-2.5 flex items-center gap-3 overflow-hidden">
       {/* min-w-0 is the important part here: without it, a flex child is never
           allowed to shrink below its content size, so the wide scrolling
           track underneath would force this whole bar (and the page) wider

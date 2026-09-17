@@ -19,7 +19,7 @@ export default function NavBar({ mapTheme = 'dark', onMapThemeChange = null }) {
   }
 
   return (
-    <div className="relative bg-brand-ink border-b border-brand-ink text-white">
+    <div className="relative bg-blue-700 border-b border-brand-blue text-white">
       <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-2">
           <img src={logo} alt="TrainLive" className="h-8 w-auto" />
