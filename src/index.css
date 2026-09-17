@@ -4,7 +4,8 @@
 @theme {
   --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
   --font-board: 'Share Tech Mono', ui-monospace, monospace;
-  --color-brand-amber: #F5B800;
+  --color-brand-amber: #FFD21A;
+  --color-brand-blue: #1688FF;
   --color-brand-ink: #111827;
   --color-brand-page: #F8FAFC;
   --color-brand-slate: #334155;
@@ -12,6 +13,23 @@
   --color-brand-live: #DC2626;
   --color-brand-success: #16A34A;
   --color-brand-surface: #FFFFFF;
+  --color-blue-50: #EEF7FF;
+  --color-blue-100: #D9EDFF;
+  --color-blue-200: #B8DCFF;
+  --color-blue-300: #82C3FF;
+  --color-blue-400: #43A6FF;
+  --color-blue-500: #1688FF;
+  --color-blue-600: #0878EA;
+  --color-blue-700: #0564C7;
+  --color-blue-800: #0A4F98;
+  --color-blue-900: #0B3B70;
+  --color-amber-400: #FFE05C;
+  --color-amber-500: #FFC400;
+  --color-yellow-300: #FFE66B;
+  --color-yellow-400: #FFDF3D;
+  --color-yellow-500: #FFD21A;
+  --color-yellow-600: #E8B900;
+  --color-yellow-700: #B88E00;
 }
 
 body {

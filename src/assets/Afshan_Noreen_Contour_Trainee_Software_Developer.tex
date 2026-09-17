@@ -1,0 +1,125 @@
+\documentclass[10pt,a4paper]{article}
+
+% ---------- Packages ----------
+\usepackage[a4paper,margin=0.58in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{tabularx}
+\usepackage{microtype}
+
+% ---------- Formatting ----------
+\definecolor{heading}{RGB}{35,35,35}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+\setlist[itemize]{leftmargin=1.2em, itemsep=1pt, topsep=2pt, parsep=0pt}
+\titleformat{\section}{\large\bfseries\color{heading}}{}{0pt}{}[\titlerule]
+\titlespacing*{\section}{0pt}{7pt}{3pt}
+\urlstyle{same}
+
+\newcommand{\resumeSubheading}[4]{%
+  \textbf{#1}\hfill \textbf{#2}\\
+  \textit{#3}\hfill \textit{#4}\\[-2pt]
+}
+\newcommand{\resumeProject}[2]{%
+  \textbf{#1}\hfill \textit{#2}\\[-2pt]
+}
+
+\begin{document}
+
+% ---------- Header ----------
+\begin{center}
+    {\LARGE \textbf{AFSHAN NOREEN}}\\[3pt]
+    {\normalsize Trainee Software Developer \textbar{} Software Engineering Graduate}\\[4pt]
+    \small
+    \href{mailto:afshannoreen010@gmail.com}{afshannoreen010@gmail.com}
+    \textbar{} \href{https://github.com/nooraizafshan}{GitHub}
+    \textbar{} \href{https://linkedin.com/in/afshan-noreen}{LinkedIn}
+    \textbar{} Portfolio
+\end{center}
+
+% ---------- Summary ----------
+\section*{PROFESSIONAL SUMMARY}
+Software Engineering graduate with hands-on experience developing full-stack web applications using JavaScript, React, Node.js, and REST APIs. Familiar with C\#/.NET API integration, SQL databases, Git, authentication, and role-based access control. Experienced in developing database-driven applications and collaborating on software projects. Interested in enterprise software development, object-oriented programming, and AI-powered applications, with a strong commitment to learning and applying professional software engineering practices.
+
+% ---------- Skills ----------
+\section*{TECHNICAL SKILLS}
+\textbf{Programming:} JavaScript (ES6+), TypeScript (learning), C\#/.NET API integration\\
+\textbf{Frontend:} React.js, Next.js, HTML5, CSS3, Tailwind CSS\\
+\textbf{Backend \& APIs:} Node.js, Express.js, RESTful APIs, JWT authentication, RBAC\\
+\textbf{Databases:} MongoDB, MS SQL, MySQL; data modeling and query optimization\\
+\textbf{Tools \& Practices:} Git, GitHub, Postman, Agile/Scrum, code reviews, SDLC, MVC\\
+\textbf{Currently Learning:} OOP and SOLID design principles, DSA, NestJS, GraphQL, AI/LLM concepts
+
+% ---------- Experience ----------
+\section*{PROFESSIONAL EXPERIENCE}
+
+\resumeSubheading{MERN Stack Developer}{Jun 2026 -- Present}{Tyro Soft}{Gujranwala, Pakistan \textbar{} Remote}
+\begin{itemize}
+  \item Develop and maintain full-stack features using MongoDB, Express.js, React.js, and Node.js in a remote, agile environment.
+  \item Build and consume RESTful APIs for application functionality and backend-service integrations.
+  \item Implement JWT authentication and role-based access control for multi-role workflows.
+  \item Collaborate with cross-functional teams through sprint planning, stand-ups, and code reviews.
+\end{itemize}
+
+\resumeSubheading{Software Developer}{Feb 2026 -- May 2026}{CanDev Software Agency}{}
+\begin{itemize}
+  \item Developed and maintained full-stack applications using React.js, Node.js, Express.js, and RESTful APIs in a SaaS environment.
+  \item Integrated React frontends with .NET backend services for reliable cross-service communication.
+  \item Led migration of a legacy .NET admin panel to React.js, improving maintainability and user experience.
+  \item Built reusable components and modular backend architecture; participated in code reviews and delivery workflows.
+\end{itemize}
+
+\resumeSubheading{Full Stack Web Developer}{Sep 2025 -- Jan 2026}{BioNexam}{}
+\begin{itemize}
+  \item Built and maintained a live educational platform using Next.js, Node.js, Express.js, and MongoDB.
+  \item Designed REST APIs for user management, dashboards, and workflow automation; implemented JWT and RBAC.
+  \item Optimized MongoDB queries and data retrieval for reporting and dashboard features.
+\end{itemize}
+
+\resumeSubheading{AI-Assisted Full Stack Developer}{Oct 2025 -- Dec 2025}{IDO Innotech}{}
+\begin{itemize}
+  \item Developed full-stack features using AI-assisted workflows and integrated frontend components with backend APIs.
+  \item Collaborated with international agile teams on sprint planning and code reviews.
+\end{itemize}
+
+\resumeSubheading{Frontend Developer (Part-Time)}{Jun 2025 -- Sep 2025}{OnRoad24Seven ApS}{}
+\begin{itemize}
+  \item Built reusable React components integrated with backend APIs for a transport SaaS platform.
+\end{itemize}
+
+\resumeSubheading{Frontend Developer Intern}{May 2024 -- Aug 2024}{Business Incubation Center / EcoTater Starch}{}
+\begin{itemize}
+  \item Contributed UI components to startup products and strengthened practical frontend development skills.
+\end{itemize}
+
+% ---------- Projects ----------
+\section*{KEY PROJECTS}
+
+\resumeProject{MediServe -- Medical Certificate Management System}{Next.js, Node.js, Express.js, MongoDB}
+\begin{itemize}
+  \item Developed and deployed a full-stack application for Aziz Bhatti Shaheed Teaching Hospital, used by hospital staff.
+  \item Digitized the certificate workflow from applicant registration and lab processing through consultant review and final approval.
+  \item Implemented role-based access, audit trails, and QR-enabled certificates for external verification.
+\end{itemize}
+
+\resumeProject{BioNexam Platform}{Next.js, Node.js, Express.js, MongoDB}
+\begin{itemize}
+  \item Delivered full-stack features for a live educational SaaS platform, including REST APIs, data models, and JWT-secured authentication.
+\end{itemize}
+
+\resumeProject{MERN E-Commerce Management System}{React, Next.js, Node.js, MongoDB, Stripe}
+\begin{itemize}
+  \item Built customer and admin dashboards with JWT authentication, RBAC, product/inventory/order data models, and Stripe payments.
+\end{itemize}
+
+% ---------- Education ----------
+\section*{EDUCATION}
+\textbf{Bachelor of Science in Software Engineering}\hfill \textbf{Nov 2022 -- May 2026}\\
+University of Gujrat \hfill CGPA: 3.46
+
+\end{document}
