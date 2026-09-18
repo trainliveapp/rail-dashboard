@@ -1,7 +1,8 @@
 import { useRef, useEffect, useState, useMemo } from 'react'
 import { MapContainer, TileLayer, Polyline, Marker, Popup, Tooltip, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
-import { Plus, Minus, LocateFixed, Flag, ThumbsUp, Sun, Moon } from 'lucide-react'
+import 'leaflet-rotate'
+import { Plus, Minus, LocateFixed, Flag, ThumbsUp, Sun, Moon, Compass, Route } from 'lucide-react'
 import { lines, housingPins, coffeePins, liveEventPin, stations } from '../data/mockData'
 import { tubeLineGeometry } from '../data/tubeLineGeometry'
 import { getStationScores } from '../lib/stationRatings'
@@ -228,6 +229,13 @@ function ZoomTracker({ onZoomChange }) {
   return null
 }
 
+function BearingTracker({ onBearingChange }) {
+  const map = useMapEvents({
+    rotate: () => onBearingChange(map.getBearing()),
+  })
+  return null
+}
+
 // Below this zoom, station markers don't render at all, at a city-wide
 // view the basemap's own city/borough labels are what should carry the
 // map, not hundreds of our train icons stacked on top of each other.
@@ -256,6 +264,7 @@ export default function MapPanel({
   const [stationScores, setStationScores] = useState({})
   const [followSuspended, setFollowSuspended] = useState(false)
   const [zoom, setZoom] = useState(16)
+  const [bearing, setBearing] = useState(0)
   const [reportingStation, setReportingStation] = useState(null)
   const [reportModalOpen, setReportModalOpen] = useState(false)
   const [communityReports, setCommunityReports] = useState([])
@@ -397,11 +406,40 @@ export default function MapPanel({
     return boundsList.some((b) => segmentInBounds(segment, b))
   }
 
+  const setMapBearing = (nextBearing) => {
+    const normalizedBearing = ((nextBearing % 360) + 360) % 360
+    mapRef.current?.setBearing?.(normalizedBearing)
+    setBearing(normalizedBearing)
+  }
+
+  const currentMapBearing = () => mapRef.current?.getBearing?.() ?? bearing
+
+  const showRouteOverview = () => {
+    if (routeFitPoints.length < 2) return
+    setMapBearing(0)
+    mapRef.current?.flyToBounds(L.latLngBounds(routeFitPoints), {
+      paddingTopLeft: [40, 40],
+      paddingBottomRight: [40, 260],
+      maxZoom: 16,
+      duration: 0.75,
+    })
+  }
+
   return (
     <div className={`relative w-full ${className} overflow-hidden bg-slate-100`}>
-      <MapContainer center={CENTER} zoom={16} zoomControl={false} className="w-full h-full">
+      <MapContainer
+        center={CENTER}
+        zoom={16}
+        zoomControl={false}
+        rotate
+        bearing={0}
+        touchRotate
+        shiftKeyRotate
+        className="w-full h-full"
+      >
         <MapBridge mapRef={mapRef} />
         <ZoomTracker onZoomChange={setZoom} />
+        <BearingTracker onBearingChange={setBearing} />
         
         <TileLayer
           key={mapTheme}
@@ -599,6 +637,35 @@ export default function MapPanel({
           }`}
         >
           <LocateFixed size={15} />
+        </button>
+        <button
+          type="button"
+          aria-label="Face the direction of travel"
+          title={liveLocation ? 'Face the direction of travel' : 'Direction unavailable'}
+          disabled={!liveLocation}
+          onClick={() => setMapBearing(liveLocation?.heading || 0)}
+          className="w-8 h-8 sm:w-10 sm:h-10 bg-white shadow-sm rounded-lg flex items-center justify-center text-slate-600 active:bg-slate-50 disabled:opacity-40"
+        >
+          <Compass size={15} />
+        </button>
+        <button
+          type="button"
+          aria-label="Reset map angle to north"
+          title="Reset map angle to north"
+          onClick={() => setMapBearing(0)}
+          className="w-8 h-8 sm:w-10 sm:h-10 bg-white shadow-sm rounded-lg flex items-center justify-center text-slate-600 active:bg-slate-50"
+        >
+          <Compass size={15} className={bearing ? 'text-blue-600' : 'text-slate-400'} style={{ transform: `rotate(${bearing}deg)` }} />
+        </button>
+        <button
+          type="button"
+          aria-label="Show route overview"
+          title={routeFitPoints.length > 1 ? 'Show route overview' : 'Plan a journey to see the route overview'}
+          disabled={routeFitPoints.length < 2}
+          onClick={showRouteOverview}
+          className="w-8 h-8 sm:w-10 sm:h-10 bg-white shadow-sm rounded-lg flex items-center justify-center text-slate-600 active:bg-slate-50 disabled:opacity-40"
+        >
+          <Route size={15} />
         </button>
       </div>
 

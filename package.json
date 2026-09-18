@@ -17,6 +17,7 @@
     "@capacitor/splash-screen": "^8.0.1",
     "@supabase/supabase-js": "^2.111.0",
     "leaflet": "^1.9.4",
+    "leaflet-rotate": "^0.2.8",
     "lucide-react": "^1.27.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
