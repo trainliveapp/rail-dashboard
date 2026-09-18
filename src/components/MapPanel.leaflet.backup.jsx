@@ -638,35 +638,39 @@ export default function MapPanel({
         >
           <LocateFixed size={15} />
         </button>
-        <button
-          type="button"
-          aria-label="Face the direction of travel"
-          title={liveLocation ? 'Face the direction of travel' : 'Direction unavailable'}
-          disabled={!liveLocation}
-          onClick={() => setMapBearing(liveLocation?.heading || 0)}
-          className="w-8 h-8 sm:w-10 sm:h-10 bg-white shadow-sm rounded-lg flex items-center justify-center text-slate-600 active:bg-slate-50 disabled:opacity-40"
-        >
-          <Compass size={15} />
-        </button>
-        <button
-          type="button"
-          aria-label="Reset map angle to north"
-          title="Reset map angle to north"
-          onClick={() => setMapBearing(0)}
-          className="w-8 h-8 sm:w-10 sm:h-10 bg-white shadow-sm rounded-lg flex items-center justify-center text-slate-600 active:bg-slate-50"
-        >
-          <Compass size={15} className={bearing ? 'text-blue-600' : 'text-slate-400'} style={{ transform: `rotate(${bearing}deg)` }} />
-        </button>
-        <button
-          type="button"
-          aria-label="Show route overview"
-          title={routeFitPoints.length > 1 ? 'Show route overview' : 'Plan a journey to see the route overview'}
-          disabled={routeFitPoints.length < 2}
-          onClick={showRouteOverview}
-          className="w-8 h-8 sm:w-10 sm:h-10 bg-white shadow-sm rounded-lg flex items-center justify-center text-slate-600 active:bg-slate-50 disabled:opacity-40"
-        >
-          <Route size={15} />
-        </button>
+        {liveLocation && (
+          <button
+            type="button"
+            aria-label="Face the direction of travel"
+            title="Face the direction of travel"
+            onClick={() => setMapBearing(liveLocation.heading || 0)}
+            className="w-8 h-8 sm:w-10 sm:h-10 bg-white shadow-sm rounded-lg flex items-center justify-center text-slate-600 active:bg-slate-50"
+          >
+            <Compass size={15} />
+          </button>
+        )}
+        {bearing !== 0 && (
+          <button
+            type="button"
+            aria-label="Reset map angle to north"
+            title="Reset map angle to north"
+            onClick={() => setMapBearing(0)}
+            className="w-8 h-8 sm:w-10 sm:h-10 bg-white shadow-sm rounded-lg flex items-center justify-center text-slate-600 active:bg-slate-50"
+          >
+            <Compass size={15} className="text-blue-600" style={{ transform: `rotate(${bearing}deg)` }} />
+          </button>
+        )}
+        {routeFitPoints.length > 1 && (
+          <button
+            type="button"
+            aria-label="Show route overview"
+            title="Show route overview"
+            onClick={showRouteOverview}
+            className="w-8 h-8 sm:w-10 sm:h-10 bg-white shadow-sm rounded-lg flex items-center justify-center text-slate-600 active:bg-slate-50"
+          >
+            <Route size={15} />
+          </button>
+        )}
       </div>
 
       {/* <div className="hidden sm:block absolute bottom-24 left-3 z-[1000] bg-white shadow-sm rounded-xl px-4 py-3 text-xs text-slate-600">
