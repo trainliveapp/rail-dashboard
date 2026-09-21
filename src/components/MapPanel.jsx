@@ -260,6 +260,7 @@ export default function MapPanel({
         .from("chat_messages")
         .select("*")
         .eq("line", line)
+        .gte("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
         .order("created_at", { ascending: true })
         .limit(100);
 

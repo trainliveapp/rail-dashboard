@@ -3,6 +3,8 @@ import { MessageCircle, X, Send, Paperclip, Camera, Loader2, Share2 } from "luci
 import { supabase } from "../supabase";
 import { lineTextColors } from "./lineColors";
 
+const CHAT_VISIBILITY_WINDOW_MS = 24 * 60 * 60 * 1000;
+
 const TUBE_LINES = [
   "central",
   "jubilee",
@@ -79,6 +81,7 @@ export default function MapChat() {
       .from("chat_messages")
       .select("*")
       .eq("line", line)
+      .gte("created_at", new Date(Date.now() - CHAT_VISIBILITY_WINDOW_MS).toISOString())
       .order("created_at", { ascending: true });
 
 

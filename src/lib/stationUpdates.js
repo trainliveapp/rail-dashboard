@@ -1,5 +1,11 @@
 import { supabase } from './supabaseClient'
 
+export const UPDATE_VISIBILITY_WINDOW_MS = 24 * 60 * 60 * 1000
+
+function activeSinceIso() {
+  return new Date(Date.now() - UPDATE_VISIBILITY_WINDOW_MS).toISOString()
+}
+
 // Real data layer for the report + live update feed shown in
 // JourneyResults, backed by the station_updates table. Run the migration in
 // supabase/migrations before enabling station reporting in production.
@@ -40,7 +46,8 @@ function mapRow(row) {
 }
 
 function isVisibleUpdate(row) {
-  return row.kind === 'chat' || row.status === 'ACTIVE' || row.status === 'CONFIRMED'
+  return new Date(row.created_at).getTime() >= Date.now() - UPDATE_VISIBILITY_WINDOW_MS &&
+    (row.kind === 'chat' || row.status === 'ACTIVE' || row.status === 'CONFIRMED')
 }
 
 // Everything currently posted for the stations a journey option passes
@@ -52,6 +59,7 @@ export async function getStationUpdates(stationNames) {
     .from('station_updates')
     .select('*')
     .in('station_name', stationNames)
+    .gte('created_at', activeSinceIso())
     .order('created_at', { ascending: false })
     .limit(20)
 
@@ -76,7 +84,7 @@ export function subscribeToStationUpdates(stationNames, onInsert) {
       'postgres_changes',
       { event: 'INSERT', schema: 'public', table: 'station_updates' },
       (payload) => {
-        if (stationSet.has(payload.new.station_name)) {
+        if (stationSet.has(payload.new.station_name) && isVisibleUpdate(payload.new)) {
           onInsert(mapRow(payload.new))
         }
       }
@@ -139,6 +147,18 @@ export async function postChatMessage({ stationName, message }) {
 
 // The tap-to-confirm ("confirmed by N riders") action on a report.
 export async function confirmUpdate(id) {
-  const { error } = await supabase.rpc('increment_confirms', { update_id: id })
+  let visitorId = null
+  if (typeof window !== 'undefined') {
+    visitorId = window.localStorage.getItem('rail-dashboard-visitor-id')
+    if (!visitorId) {
+      visitorId = crypto.randomUUID()
+      window.localStorage.setItem('rail-dashboard-visitor-id', visitorId)
+    }
+  }
+
+  const { error } = await supabase.rpc('increment_confirms', {
+    update_id: id,
+    visitor_id: visitorId,
+  })
   if (error) throw error
 }

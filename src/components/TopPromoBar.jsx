@@ -26,8 +26,6 @@ export default function TopPromoBar() {
   const [trendingError, setTrendingError] = useState('')
 
   useEffect(() => {
-    if (!trendingOpen) return undefined
-
     let active = true
     const loadTrending = async () => {
       setTrendingLoading(true)
@@ -37,15 +35,34 @@ export default function TopPromoBar() {
         .from('station_updates')
         .select('id, station_name, kind, message, label, confirms, created_at, status')
         .in('status', ['ACTIVE', 'CONFIRMED'])
+        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
         .order('confirms', { ascending: false })
         .order('created_at', { ascending: false })
         .limit(6)
 
+      const { data: tflData, error: tflError } = await supabase
+        .from('tfl_disruptions')
+        .select('source_key, line_names, severity, status_description, reason, last_seen_at')
+        .is('resolved_at', null)
+        .gte('last_seen_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+        .order('severity', { ascending: true })
+        .order('last_seen_at', { ascending: false })
+        .limit(6)
+
       if (!active) return
-      if (error) {
+      if (error && tflError) {
         setTrendingError('Trending is temporarily unavailable.')
       } else {
-        setTrending(data || [])
+        const official = (tflData || []).map((item) => ({
+          id: `tfl-${item.source_key}`,
+          kind: 'tfl',
+          station_name: item.line_names.join(', '),
+          message: item.reason,
+          label: item.status_description,
+          confirms: null,
+          created_at: item.last_seen_at,
+        }))
+        setTrending([...official, ...(data || [])].slice(0, 6))
       }
       setTrendingLoading(false)
     }
@@ -56,19 +73,23 @@ export default function TopPromoBar() {
       .channel('trending-station-updates')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'station_updates' }, loadTrending)
       .subscribe()
+    const refreshTimer = window.setInterval(loadTrending, 90 * 1000)
 
     return () => {
       active = false
+      window.clearInterval(refreshTimer)
       supabase.removeChannel(channel)
     }
-  }, [trendingOpen])
+  }, [])
 
   if (!visible) return null
 
   const track = trending.length > 0
     ? trending.slice(0, 4).map((item) => ({
       icon: item.kind === 'chat' ? 'Users' : 'AlertTriangle',
-      text: `${item.station_name}: ${item.message || item.label || 'Travel update'}`,
+      text: item.kind === 'tfl'
+        ? `TfL ${item.station_name}: ${item.label || 'Service disruption'}`
+        : `${item.station_name}: ${item.message || item.label || 'Travel update'}`,
       time: formatAge(item.created_at),
     }))
     : []
@@ -117,7 +138,7 @@ export default function TopPromoBar() {
           <div className="mb-3 flex items-center justify-between">
             <div>
               <h2 className="text-sm font-bold">Trending updates</h2>
-              <p className="text-xs text-slate-400">Community reports ranked by confirmations and recency</p>
+              <p className="text-xs text-slate-400">Official TfL disruptions and community reports</p>
             </div>
             <button type="button" onClick={() => setTrendingOpen(false)} aria-label="Close trending updates" className="text-slate-400 hover:text-slate-700">
               <X size={16} />
@@ -127,7 +148,7 @@ export default function TopPromoBar() {
           {trendingLoading && <p className="py-4 text-center text-sm text-slate-500">Loading updates...</p>}
           {!trendingLoading && trendingError && <p className="py-4 text-center text-sm text-red-600">{trendingError}</p>}
           {!trendingLoading && !trendingError && trending.length === 0 && (
-            <p className="py-4 text-center text-sm text-slate-500">No active community updates yet.</p>
+            <p className="py-4 text-center text-sm text-slate-500">No active network updates yet.</p>
           )}
           {!trendingLoading && !trendingError && trending.length > 0 && (
             <div className="space-y-2">
@@ -139,7 +160,7 @@ export default function TopPromoBar() {
                     <div className="min-w-0">
                       <p className="text-sm font-semibold">{item.station_name || 'Network update'}</p>
                       <p className="text-sm text-slate-600">{item.message || item.label || 'Travel update'}</p>
-                      <p className="mt-1 text-xs text-slate-400">{item.confirms || 0} confirmations · {formatAge(item.created_at)}</p>
+                      <p className="mt-1 text-xs text-slate-400">{item.kind === 'tfl' ? 'Official TfL update' : `${item.confirms || 0} confirmations`} · {formatAge(item.created_at)}</p>
                     </div>
                   </div>
                 )
