@@ -265,6 +265,7 @@ export default function MapPanel({
   const [followSuspended, setFollowSuspended] = useState(false)
   const [zoom, setZoom] = useState(16)
   const [bearing, setBearing] = useState(0)
+  const [directionMode, setDirectionMode] = useState(false)
   const [reportingStation, setReportingStation] = useState(null)
   const [reportModalOpen, setReportModalOpen] = useState(false)
   const [communityReports, setCommunityReports] = useState([])
@@ -641,23 +642,26 @@ export default function MapPanel({
         {liveLocation && (
           <button
             type="button"
-            aria-label="Face the direction of travel"
-            title="Face the direction of travel"
-            onClick={() => setMapBearing(liveLocation.heading || 0)}
-            className="w-8 h-8 sm:w-10 sm:h-10 bg-white shadow-sm rounded-lg flex items-center justify-center text-slate-600 active:bg-slate-50"
+            aria-label={directionMode ? 'Reset map angle to north' : 'Face the direction of travel'}
+            title={directionMode ? 'Reset map angle to north' : 'Face the direction of travel'}
+            onClick={() => {
+              if (directionMode) {
+                setMapBearing(0)
+                setDirectionMode(false)
+              } else {
+                setMapBearing(liveLocation.heading || 0)
+                setDirectionMode(true)
+              }
+            }}
+            className={`w-8 h-8 sm:w-10 sm:h-10 shadow-sm rounded-lg flex items-center justify-center active:bg-slate-50 ${
+              directionMode ? 'bg-white' : 'bg-slate-700'
+            }`}
           >
-            <Compass size={15} />
-          </button>
-        )}
-        {bearing !== 0 && (
-          <button
-            type="button"
-            aria-label="Reset map angle to north"
-            title="Reset map angle to north"
-            onClick={() => setMapBearing(0)}
-            className="w-8 h-8 sm:w-10 sm:h-10 bg-white shadow-sm rounded-lg flex items-center justify-center text-slate-600 active:bg-slate-50"
-          >
-            <Compass size={15} className="text-blue-600" style={{ transform: `rotate(${bearing}deg)` }} />
+            <Compass
+              size={15}
+              className={directionMode ? 'text-blue-600' : 'text-white'}
+              style={{ transform: `rotate(${bearing}deg)` }}
+            />
           </button>
         )}
         {routeFitPoints.length > 1 && (
