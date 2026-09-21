@@ -188,7 +188,7 @@ useEffect(() => {
           className="group flex h-20 w-20 items-center justify-center rounded-full p-1 transition-transform hover:-translate-y-0.5 active:translate-y-0"
         >
           <span className="relative flex h-16 w-16 items-center justify-center overflow-hidden">
-            <span className="chatter-icon" aria-hidden="true"><span className="chatter-icon__core" /></span>
+            <span className="chatter-icon" aria-hidden="true"><span className="chatter-icon__core">chatter</span></span>
           </span>
         </button>
       )}
@@ -198,7 +198,7 @@ useEffect(() => {
           <div className="flex items-center justify-between bg-white px-4 py-4 text-slate-900 border-b border-slate-200">
             <div className="flex items-center gap-3">
               <span className="relative flex h-14 w-14 items-center justify-center overflow-hidden">
-                <span className="chatter-icon" aria-hidden="true"><span className="chatter-icon__core" /></span>
+                <span className="chatter-icon" aria-hidden="true"><span className="chatter-icon__core">chatter</span></span>
               </span>
               <div>
                 <h3 className="text-sm font-bold">chatter</h3>
