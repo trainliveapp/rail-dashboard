@@ -19,7 +19,6 @@ function formatAge(createdAt) {
 }
 
 export default function TopPromoBar() {
-  const [visible, setVisible] = useState(true)
   const [trendingOpen, setTrendingOpen] = useState(false)
   const [trending, setTrending] = useState([])
   const [trendingLoading, setTrendingLoading] = useState(false)
@@ -82,8 +81,6 @@ export default function TopPromoBar() {
     }
   }, [])
 
-  if (!visible) return null
-
   const track = trending.length > 0
     ? trending.slice(0, 4).map((item) => ({
       icon: item.kind === 'chat' ? 'Users' : 'AlertTriangle',
@@ -127,9 +124,6 @@ export default function TopPromoBar() {
           className="bg-brand-ink text-white hover:bg-slate-800 transition-colors rounded-full px-3 py-1 text-xs font-medium flex items-center gap-1 whitespace-nowrap"
         >
           Trending <ArrowRight size={12} />
-        </button>
-        <button onClick={() => setVisible(false)} aria-label="Dismiss banner" className="text-brand-ink/70 hover:text-brand-ink">
-          <X size={16} />
         </button>
       </div>
 
