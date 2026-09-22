@@ -24,6 +24,7 @@ const CHAT_LINE_COLORS = {
   ...lineTextColors,
   "great western railway": "#4b1f4f",
 };
+const CHAT_EMOJIS = ["\u2764\ufe0f", "\ud83d\ude02", "\ud83d\ude21", "\ud83d\ude2e", "\ud83d\udc4d", "\ud83d\ude80"];
 
 export default function MapChat() {
   const [open, setOpen] = useState(false);
@@ -36,6 +37,7 @@ export default function MapChat() {
   const [selectedIsVideo, setSelectedIsVideo] = useState(false);
   const [sending, setSending] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [flyingEmojis, setFlyingEmojis] = useState([]);
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
 
@@ -73,6 +75,15 @@ export default function MapChat() {
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
+  };
+
+  const useEmoji = (emoji) => {
+    setText((current) => `${current}${emoji}`);
+    const id = `${Date.now()}-${Math.random()}`;
+    setFlyingEmojis((current) => [...current, { id, emoji, left: 12 + Math.random() * 72 }]);
+    window.setTimeout(() => {
+      setFlyingEmojis((current) => current.filter((item) => item.id !== id));
+    }, 1800);
   };
 
   async function loadMessages() {
@@ -194,7 +205,7 @@ useEffect(() => {
       )}
 
       {open && (
-        <div className="fixed bottom-5 right-5 z-[2000] flex h-[min(520px,calc(100vh-2rem))] w-[min(380px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-950/20">
+        <div className="relative fixed bottom-5 right-5 z-[2000] flex h-[min(520px,calc(100vh-2rem))] w-[min(380px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-950/20">
           <div className="flex items-center justify-between bg-white px-4 py-4 text-slate-900 border-b border-slate-200">
             <div className="flex items-center gap-3">
               <span className="relative flex h-14 w-14 items-center justify-center overflow-hidden">
@@ -273,6 +284,18 @@ useEffect(() => {
             )}
           </div>
 
+          <div className="pointer-events-none absolute inset-x-0 bottom-20 z-10 h-64 overflow-hidden" aria-hidden="true">
+            {flyingEmojis.map((item) => (
+              <span
+                key={item.id}
+                className="chat-flying-emoji absolute bottom-0 text-3xl"
+                style={{ left: `${item.left}%` }}
+              >
+                {item.emoji}
+              </span>
+            ))}
+          </div>
+
           {selectedImage && (
             <div className="flex items-center gap-3 border-t border-slate-100 bg-slate-50 px-3 py-2">
               {selectedIsVideo ? (
@@ -296,6 +319,19 @@ useEffect(() => {
           )}
 
           <div className="border-t border-slate-100 bg-slate-50 p-3">
+            <div className="mb-2 flex items-center gap-1 overflow-x-auto rounded-lg border border-slate-200 bg-white px-1.5 py-1" aria-label="Add an emoji to your message">
+              {CHAT_EMOJIS.map((emoji) => (
+                <button
+                  key={emoji}
+                  type="button"
+                  onClick={() => useEmoji(emoji)}
+                  aria-label={`Use ${emoji} emoji`}
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-lg transition-transform hover:bg-amber-50 hover:scale-110"
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
             <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-1.5 pl-3 shadow-sm focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/15">
               <input
                 ref={fileInputRef}

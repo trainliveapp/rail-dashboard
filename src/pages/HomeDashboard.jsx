@@ -206,7 +206,7 @@ export default function HomeDashboard() {
             onExpand={() => planner.setExpanded(true)}
           />
         ))}
-        <div className="absolute bottom-4 left-4 z-[1000]">
+        <div className="absolute bottom-4 right-4 z-[1000]">
           <MapChat />
         </div>
       </div>
