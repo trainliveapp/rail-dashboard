@@ -2,7 +2,7 @@ import { useRef, useEffect, useState, useMemo } from 'react'
 import { MapContainer, TileLayer, Polyline, Marker, Popup, Tooltip, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet-rotate'
-import { Plus, Minus, LocateFixed, Flag, ThumbsUp, Sun, Moon, Compass, Route } from 'lucide-react'
+import { Plus, Minus, LocateFixed, Flag, ThumbsUp, Sun, Moon, Compass, Route, CheckCircle2 } from 'lucide-react'
 import { lines, housingPins, coffeePins, liveEventPin, stations } from '../data/mockData'
 import { tubeLineGeometry } from '../data/tubeLineGeometry'
 import { getStationScores } from '../lib/stationRatings'
@@ -270,6 +270,7 @@ export default function MapPanel({
   const [reportModalOpen, setReportModalOpen] = useState(false)
   const [communityReports, setCommunityReports] = useState([])
   const [confirmingReport, setConfirmingReport] = useState(null)
+  const [reportNotice, setReportNotice] = useState(null)
   useEffect(() => {
     getStationScores(stations.map((s) => s.id)).then(setStationScores)
   }, [])
@@ -294,6 +295,12 @@ export default function MapPanel({
     }
   }, [])
 
+  useEffect(() => {
+    if (!reportNotice) return undefined
+    const timer = window.setTimeout(() => setReportNotice(null), 3200)
+    return () => window.clearTimeout(timer)
+  }, [reportNotice])
+
   const groupedReports = useMemo(() => {
     const grouped = new Map()
     for (const report of communityReports) {
@@ -316,6 +323,10 @@ export default function MapPanel({
   }, [communityReports])
 
   const handleReportSubmitted = (report) => {
+    setReportNotice({
+      id: Date.now(),
+      location: report.stationName || report.locationText || 'your location',
+    })
     if (!report.stationName) return
     const savedReport = {
       ...report,
@@ -606,6 +617,14 @@ export default function MapPanel({
           cycleParkingPins.map((p, i) => <Marker key={i} position={[p.lat, p.lng]} icon={badgeIcon('bike', '#db2777')} />)}
       </MapContainer>
 
+      {reportNotice && (
+        <div className="pointer-events-none absolute top-3 left-3 right-16 z-[1050] flex justify-center report-banner-in">
+          <div className="flex max-w-[360px] items-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-lg ring-1 ring-slate-200/80">
+            <CheckCircle2 size={17} className="shrink-0 text-emerald-600" />
+            <span>Report submitted for {reportNotice.location}</span>
+          </div>
+        </div>
+      )}
 
       <div className="absolute right-3 top-3 z-[1000] flex flex-col gap-1.5 sm:gap-2">
         <button aria-label="Report an issue" onClick={() => setReportModalOpen(true)} className="w-8 h-8 sm:w-10 sm:h-10 bg-brand-amber hover:bg-yellow-300 shadow-sm rounded-lg flex items-center justify-center text-brand-ink">
@@ -688,7 +707,11 @@ export default function MapPanel({
       </div> */}
 
       {reportingStation && (
-        <StationQuickReportModal station={reportingStation} onClose={() => setReportingStation(null)} />
+        <StationQuickReportModal
+          station={reportingStation}
+          onClose={() => setReportingStation(null)}
+          onReportSubmitted={handleReportSubmitted}
+        />
       )}
       {reportModalOpen && (
         <ReportIssueModal

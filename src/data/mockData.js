@@ -578,6 +578,7 @@ export const stations = [
 
 export const reportCategories = [
   { key: 'police', label: 'Police', icon: 'ShieldAlert' },
+  { key: 'safety', label: 'Safety', icon: 'ShieldCheck' },
   { key: 'revenue', label: 'Revenue Protection', icon: 'Ticket' },
   { key: 'antisocial', label: 'Anti Social Behaviour', icon: 'ShieldAlert' },
   { key: 'harassment_violence', label: 'Harassment & Violence', icon: 'ShieldAlert' },
@@ -633,6 +634,7 @@ export const liveFeed = [
 
 export const stationReportCategories = [
   { key: 'police', label: 'Police', emoji: '\ud83d\udee1\ufe0f', tone: 'amber' },
+  { key: 'safety', label: 'Safety', emoji: '\ud83d\udee1\ufe0f', tone: 'amber' },
   { key: 'revenue', label: 'Revenue Protection', emoji: '\ud83c\udfab', tone: 'amber' },
   { key: 'antisocial', label: 'Anti Social Behaviour', emoji: '\ud83d\udea8', tone: 'amber' },
   { key: 'harassment_violence', label: 'Harassment & Violence', emoji: '\ud83d\udee1\ufe0f', tone: 'amber' },

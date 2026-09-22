@@ -7,11 +7,10 @@ import { getStationUpdates, postReport } from '../lib/stationUpdates'
 // station's summary card. Deliberately simpler than the full
 // ReportIssueModal, the station is already known from the map, so there's
 // no location search here, just pick what's happening and confirm.
-export default function StationQuickReportModal({ station, onClose }) {
+export default function StationQuickReportModal({ station, onClose, onReportSubmitted }) {
   const [selected, setSelected] = useState(null)
   const [counts, setCounts] = useState({})
   const [submitting, setSubmitting] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -30,7 +29,7 @@ export default function StationQuickReportModal({ station, onClose }) {
     setSubmitting(true)
     setError('')
     try {
-      await postReport({
+      const savedReport = await postReport({
         stationName: station.name,
         category: selected.key,
         label: selected.label.toUpperCase(),
@@ -38,27 +37,13 @@ export default function StationQuickReportModal({ station, onClose }) {
         message: `${selected.label} reported at ${station.name}.`,
         whereOn: null,
       })
-      setSubmitted(true)
-      setTimeout(onClose, 1200)
+      onReportSubmitted?.(savedReport)
+      onClose()
     } catch (err) {
       setError(err.message || 'Could not submit that report, try again.')
     } finally {
       setSubmitting(false)
     }
-  }
-
-  if (submitted) {
-    return (
-      <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-900/40">
-        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-[380px] max-h-[calc(100dvh-2rem)] overflow-y-auto p-5 sm:p-8 text-center">
-          <div className="w-14 h-14 rounded-full bg-blue-600 flex items-center justify-center mx-auto mb-4">
-            <Check size={26} className="text-white" strokeWidth={3} />
-          </div>
-          <h2 className="text-lg font-bold text-slate-900 mb-1">Report submitted</h2>
-          <p className="text-sm text-slate-500">Riders heading to {station.name} will see it now.</p>
-        </div>
-      </div>
-    )
   }
 
   return (

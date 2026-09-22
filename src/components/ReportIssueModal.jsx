@@ -1,14 +1,14 @@
 import { useState } from 'react'
 import {
   X, Clock3, Ban, Construction, Users, Ticket, Accessibility, Sparkles,
-  ShieldAlert, Megaphone, CloudRain, CircleHelp,
-  TrainFront as TrainIcon, MapPin, LocateFixed, ArrowRight, Check, Loader2,
+  ShieldAlert, ShieldCheck, Megaphone, CloudRain, CircleHelp,
+  TrainFront as TrainIcon, MapPin, LocateFixed, ArrowRight, Loader2,
 } from 'lucide-react'
 import { reportCategories, stations } from '../data/mockData'
 import { findNearestStation } from '../lib/geo'
 import { postReport } from '../lib/stationUpdates'
 
-const icons = { Clock3, Ban, Construction, Users, Ticket, Accessibility, Sparkles, ShieldAlert, Megaphone, CloudRain, CircleHelp }
+const icons = { Clock3, Ban, Construction, Users, Ticket, Accessibility, Sparkles, ShieldAlert, ShieldCheck, Megaphone, CloudRain, CircleHelp }
 
 // Category -> badge styling shown on the report in JourneyResults. Most
 // categories are informational (blue), a few carry more weight and get the
@@ -19,6 +19,7 @@ const categoryTone = {
   antisocial: 'amber',
   harassment_violence: 'amber',
   fare_dodgers: 'amber',
+  safety: 'amber',
 }
 
 export default function ReportIssueModal({ onClose, onReportSubmitted }) {
@@ -31,7 +32,6 @@ export default function ReportIssueModal({ onClose, onReportSubmitted }) {
   const [locating, setLocating] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
-  const [submitted, setSubmitted] = useState(false)
 
   const stationMatches =
     locationQuery.trim().length > 0
@@ -82,27 +82,12 @@ export default function ReportIssueModal({ onClose, onReportSubmitted }) {
       }
       const savedReport = await postReport(report)
       onReportSubmitted?.(savedReport)
-      setSubmitted(true)
-      setTimeout(onClose, 1400)
+      onClose()
     } catch (err) {
       setError(err.message || 'Could not submit that report, try again.')
     } finally {
       setSubmitting(false)
     }
-  }
-
-  if (submitted) {
-    return (
-      <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-900/40">
-        <div className="bg-slate-50 rounded-3xl shadow-2xl w-full max-w-[420px] max-h-[calc(100dvh-2rem)] overflow-y-auto p-5 sm:p-8 text-center">
-          <div className="w-14 h-14 rounded-full bg-brand-success flex items-center justify-center mx-auto mb-4">
-            <Check size={26} className="text-white" strokeWidth={3} />
-          </div>
-          <h2 className="text-lg font-bold text-slate-900 mb-1">Report submitted</h2>
-          <p className="text-sm text-slate-500">Other riders on this route will see it now.</p>
-        </div>
-      </div>
-    )
   }
 
   return (
