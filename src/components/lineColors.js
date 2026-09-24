@@ -6,15 +6,32 @@ export const lineTextColors = {
   elizabeth: "#6950a1",
   hammersmith: "#f3a9bb",
   jubilee: "#a0a5a9",
-  metropolitan: "#9b0056",
-  northern: "#000000",
-  piccadilly: "#003688",
-  victoria: "#0098d4",
-  waterloo: "#95cdba",
-  overground: "#ff7b00",
-  dlr: "#00a4a7",
-  tram: "#00b355",
+    metropolitan: "#9B0056",
+    northern: "#000000",
+    piccadilly: "#003688",
+    victoria: "#0098D4",
+    waterloo: "#95CDBA",
+    overground: "#EE7C0E",
+    dlr: "#00A4A7",
+    tram: "#84B817",
 };
+
+  const LINE_ALIASES = {
+    "hammersmith & city": "hammersmith",
+    "hammersmith and city": "hammersmith",
+    "waterloo & city": "waterloo",
+    "waterloo and city": "waterloo",
+    "london overground": "overground",
+    tramlink: "tram",
+  };
+
+  export function lineColorFor(lineName) {
+    if (!lineName) return null;
+
+    const normalized = String(lineName).trim().toLowerCase().replace(/\s+line$/, "");
+    const key = LINE_ALIASES[normalized] || normalized;
+    return lineTextColors[key] || null;
+  }
 
 export const lineBgColors = {
   bakerloo: "#b3630533",

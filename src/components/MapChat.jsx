@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { MessageCircle, X, Send, Paperclip, Camera, Loader2, Share2 } from "lucide-react";
+import { siFacebook, siInstagram, siTiktok, siX } from "simple-icons";
 import { supabase } from "../supabase";
 import { lineTextColors } from "./lineColors";
 
@@ -25,6 +26,17 @@ const CHAT_LINE_COLORS = {
   "great western railway": "#4b1f4f",
 };
 const CHAT_EMOJIS = ["\u2764\ufe0f", "\ud83d\ude02", "\ud83d\ude21", "\ud83d\ude2e", "\ud83d\udc4d", "\ud83d\ude80"];
+const LINKEDIN_ICON = {
+  hex: "0A66C2",
+  path: "M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V8.97h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.316zM5.337 7.433a2.062 2.062 0 1 1 0-4.124 2.062 2.062 0 0 1 0 4.124zM3.555 20.452h3.564V8.97H3.555v11.482zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z",
+};
+const SOCIAL_SHARE_OPTIONS = [
+  ["X", siX, "https://twitter.com/intent/tweet?text=Join%20TrainLive%20live%20chat&url="],
+  ["Instagram", siInstagram, "https://www.instagram.com/?url="],
+  ["TikTok", siTiktok, "https://www.tiktok.com/upload?lang=en"],
+  ["Facebook", siFacebook, "https://www.facebook.com/sharer/sharer.php?u="],
+  ["LinkedIn", LINKEDIN_ICON, "https://www.linkedin.com/sharing/share-offsite/?url="],
+];
 
 export default function MapChat() {
   const [open, setOpen] = useState(false);
@@ -393,14 +405,8 @@ useEffect(() => {
               </button>
             </div>
             {shareOpen && (
-              <div className="mt-2 grid grid-cols-5 gap-1.5" role="menu" aria-label="Share on social media">
-                {[
-                  ['X', 'https://twitter.com/intent/tweet?text=Join%20TrainLive%20live%20chat&url='],
-                  ['Instagram', 'https://www.instagram.com/?url='],
-                  ['TikTok', 'https://www.tiktok.com/upload?lang=en'],
-                  ['Facebook', 'https://www.facebook.com/sharer/sharer.php?u='],
-                  ['LinkedIn', 'https://www.linkedin.com/sharing/share-offsite/?url='],
-                ].map(([label, base]) => (
+              <div className="mt-2 flex items-center justify-center gap-2" role="menu" aria-label="Share on social media">
+                {SOCIAL_SHARE_OPTIONS.map(([label, icon, base]) => (
                   <button
                     key={label}
                     type="button"
@@ -408,10 +414,12 @@ useEffect(() => {
                     aria-label={`Share on ${label}`}
                     title={`Share on ${label}`}
                     onClick={() => window.open(`${base}${encodeURIComponent(window.location.href)}`, '_blank', 'noopener,noreferrer')}
-                    className="flex items-center justify-center gap-1 rounded-lg border border-slate-200 bg-white px-1.5 py-2 text-[10px] font-semibold text-slate-600 hover:border-blue-300 hover:text-blue-700"
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white shadow-sm ring-1 ring-black/5 transition-transform hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    style={{ backgroundColor: `#${icon.hex}` }}
                   >
-                    <span className="text-[10px] font-bold">{label === 'Instagram' ? 'IG' : label === 'Facebook' ? 'f' : label === 'LinkedIn' ? 'in' : label === 'TikTok' ? 'TT' : 'X'}</span>
-                    <span className="sr-only sm:not-sr-only">{label}</span>
+                    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-[18px] w-[18px] fill-current">
+                      <path d={icon.path} />
+                    </svg>
                   </button>
                 ))}
               </div>

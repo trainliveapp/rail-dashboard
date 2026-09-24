@@ -12,6 +12,8 @@
 // the results screen can show real alternatives, the same way Waze offers
 // more than one road route.
 
+import { lineColorFor } from '../components/lineColors'
+
 const APP_ID = import.meta.env.VITE_TRANSPORTAPI_APP_ID
 const APP_KEY = import.meta.env.VITE_TRANSPORTAPI_APP_KEY
 
@@ -93,7 +95,7 @@ function buildOption(route, fromStation, toStation, index) {
       transitMode: resolved.transitMode, // exact mode, used for platform display and map matching
       line: resolved.line, // raw line/operator name, used for map line-matching
       label: resolved.label, // human-facing text, already has "bus"/"line" suffix where appropriate
-      color: part.line_colour ? `#${part.line_colour}` : '#334155',
+      color: lineColorFor(resolved.line) || (part.line_colour ? `#${part.line_colour}` : '#334155'),
       from: part.from_point_name || fromStation.name,
       to: part.to_point_name || toStation.name,
       platform: resolved.showsPlatform ? part.departure_platform || null : null,
