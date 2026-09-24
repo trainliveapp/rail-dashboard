@@ -507,7 +507,7 @@ export default function MapPanel({
             }
             return segmentsToRender.map((positions, i) => (
               <Polyline
-                key={`${name}-${i}`}
+                key={`${mapTheme}-${name}-${i}`}
                 positions={positions}
                 pathOptions={{
                   color,
