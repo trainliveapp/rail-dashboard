@@ -22,6 +22,7 @@ const categoryTone = {
   safety: 'amber',
 }
 
+
 export default function ReportIssueModal({ onClose, onReportSubmitted }) {
   const [category, setCategory] = useState('train_delay')
   const [where, setWhere] = useState('train')
