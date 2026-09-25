@@ -55,6 +55,9 @@ function createNoopSupabaseClient() {
       eq() {
         return this;
       },
+      is() {
+        return this;
+      },
       in() {
         return this;
       },

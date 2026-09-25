@@ -30,40 +30,45 @@ export default function TopPromoBar() {
       setTrendingLoading(true)
       setTrendingError('')
 
-      const { data, error } = await supabase
-        .from('station_updates')
-        .select('id, station_name, kind, message, label, confirms, created_at, status')
-        .in('status', ['ACTIVE', 'CONFIRMED'])
-        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-        .order('confirms', { ascending: false })
-        .order('created_at', { ascending: false })
-        .limit(6)
+      try {
+        const { data, error } = await supabase
+          .from('station_updates')
+          .select('id, station_name, kind, message, label, confirms, created_at, status')
+          .in('status', ['ACTIVE', 'CONFIRMED'])
+          .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+          .order('confirms', { ascending: false })
+          .order('created_at', { ascending: false })
+          .limit(6)
 
-      const { data: tflData, error: tflError } = await supabase
-        .from('tfl_disruptions')
-        .select('source_key, line_names, severity, status_description, reason, last_seen_at')
-        .is('resolved_at', null)
-        .gte('last_seen_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-        .order('severity', { ascending: true })
-        .order('last_seen_at', { ascending: false })
-        .limit(6)
+        const { data: tflData, error: tflError } = await supabase
+          .from('tfl_disruptions')
+          .select('source_key, line_names, severity, status_description, reason, last_seen_at')
+          .is('resolved_at', null)
+          .gte('last_seen_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+          .order('severity', { ascending: true })
+          .order('last_seen_at', { ascending: false })
+          .limit(6)
 
-      if (!active) return
-      if (error && tflError) {
-        setTrendingError('Trending is temporarily unavailable.')
-      } else {
-        const official = (tflData || []).map((item) => ({
-          id: `tfl-${item.source_key}`,
-          kind: 'tfl',
-          station_name: item.line_names.join(', '),
-          message: item.reason,
-          label: item.status_description,
-          confirms: null,
-          created_at: item.last_seen_at,
-        }))
-        setTrending([...official, ...(data || [])].slice(0, 6))
+        if (!active) return
+        if (error && tflError) {
+          setTrendingError('Trending is temporarily unavailable.')
+        } else {
+          const official = (tflData || []).map((item) => ({
+            id: `tfl-${item.source_key}`,
+            kind: 'tfl',
+            station_name: item.line_names.join(', '),
+            message: item.reason,
+            label: item.status_description,
+            confirms: null,
+            created_at: item.last_seen_at,
+          }))
+          setTrending([...official, ...(data || [])].slice(0, 6))
+        }
+      } catch {
+        if (active) setTrendingError('Trending is temporarily unavailable.')
+      } finally {
+        if (active) setTrendingLoading(false)
       }
-      setTrendingLoading(false)
     }
 
     loadTrending()
