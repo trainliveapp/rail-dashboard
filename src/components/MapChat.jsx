@@ -433,6 +433,7 @@
 
 // }
 
+
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -451,6 +452,8 @@ import { lineTextColors } from "./lineColors";
 
 const CHAT_VISIBILITY_WINDOW_MS = 24 * 60 * 60 * 1000;
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
+// Change this if your app uses a different authentication route.
+const DEFAULT_SIGN_IN_URL = "/login";
 
 const TUBE_LINES = [
   "central",
@@ -506,7 +509,7 @@ function totalReactionCount(reactionState) {
   );
 }
 
-export default function MapChat() {
+export default function MapChat({ signInUrl = DEFAULT_SIGN_IN_URL }) {
   const [open, setOpen] = useState(false);
   const [line, setLine] = useState("central");
   const [messages, setMessages] = useState([]);
@@ -516,6 +519,8 @@ export default function MapChat() {
   const [imageError, setImageError] = useState("");
   const [selectedIsVideo, setSelectedIsVideo] = useState(false);
   const [sending, setSending] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
   const [emojiOpen, setEmojiOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [flyingEmojis, setFlyingEmojis] = useState([]);
@@ -542,8 +547,35 @@ export default function MapChat() {
     }
 
     currentUserRef.current = user || null;
+    setIsAuthenticated(Boolean(user));
+    setAuthLoading(false);
     return user || null;
   }
+
+  useEffect(() => {
+    let mounted = true;
+
+    supabase.auth.getSession().then(({ data, error }) => {
+      if (!mounted) return;
+      if (error) console.error("Could not read auth session:", error);
+      const user = data?.session?.user || null;
+      currentUserRef.current = user;
+      setIsAuthenticated(Boolean(user));
+      setAuthLoading(false);
+    });
+
+    const { data: authSubscription } = supabase.auth.onAuthStateChange((_event, session) => {
+      const user = session?.user || null;
+      currentUserRef.current = user;
+      setIsAuthenticated(Boolean(user));
+      setAuthLoading(false);
+    });
+
+    return () => {
+      mounted = false;
+      authSubscription?.subscription?.unsubscribe();
+    };
+  }, []);
 
   const handleImageSelection = (event) => {
     const file = event.target.files?.[0];
@@ -838,6 +870,10 @@ export default function MapChat() {
   }, [open, line]);
 
   async function sendMessage() {
+    if (!isAuthenticated) {
+      window.location.href = signInUrl;
+      return;
+    }
     if (sending) return;
     if (!text.trim() && !selectedImage) return;
 
@@ -885,7 +921,6 @@ export default function MapChat() {
         line,
         image_url: imageUrl,
         ...(videoUrl ? { video_url: videoUrl } : {}),
-        ...(user?.id ? { user_id: user.id } : {}),
       };
 
       const { data, error } = await supabase
@@ -973,6 +1008,27 @@ export default function MapChat() {
         </select>
       </div>
 
+      {!authLoading && !isAuthenticated && (
+        <div className="relative z-[25] shrink-0 border-b border-blue-100 bg-gradient-to-r from-blue-50 via-white to-amber-50 px-3 py-2.5">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+              <MessageCircle size={16} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[12px] font-bold text-slate-800">Sign in to unlock the full chat</p>
+              <p className="text-[10px] leading-4 text-slate-500">Some messages are blurred until you sign in.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => { window.location.href = signInUrl; }}
+              className="shrink-0 rounded-full bg-[#168cff] px-3 py-1.5 text-[11px] font-bold text-white shadow-sm transition hover:bg-[#0b7fe6]"
+            >
+              Sign in
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="relative z-10 flex-1 overflow-y-auto bg-[#efeae2] px-3 py-4 [scrollbar-width:thin]">
         {messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center px-8 text-center">
@@ -992,48 +1048,72 @@ export default function MapChat() {
               .sort((a, b) => b[1] - a[1])
               .slice(0, 3);
             const pickerOpen = activeReactionMessage === message.id;
+            // Guests can preview the conversation, but selected messages stay blurred until sign-in.
+            const guestLocked = !isAuthenticated && !authLoading && index % 3 === 2;
 
             return (
-              <div key={message.id || index} className="mb-4 flex w-full justify-start">
-                <div className="group relative max-w-[88%]">
-                  <div className="relative rounded-[14px] rounded-tl-[4px] bg-white px-3.5 py-2.5 text-slate-800 shadow-[0_1px_1px_rgba(0,0,0,0.08)]">
+              <div key={message.id || index} className="mb-3 flex w-full justify-start">
+                <div className="group relative w-full max-w-[94%]">
+                  <div className="relative rounded-[14px] rounded-tl-[4px] bg-white px-3 py-2 text-slate-800 shadow-[0_1px_1px_rgba(0,0,0,0.08)]">
                     <p className="mb-1 text-[11px] font-bold text-slate-700">
                       {message.username || "TrainLive User"}
                     </p>
 
-                    {message.message && (
-                      <p className="break-words whitespace-pre-wrap pr-1 text-[14px] leading-[1.35rem] text-slate-700">
-                        {message.message}
-                      </p>
-                    )}
+                    <div className={guestLocked ? "relative overflow-hidden rounded-lg" : "relative"}>
+                      <div className={guestLocked ? "pointer-events-none select-none blur-[8px] scale-[1.01] transition-all duration-300" : ""} aria-hidden={guestLocked}>
+                        {message.message && (
+                          <p className="break-words whitespace-pre-wrap pr-1 text-[13.5px] leading-[1.22rem] text-slate-700">
+                            {message.message}
+                          </p>
+                        )}
 
-                    {message.image_url && (
-                      <div className="mt-2 overflow-hidden rounded-xl">
-                        <img
-                          src={message.image_url}
-                          alt="Shared in chat"
-                          className="max-h-72 w-full object-cover"
-                          loading="lazy"
-                        />
+                        {message.image_url && (
+                          <div className="mt-1.5 overflow-hidden rounded-lg">
+                            <img
+                              src={message.image_url}
+                              alt="Shared in chat"
+                              className="max-h-64 w-full object-cover"
+                              loading="lazy"
+                            />
+                          </div>
+                        )}
+
+                        {message.video_url && (
+                          <video
+                            src={message.video_url}
+                            controls
+                            className="mt-1.5 max-h-64 w-full rounded-lg"
+                          />
+                        )}
                       </div>
-                    )}
 
-                    {message.video_url && (
-                      <video
-                        src={message.video_url}
-                        controls
-                        className="mt-2 max-h-72 w-full rounded-xl"
-                      />
-                    )}
+                      {guestLocked && (
+                        <div className="absolute inset-0 flex items-center justify-center px-3">
+                          <button
+                            type="button"
+                            onClick={() => { window.location.href = signInUrl; }}
+                            className="rounded-full bg-slate-900/80 px-3 py-1.5 text-[10px] font-bold text-white shadow-lg ring-1 ring-white/20 backdrop-blur-sm transition hover:scale-[1.02] hover:bg-slate-900/90"
+                          >
+                            🔒 Sign in to view
+                          </button>
+                        </div>
+                      )}
+                    </div>
 
-                    <div className="mt-1 flex items-center justify-end gap-1 text-[10px] text-slate-400">
+                    <div className="mt-0.5 flex items-center justify-end gap-1 text-[9px] text-slate-400">
                       {formatMessageTime(message.created_at)}
                     </div>
 
                     {totalReactionCount(reactionState) > 0 && (
                       <button
                         type="button"
-                        onClick={() => openReactionPicker(message.id)}
+                        onClick={() => {
+                          if (!isAuthenticated) {
+                            window.location.href = signInUrl;
+                            return;
+                          }
+                          openReactionPicker(message.id);
+                        }}
                         className="absolute -bottom-3 left-3 flex h-7 items-center gap-0.5 rounded-full border border-slate-200 bg-white px-1.5 shadow-sm transition hover:scale-[1.03]"
                         aria-label="Change reaction"
                       >
@@ -1052,8 +1132,14 @@ export default function MapChat() {
                       reactionButtonRefs.current[message.id] = element;
                     }}
                     type="button"
-                    onClick={() => openReactionPicker(message.id)}
-                    aria-label="Add reaction"
+                    onClick={() => {
+                      if (!isAuthenticated) {
+                        window.location.href = signInUrl;
+                        return;
+                      }
+                      openReactionPicker(message.id);
+                    }}
+                    aria-label={isAuthenticated ? "Add reaction" : "Sign in to react"}
                     aria-expanded={pickerOpen}
                     className={`absolute -right-3 bottom-0 flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 shadow-sm transition-all hover:scale-105 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-400/30 sm:opacity-0 sm:group-hover:opacity-100 ${
                       pickerOpen ? "opacity-100" : ""
@@ -1110,6 +1196,23 @@ export default function MapChat() {
       )}
 
       <div className="relative z-50 shrink-0 border-t border-slate-200 bg-[#f7f8fa] p-3">
+        {!authLoading && !isAuthenticated ? (
+          <button
+            type="button"
+            onClick={() => { window.location.href = signInUrl; }}
+            className="flex w-full items-center gap-3 rounded-2xl border border-blue-100 bg-white px-3.5 py-3 text-left shadow-sm transition hover:border-blue-200 hover:shadow-md"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+              <Smile size={20} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[13px] font-bold text-slate-800">Sign in to join the conversation</span>
+              <span className="mt-0.5 block text-[11px] text-slate-500">React, send messages and see the full chat.</span>
+            </span>
+            <span className="shrink-0 rounded-full bg-[#168cff] px-3 py-1.5 text-[11px] font-bold text-white">Sign in</span>
+          </button>
+        ) : (
+        <>
         <div className="flex items-center gap-2 rounded-[18px] border border-slate-200 bg-white p-1.5 pl-2.5 shadow-sm focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-400/10">
           <div className="relative shrink-0">
             <button
@@ -1245,6 +1348,8 @@ export default function MapChat() {
             </div>
           </div>
         )}
+        </>
+        )}
       </div>
     </div>
   );
@@ -1281,17 +1386,43 @@ export default function MapChat() {
       )
     : null;
 
+
   return (
     <>
+      <style>{`
+        .chatter-launcher {
+          isolation: isolate;
+        }
+        .chatter-pulse-ring {
+          position: absolute;
+          inset: 4px;
+          border-radius: 9999px;
+          border: 2px solid rgba(255, 107, 22, 0.42);
+          pointer-events: none;
+          animation: trainlive-chatter-pulse 2.2s ease-out infinite;
+        }
+        .chatter-pulse-ring--two {
+          animation-delay: 1.1s;
+        }
+        @keyframes trainlive-chatter-pulse {
+          0% { transform: scale(0.92); opacity: 0.8; }
+          70%, 100% { transform: scale(1.55); opacity: 0; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .chatter-pulse-ring { animation: none; opacity: 0; }
+        }
+      `}</style>
       {!open &&
         createPortal(
           <button
             type="button"
             onClick={() => setOpen(true)}
             aria-label="Open chatter"
-            className="fixed bottom-5 left-5 z-[2147483000] flex h-14 w-14 items-center justify-center rounded-full bg-[#ff6b16] text-[10px] font-black text-white shadow-xl transition hover:-translate-y-0.5 hover:shadow-2xl"
+            className="chatter-launcher fixed bottom-5 left-5 z-[2147483000] flex h-16 w-16 items-center justify-center rounded-full text-[10px] font-black text-white transition hover:-translate-y-0.5"
           >
-            chatter
+            <span className="chatter-pulse-ring chatter-pulse-ring--one" aria-hidden="true" />
+            <span className="chatter-pulse-ring chatter-pulse-ring--two" aria-hidden="true" />
+            <span className="relative z-10 flex h-14 w-14 items-center justify-center rounded-full bg-[#ff6b16] shadow-[0_8px_24px_rgba(255,107,22,0.38)]">chatter</span>
           </button>,
           document.body
         )}
