@@ -1418,6 +1418,7 @@
 
 
 import { useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -2015,14 +2016,12 @@ export default function MapChat({ signInUrl = DEFAULT_SIGN_IN_URL }) {
             >
               Sign in
             </button> */}
-
-            <button
-  type="button"
-  onClick={() => navigate('/signin')}
+<Link
+  to="/signin"
   className="shrink-0 rounded-full bg-[#168cff] px-3 py-1.5 text-[11px] font-bold text-white shadow-sm transition hover:bg-[#0b7fe6]"
 >
   Sign in
-</button>
+</Link>
           </div>
         </div>
       )}
