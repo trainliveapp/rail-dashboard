@@ -1417,7 +1417,7 @@
 // }
 
 
-
+import { useNavigate } from 'react-router-dom'
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -1518,7 +1518,7 @@ export default function MapChat({ signInUrl = DEFAULT_SIGN_IN_URL }) {
   const messagesRef = useRef([]);
   const reactionButtonRefs = useRef({});
   const chatPanelRef = useRef(null);
-
+  const navigate = useNavigate()
   async function getCurrentUser() {
     const {
       data: { user },
@@ -2008,13 +2008,21 @@ export default function MapChat({ signInUrl = DEFAULT_SIGN_IN_URL }) {
               <p className="text-[12px] font-bold text-slate-800">Sign in to unlock the full chat</p>
               <p className="text-[10px] leading-4 text-slate-500">Some messages are blurred until you sign in.</p>
             </div>
-            <button
+            {/* <button
               type="button"
               onClick={() => { window.location.href = signInUrl; }}
               className="shrink-0 rounded-full bg-[#168cff] px-3 py-1.5 text-[11px] font-bold text-white shadow-sm transition hover:bg-[#0b7fe6]"
             >
               Sign in
-            </button>
+            </button> */}
+
+            <button
+  type="button"
+  onClick={() => navigate('/signin')}
+  className="shrink-0 rounded-full bg-[#168cff] px-3 py-1.5 text-[11px] font-bold text-white shadow-sm transition hover:bg-[#0b7fe6]"
+>
+  Sign in
+</button>
           </div>
         </div>
       )}
