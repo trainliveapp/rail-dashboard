@@ -4,6 +4,6 @@ import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => ({
-  base: mode === 'production' ? '/rail-dashboard/' : '/',
+  base: process.env.VERCEL ? '/' : mode === 'production' ? '/rail-dashboard/' : '/',
   plugins: [react(), tailwindcss()],
 }))
