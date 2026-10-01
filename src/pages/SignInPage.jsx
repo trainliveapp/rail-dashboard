@@ -113,21 +113,24 @@
 //   )
 // }
 
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import {
   Mail,
   Lock,
   Eye,
   EyeOff,
+  ArrowLeft,
   ArrowRight,
   Bell,
   CalendarDays,
   Star,
   Globe,
   ChevronDown,
+  AlertCircle,
 } from 'lucide-react'
 import backgroundImage from '../assets/backgroundimg.png'
+import { supabase } from '../lib/supabaseClient'
 
 /* =========================================================
    RESPONSIVE LOGO
@@ -264,12 +267,15 @@ const inputClass = `
 ========================================================= */
 
 export default function SignInPage() {
+  const navigate = useNavigate()
   const [showPassword, setShowPassword] = useState(false)
 
   const [form, setForm] = useState({
     email: '',
     password: '',
   })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const update = (field) => (e) => {
     setForm((prev) => ({
@@ -278,11 +284,53 @@ export default function SignInPage() {
     }))
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    console.log(form)
+    setError('')
+    setLoading(true)
 
-    // Supabase sign-in will go here
+    try {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: form.email.trim(),
+        password: form.password,
+      })
+
+      if (signInError) {
+        const message = signInError.message.toLowerCase()
+        if (message.includes('invalid login credentials')) {
+          setError("That email and password combination doesn't match an account.")
+        } else if (message.includes('email not confirmed')) {
+          setError('Please confirm your email address first, then try again.')
+        } else {
+          setError(signInError.message)
+        }
+        return
+      }
+
+      navigate('/')
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : 'Unable to sign in right now.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleGoogle = async () => {
+    setError('')
+    const { error: oauthError } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}` },
+    })
+
+    if (oauthError) setError(oauthError.message)
+  }
+
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1)
+    } else {
+      navigate('/')
+    }
   }
 
   return (
@@ -568,7 +616,16 @@ export default function SignInPage() {
             COUNTRY SELECTOR
         =================================================== */}
 
-        <div className="flex justify-end">
+        <div className="flex items-center justify-between">
+          <button
+            type="button"
+            onClick={handleBack}
+            className="flex items-center gap-1.5 text-sm font-medium text-slate-700 hover:text-slate-900"
+          >
+            <ArrowLeft size={16} />
+            Back
+          </button>
+
           <button
             type="button"
             className="
@@ -683,6 +740,13 @@ export default function SignInPage() {
           ================================================= */}
 
           <form onSubmit={handleSubmit}>
+            {error && (
+              <div role="alert" className="mb-4 flex items-start gap-2.5 rounded-xl border border-red-100 bg-red-50 px-4 py-3">
+                <AlertCircle size={16} className="mt-0.5 shrink-0 text-red-500" />
+                <p className="text-sm text-red-700">{error}</p>
+              </div>
+            )}
+
             {/* Email */}
             <div
               className="
@@ -795,6 +859,7 @@ export default function SignInPage() {
             {/* Sign In */}
             <button
               type="submit"
+              disabled={loading}
               className="
                 group
                 mx-auto
@@ -811,9 +876,10 @@ export default function SignInPage() {
                 font-semibold
                 text-[#101b38]
                 transition
+                disabled:opacity-50
               "
             >
-              <span>Sign in</span>
+              <span>{loading ? 'Signing in...' : 'Sign in'}</span>
 
               <ArrowRight
                 size={22}
@@ -849,6 +915,7 @@ export default function SignInPage() {
             {/* Google */}
             <button
               type="button"
+              onClick={handleGoogle}
               className="
                 flex
                 min-h-[52px]

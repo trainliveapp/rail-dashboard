@@ -24,9 +24,15 @@ import './index.css'
 import App from './App.jsx'
 import { AuthProvider } from './lib/AuthContext.jsx'
 
+const configuredBase = import.meta.env.BASE_URL.replace(/\/$/, '')
+const localDeploymentBase = window.location.pathname.startsWith('/rail-dashboard')
+  ? '/rail-dashboard'
+  : ''
+const basename = configuredBase || localDeploymentBase || undefined
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename={basename}>
       <AuthProvider>
         <App />
       </AuthProvider>

@@ -87,6 +87,13 @@ function createNoopSupabaseClient() {
       }),
     },
 
+    functions: {
+      invoke: async () => ({
+        data: null,
+        error: new Error(missingConfigMessage),
+      }),
+    },
+
     channel: () => ({
       on() {
         return this;
@@ -103,11 +110,11 @@ function createNoopSupabaseClient() {
 const supabase = isSupabaseConfigured
   ? createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
-  flowType: 'pkce',
-  persistSession: false,
-  autoRefreshToken: false,
-  detectSessionInUrl: false,
-},
+        flowType: 'pkce',
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+      },
     })
   : createNoopSupabaseClient();
 

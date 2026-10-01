@@ -151,6 +151,7 @@ import {
   Lock,
   Eye,
   EyeOff,
+  ArrowLeft,
   ArrowRight,
   AlertCircle,
   Bell,
@@ -260,41 +261,56 @@ export default function SignupPage() {
 
     setLoading(true)
 
-    const { data, error: signUpError } = await supabase.auth.signUp({
-      email: form.email.trim(),
-      password: form.password,
-      options: {
-        data: {
-          first_name: form.firstName.trim(),
-          last_name: form.lastName.trim(),
+    try {
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email: form.email.trim(),
+        password: form.password,
+        options: {
+          data: {
+            first_name: form.firstName.trim(),
+            last_name: form.lastName.trim(),
+          },
+          emailRedirectTo: `${window.location.origin}${import.meta.env.BASE_URL}signin`,
         },
-        emailRedirectTo: `${window.location.origin}${window.location.pathname}#/signin`,
-      },
-    })
+      })
 
-    setLoading(false)
-
-    if (signUpError) {
-      if (signUpError.message.toLowerCase().includes('already registered')) {
-        setError('An account with that email already exists. Try signing in instead.')
-      } else {
-        setError(signUpError.message)
+      if (signUpError) {
+        if (signUpError.message.toLowerCase().includes('already registered')) {
+          setError('An account with that email already exists. Try signing in instead.')
+        } else {
+          setError(signUpError.message)
+        }
+        return
       }
-      return
-    }
 
-    if (data.session) {
-      navigate('/')
-      return
-    }
+      if (data.session) {
+        navigate('/')
+        return
+      }
 
-    navigate('/check-email', { state: { email: form.email.trim(), type: 'signup' } })
+      navigate('/check-email', { state: { email: form.email.trim(), type: 'signup' } })
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : 'Unable to create your account right now.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleGoogle = async () => {
     setError('')
-    const { error: oauthError } = await supabase.auth.signInWithOAuth({ provider: 'google' })
+    const { error: oauthError } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}` },
+    })
     if (oauthError) setError(oauthError.message)
+  }
+
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1)
+    } else {
+      navigate('/')
+    }
   }
 
   return (
@@ -363,7 +379,16 @@ export default function SignupPage() {
       {/* lg:overflow-y-auto is a safety net: on an extremely short window the form scrolls inside its column instead of being cut off */}
       <section className="relative z-10 -mt-5 flex min-w-0 flex-1 flex-col rounded-t-3xl bg-white px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-5 sm:-mt-6 sm:px-8 md:px-10 lg:mt-0 lg:h-full lg:min-h-0 lg:min-w-0 lg:overflow-y-auto lg:rounded-none lg:px-[clamp(1.5rem,3vw,4rem)] lg:py-[clamp(1rem,2.5vh,2rem)]">
 
-        <div className="flex justify-end">
+        <div className="flex items-center justify-between">
+          <button
+            type="button"
+            onClick={handleBack}
+            className="flex items-center gap-1.5 text-sm font-medium text-slate-700 hover:text-slate-900"
+          >
+            <ArrowLeft size={16} />
+            Back
+          </button>
+
           <button type="button" className="flex items-center gap-1.5 text-sm font-medium text-slate-700 hover:text-slate-900">
             <Globe size={18} />
             UK

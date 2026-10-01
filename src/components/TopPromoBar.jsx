@@ -1,5 +1,6 @@
-import { AlertTriangle, ArrowRight, Megaphone, Users, Wrench, X } from 'lucide-react'
+import { AlertTriangle, Megaphone, Users, Wrench, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { supabase } from '../supabase'
 
 const feedIcons = { AlertTriangle, Users, Wrench, Megaphone }
@@ -8,6 +9,9 @@ const iconByKind = {
   chat: Users,
   report: AlertTriangle,
 }
+
+const TFL_SYNC_INTERVAL = 24 * 60 * 60 * 1000
+const TFL_SYNC_STORAGE_KEY = 'trainlive-tfl-last-sync'
 
 function formatAge(createdAt) {
   const minutes = Math.max(0, Math.round((Date.now() - new Date(createdAt).getTime()) / 60000))
@@ -26,11 +30,34 @@ export default function TopPromoBar() {
 
   useEffect(() => {
     let active = true
+
+    const syncTfLIfStale = async () => {
+      let lastSync = 0
+      try {
+        lastSync = Number(window.localStorage.getItem(TFL_SYNC_STORAGE_KEY)) || 0
+      } catch {
+        // Syncing still works when browser storage is unavailable.
+      }
+
+      if (Date.now() - lastSync < TFL_SYNC_INTERVAL) return
+
+      const { error } = await supabase.functions.invoke('sync-tfl-disruptions')
+      if (!error) {
+        try {
+          window.localStorage.setItem(TFL_SYNC_STORAGE_KEY, String(Date.now()))
+        } catch {
+          // The next page load can retry when storage is unavailable.
+        }
+      }
+    }
+
     const loadTrending = async () => {
       setTrendingLoading(true)
       setTrendingError('')
 
       try {
+        await syncTfLIfStale()
+
         const { data, error } = await supabase
           .from('station_updates')
           .select('id, station_name, kind, message, label, confirms, created_at, status')
@@ -122,14 +149,12 @@ export default function TopPromoBar() {
       </div>
 
       <div className="flex items-center gap-3 shrink-0 pr-4">
-        <button
-          type="button"
-          onClick={() => setTrendingOpen((open) => !open)}
-          aria-expanded={trendingOpen}
+        <Link
+          to="/signin"
           className="bg-brand-ink text-white hover:bg-slate-800 transition-colors rounded-full px-3 py-1 text-xs font-medium flex items-center gap-1 whitespace-nowrap"
         >
-          Trending <ArrowRight size={12} />
-        </button>
+          Sign in
+        </Link>
       </div>
 
       {trendingOpen && (
