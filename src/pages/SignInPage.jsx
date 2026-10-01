@@ -518,7 +518,7 @@ export default function SignInPage() {
                 [@media(max-height:560px)]:hidden
               "
             >
-              Live travel updates from the Aviso community.
+              Live travel updates from the Avviso community.
             </p>
           </div>
 
@@ -731,7 +731,7 @@ export default function SignInPage() {
                 lg:text-[clamp(0.9rem,2.1vh,1.1rem)]
               "
             >
-              Join Aviso to stay informed.
+              Join Avviso to stay informed.
             </p>
           </div>
 
@@ -1019,7 +1019,7 @@ export default function SignInPage() {
             </a>
           </div>
 
-          <span>© 2026 Aviso</span>
+          <span>© 2026 Avviso</span>
         </div>
       </section>
     </main>

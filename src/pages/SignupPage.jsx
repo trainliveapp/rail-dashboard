@@ -409,7 +409,7 @@ export default function SignupPage() {
               Create your account
             </h1>
             <p className="mt-1.5 text-sm text-slate-500 sm:text-[15px] lg:text-[clamp(0.85rem,1.9vh,1rem)]">
-              Join Aviso to stay informed.
+              Join Avviso to stay informed.
             </p>
           </div>
 
@@ -473,7 +473,7 @@ export default function SignupPage() {
             <Link to="/privacy" className="hover:text-slate-600">Privacy</Link>
             <Link to="/help" className="hover:text-slate-600">Help</Link>
           </div>
-          <span>© 2026 Aviso</span>
+          <span>© 2026 Avviso</span>
         </div>
       </section>
     </main>
