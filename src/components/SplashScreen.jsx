@@ -30,14 +30,14 @@ export default function SplashScreen({ fadingOut }) {
     >
       <BrandLogo framed className="w-40 sm:w-48" />
 
-      <div className="mt-10 w-40 h-1 rounded-full bg-yellow-900/10 overflow-hidden">
+      <div className="mt-10 h-1 w-40 overflow-hidden rounded-full bg-[#17233f]/10">
         <div
-          className="h-full bg-yellow-700 rounded-full transition-[width] duration-150 ease-linear motion-reduce:transition-none"
+          className="h-full rounded-full bg-[#17233f] transition-[width] duration-150 ease-linear motion-reduce:transition-none"
           style={{ width: `${progress}%` }}
         />
       </div>
 
-      <p className="mt-3 text-xs tracking-wide text-yellow-900/50">Loading {progress}%</p>
+      <p className="mt-3 text-xs tracking-wide text-[#17233f]/60">Loading {progress}%</p>
     </div>
   )
 }
