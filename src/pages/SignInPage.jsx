@@ -131,58 +131,7 @@ import {
 } from 'lucide-react'
 import backgroundImage from '../assets/backgroundimg.png'
 import { supabase } from '../lib/supabaseClient'
-
-/* =========================================================
-   RESPONSIVE LOGO
-========================================================= */
-
-function LiveLogo({ light = false, className = '' }) {
-  const color = light
-    ? 'border-white text-white'
-    : 'border-[#17233f] text-[#17233f]'
-
-  const dot = light ? 'bg-white' : 'bg-[#17233f]'
-
-  return (
-    <div className={`flex items-center gap-2.5 ${className}`}>
-      <div className="relative flex items-center">
-        <div
-          className={`
-            flex items-center justify-center rounded-2xl border-[3px]
-            h-10 w-10
-            sm:h-11 sm:w-11
-            lg:h-[clamp(2.25rem,5.5vh,2.9rem)]
-            lg:w-[clamp(2.25rem,5.5vh,2.9rem)]
-            ${color}
-          `}
-        >
-          <div className={`h-2.5 w-2.5 rounded-full ${dot}`} />
-        </div>
-
-        <div className="absolute -right-1.5 -top-1 h-3.5 w-3.5 rounded-full bg-red-500" />
-      </div>
-
-      <div
-        className={`
-          flex items-center rounded-full border-[3px]
-          px-3 py-0.5
-          sm:px-3.5
-          ${color}
-        `}
-      >
-        <span
-          className="
-            text-lg font-bold tracking-tight
-            sm:text-xl
-            lg:text-[clamp(1.1rem,3vh,1.5rem)]
-          "
-        >
-          LIVE
-        </span>
-      </div>
-    </div>
-  )
-}
+import BrandLogo from '../components/BrandLogo'
 
 /* =========================================================
    GOOGLE ICON
@@ -402,7 +351,7 @@ export default function SignInPage() {
             md:pb-10
           "
         >
-          <LiveLogo light />
+          <BrandLogo className="h-10 max-w-[175px] sm:h-11 sm:max-w-[195px]" />
 
           <h2
             className="
@@ -474,7 +423,7 @@ export default function SignInPage() {
 
         {/* Logo */}
         <div className="relative z-10">
-          <LiveLogo light />
+          <BrandLogo className="h-[clamp(2.5rem,6vh,3.5rem)] max-w-[230px]" />
         </div>
 
         {/* Hero Content */}
@@ -673,32 +622,6 @@ export default function SignInPage() {
             lg:py-0
           "
         >
-          {/* Desktop Logo */}
-          <div
-            className="
-              mb-7
-              hidden
-
-              lg:mb-[3.5vh]
-              lg:block
-            "
-          >
-            <LiveLogo />
-
-            <p
-              className="
-                mt-2
-                text-sm
-                text-slate-500
-
-                lg:mt-[1.2vh]
-                lg:text-[clamp(0.8rem,1.9vh,0.95rem)]
-              "
-            >
-              Live travel updates from the community
-            </p>
-          </div>
-
           {/* Heading */}
           <div
             className="

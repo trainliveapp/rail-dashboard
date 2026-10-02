@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Menu, X, Map, Search, CalendarDays, Bell, HelpCircle } from 'lucide-react'
-import logo from '../assets/logoy.png'
+import BrandLogo from './BrandLogo'
 
 const navItems = [
   { label: 'Live Map', icon: Map, href: '/' },
@@ -27,7 +27,7 @@ export default function FloatingTopBar() {
         >
           {menuOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
-        <img src={logo} alt="TrainLive" className="h-8 w-auto" />
+        <BrandLogo framed className="h-8 max-w-[145px]" />
 
         {menuOpen && (
           <>

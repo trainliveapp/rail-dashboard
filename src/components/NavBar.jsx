@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { LogOut, Sun, Moon } from 'lucide-react'
-import logo from '../assets/logoy.png'
+import BrandLogo from './BrandLogo'
 import { useAuth } from '../lib/AuthContext'
 
 export default function NavBar({ mapTheme = 'dark', onMapThemeChange = null }) {
@@ -22,7 +22,7 @@ export default function NavBar({ mapTheme = 'dark', onMapThemeChange = null }) {
     <div className="relative bg-blue-700 border-b border-brand-blue text-white">
       <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-2">
-          <img src={logo} alt="TrainLive" className="h-8 w-auto" />
+          <BrandLogo className="h-9 max-w-[150px] sm:h-10 sm:max-w-[170px]" />
         </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1 rounded-lg border border-white/15 bg-white/10 p-1" role="group" aria-label="Map theme">

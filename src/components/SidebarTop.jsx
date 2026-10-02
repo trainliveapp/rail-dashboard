@@ -4,7 +4,7 @@ import {
   Search, Heart, Clock, ArrowUpDown, ArrowRight, Menu, X, Map, CalendarDays, Bell, HelpCircle, Plus,
 } from 'lucide-react'
 import { savedJourneys } from '../data/mockData'
-import logo from '../assets/logoy.png'
+import BrandLogo from './BrandLogo'
 
 const navItems = [
   { label: 'Live Map', icon: Map, href: '/' },
@@ -41,7 +41,7 @@ export default function SidebarTop({ className = '', onSearch }) {
           >
             {menuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
-          <img src={logo} alt="TrainLive" className="h-10 w-auto" />
+          <BrandLogo framed className="h-10 max-w-[175px]" />
         </div>
         {menuOpen && (
           <>

@@ -162,27 +162,7 @@ import {
 } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient'
 import backgroundImage from '../assets/backgroundimg.png'
-
-/* ---------- shared bits (same as SignInPage_v3) ---------- */
-
-function LiveLogo({ light = false, className = '' }) {
-  const color = light ? 'border-white text-white' : 'border-[#17233f] text-[#17233f]'
-  const dot = light ? 'bg-white' : 'bg-[#17233f]'
-
-  return (
-    <div className={`flex items-center gap-2.5 ${className}`}>
-      <div className="relative flex items-center">
-        <div className={`flex h-10 w-10 items-center justify-center rounded-2xl border-[3px] lg:h-[clamp(2.25rem,5.5vh,2.9rem)] lg:w-[clamp(2.25rem,5.5vh,2.9rem)] ${color}`}>
-          <div className={`h-2.5 w-2.5 rounded-full ${dot}`} />
-        </div>
-        <div className="absolute -right-1.5 -top-1 h-3.5 w-3.5 rounded-full bg-red-500" />
-      </div>
-      <div className={`flex items-center rounded-full border-[3px] px-3.5 py-0.5 ${color}`}>
-        <span className="text-xl font-bold tracking-tight lg:text-[clamp(1.1rem,3vh,1.5rem)]">LIVE</span>
-      </div>
-    </div>
-  )
-}
+import BrandLogo from '../components/BrandLogo'
 
 function GoogleIcon() {
   return (
@@ -321,7 +301,7 @@ export default function SignupPage() {
         <div className="absolute inset-0 bg-cover bg-[center_30%]" style={{ backgroundImage: `url(${backgroundImage})` }} />
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-black/20" />
         <div className="relative z-10 flex h-full flex-col justify-between p-4 pb-7 sm:p-6 sm:pb-9 md:p-8 md:pb-10">
-          <LiveLogo light />
+          <BrandLogo className="h-10 max-w-[175px] sm:h-11 sm:max-w-[195px]" />
           <h2 className="max-w-[290px] text-[clamp(1.5rem,5.5vw,2.25rem)] font-extrabold leading-[1.08] tracking-tight text-white sm:max-w-[420px]">
             Join the community <span className="text-[#ffc400]">and travel smarter.</span>
           </h2>
@@ -335,7 +315,7 @@ export default function SignupPage() {
         <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/55 to-transparent" />
 
         <div className="relative z-10">
-          <LiveLogo light />
+          <BrandLogo className="h-[clamp(2.5rem,6vh,3.5rem)] max-w-[230px]" />
         </div>
 
         <div className="relative z-10 flex flex-col gap-[4vh]">
@@ -398,11 +378,6 @@ export default function SignupPage() {
 
         {/* my-auto centres the block, and lets the column scroll from the top if it ever overflows */}
         <div className="mx-auto my-auto w-full max-w-[460px] py-3 sm:py-4 lg:py-2">
-
-          {/* desktop logo; hidden on short windows because the hero already has one */}
-          <div className="mb-[2.5vh] hidden lg:block [@media(max-height:720px)]:!hidden">
-            <LiveLogo />
-          </div>
 
           <div className="mb-4 sm:mb-5 lg:mb-[2vh]">
             <h1 className="text-[clamp(1.75rem,7vw,2.25rem)] font-bold tracking-tight text-[#101b38] lg:text-[clamp(1.5rem,4vh,2.25rem)]">

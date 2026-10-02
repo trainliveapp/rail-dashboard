@@ -1,5 +1,5 @@
 import authBg from '../assets/auth-bg.png'
-import logo from '../assets/logoy.png'
+import BrandLogo from './BrandLogo'
 
 export default function AuthLayout({ children, cardWidth = 'max-w-[560px]', backgroundImage, blurBackground = true }) {
   const bgSrc = backgroundImage || authBg
@@ -13,7 +13,7 @@ export default function AuthLayout({ children, cardWidth = 'max-w-[560px]', back
       />
       <div className={`absolute inset-0 ${blurBackground ? 'bg-slate-900/55' : 'bg-slate-900/45'}`} />
 
-      <img src={logo} alt="TrainLive" className="absolute top-6 left-6 h-9 w-auto z-10" />
+      <BrandLogo className="absolute left-6 top-6 z-10 h-10 max-w-[170px]" />
 
       <div className={`relative z-10 w-full ${cardWidth}`}>
         <div className="bg-slate-50 rounded-3xl shadow-2xl px-8 sm:px-10 py-10">

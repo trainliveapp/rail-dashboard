@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import logo from '../assets/logoy.png'
+import BrandLogo from './BrandLogo'
 
 const LOAD_DURATION_MS = 2000
 
@@ -28,11 +28,7 @@ export default function SplashScreen({ fadingOut }) {
       className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center transition-opacity duration-500 ${fadingOut ? 'opacity-0' : 'opacity-100'}`}
       style={{ background: 'linear-gradient(180deg, #EEF3FC 0%, #F6F8FD 60%, #FBFCFE 100%)' }}
     >
-      <img
-        src={logo}
-        alt="TrainLive"
-        className="w-40 sm:w-48 h-auto"
-      />
+      <BrandLogo framed className="w-40 sm:w-48" />
 
       <div className="mt-10 w-40 h-1 rounded-full bg-yellow-900/10 overflow-hidden">
         <div
