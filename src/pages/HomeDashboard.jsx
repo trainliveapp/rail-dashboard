@@ -216,7 +216,6 @@ export default function HomeDashboard() {
         <SidebarBottom nearby={nearby} toggleNearby={toggleNearby} layers={layers} toggleLayer={toggleLayer} className="border border-slate-200 rounded-xl" />
         <DepartureBoards />
         <FeatureCards />
-        <AdSlot size="rail" />
         <NextDeparturesPanel />
         <SustainabilityBanner />
         <Footer />
