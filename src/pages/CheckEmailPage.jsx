@@ -5,12 +5,13 @@ import AuthLayout from '../components/AuthLayout'
 export default function CheckEmailPage() {
   const location = useLocation()
   const email = location.state?.email || 'your email address'
+  const isPasswordReset = location.state?.type === 'reset'
 
   return (
     <AuthLayout cardWidth="max-w-[520px]">
       <h1 className="text-3xl font-bold text-slate-900 mb-2">Check your email</h1>
       <p className="text-slate-500 mb-6">
-        We've sent a password reset link to <span className="font-medium text-slate-700">{email}</span>. The link expires in 30 minutes.
+        {isPasswordReset ? "We've sent a password reset link to" : "We've sent a confirmation link to"} <span className="font-medium text-slate-700">{email}</span>.
       </p>
 
       <div className="flex items-start gap-3 bg-blue-50 rounded-xl px-4 py-3.5 mb-6">
@@ -24,13 +25,6 @@ export default function CheckEmailPage() {
         </Link>
       </p>
 
-      {/* Demo-only shortcut: in production this page has no button forward, the person
-          reaches the next step by clicking the real link emailed to them. This link
-          exists purely so the reset-password screen can be reviewed without a live
-          email/backend behind it yet. Remove this once real email sending is wired up. */}
-      <p className="text-center text-xs text-slate-300 mt-6">
-        <Link to="/reset-password" className="underline hover:text-slate-400">Demo only: continue to reset password →</Link>
-      </p>
     </AuthLayout>
   )
 }

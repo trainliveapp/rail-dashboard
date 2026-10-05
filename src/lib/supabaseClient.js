@@ -2,8 +2,6 @@ import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-console.log("SUPABASE URL:", supabaseUrl);
-console.log("SUPABASE KEY PREFIX:", supabaseAnonKey?.slice(0, 15));
 const missingConfigMessage =
   "Supabase credentials are missing. Copy .env.example to .env.local and fill in your project URL and anon key.";
 
@@ -32,6 +30,18 @@ function createNoopSupabaseClient() {
       }),
       signInWithPassword: async () => ({
         data: { session: null },
+        error: new Error(missingConfigMessage),
+      }),
+      signInWithOAuth: async () => ({
+        data: { provider: null, url: null },
+        error: new Error(missingConfigMessage),
+      }),
+      resetPasswordForEmail: async () => ({
+        data: {},
+        error: new Error(missingConfigMessage),
+      }),
+      updateUser: async () => ({
+        data: { user: null },
         error: new Error(missingConfigMessage),
       }),
     },

@@ -2,6 +2,7 @@ import { AlertTriangle, Megaphone, Users, Wrench, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../supabase'
+import { useAuth } from '../lib/AuthContext'
 
 const feedIcons = { AlertTriangle, Users, Wrench, Megaphone }
 
@@ -23,6 +24,7 @@ function formatAge(createdAt) {
 }
 
 export default function TopPromoBar() {
+  const { user } = useAuth()
   const [trendingOpen, setTrendingOpen] = useState(false)
   const [trending, setTrending] = useState([])
   const [trendingLoading, setTrendingLoading] = useState(false)
@@ -149,12 +151,18 @@ export default function TopPromoBar() {
       </div>
 
       <div className="flex items-center gap-3 shrink-0 pr-4">
-        <Link
-          to="/signin"
-          className="bg-brand-ink text-white hover:bg-slate-800 transition-colors rounded-full px-3 py-1 text-xs font-medium flex items-center gap-1 whitespace-nowrap"
-        >
-          Sign in
-        </Link>
+        {user ? (
+          <span className="max-w-32 truncate rounded-full bg-brand-ink px-3 py-1 text-xs font-medium text-white" title={user.email}>
+            {user.user_metadata?.first_name || user.email}
+          </span>
+        ) : (
+          <Link
+            to="/signin"
+            className="flex items-center gap-1 whitespace-nowrap rounded-full bg-brand-ink px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-slate-800"
+          >
+            Sign in
+          </Link>
+        )}
       </div>
 
       {trendingOpen && (

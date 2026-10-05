@@ -292,9 +292,8 @@ export default function SignInPage() {
         overflow-x-hidden
         bg-white
 
-        lg:h-dvh
         lg:flex-row
-        lg:overflow-hidden
+        lg:min-h-dvh
       "
     >
       {/* =====================================================
@@ -387,7 +386,7 @@ export default function SignInPage() {
         className="
           relative
           hidden
-          h-full
+          min-h-dvh
           w-[58%]
           shrink-0
           flex-col
@@ -552,8 +551,9 @@ export default function SignInPage() {
           md:px-12
 
           lg:mt-0
-          lg:h-full
+          lg:min-h-dvh
           lg:min-w-0
+          lg:overflow-y-auto
           lg:rounded-none
           lg:px-8
           lg:py-[3vh]
@@ -748,6 +748,13 @@ export default function SignInPage() {
                 placeholder="Password"
                 className={`${inputClass} pr-11`}
               />
+
+              <Link
+                to="/forgot-password"
+                className="absolute right-11 top-1/2 -translate-y-1/2 text-sm text-slate-500 transition hover:text-blue-600"
+              >
+                Forgot?
+              </Link>
 
               <button
                 type="button"

@@ -1,30 +1,52 @@
-import { ChevronLeft, ChevronRight, Clock3, Users } from 'lucide-react'
+import { ChevronRight, MessageCircle, ShieldAlert, TrainFront, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import communityImage from '../assets/backgroundimg.png'
-import pretImage from '../assets/splash-promo.jpg'
+import liveBadge from '../assets/White Robot Live Badge with Red Record Dot.png'
+import firstAdImage from '../assets/1ad.png'
+import secondAdImage from '../assets/2ad.png'
+import thirdAdImage from '../assets/3ad.png'
+import fourthAdImage from '../assets/4ad.png'
 
 const slides = [
   {
-    image: communityImage,
-    eyebrow: 'LIVE COMMUNITY',
-    title: 'See what passengers are reporting.',
-    description: 'Real-time updates about your trains and stations.',
-    notification: 'Train to Birmingham',
-    notificationText: 'A passenger update was just posted',
-    notificationTime: '6 mins ago',
+    image: firstAdImage,
+    title: <>Know before you <span className="text-[#ffd21a]">go.</span></>,
+    description: 'Live updates from real passengers at the stations you care about.',
+    updates: [
+      { icon: ShieldAlert, color: 'bg-red-500', title: 'Euston', text: 'Signalling problems being reported by passengers.', time: '5 mins ago' },
+    ],
     icon: Users,
-    overlay: 'from-slate-950/90 via-slate-950/25 to-transparent',
   },
   {
-    image: pretImage,
-    eyebrow: 'TRAVEL BETTER',
-    title: 'Make every journey a little easier.',
-    description: 'Grab a coffee or something good to go before you board.',
-    notification: 'Station offers',
-    notificationText: 'Fresh picks near your route',
-    notificationTime: 'Today',
-    icon: Clock3,
-    overlay: 'from-[#4b0d1c]/90 via-[#4b0d1c]/20 to-transparent',
+    image: secondAdImage,
+    title: <>See what passengers <span className="text-[#ffd21a]">are reporting.</span></>,
+    description: 'Real-time updates about your trains and stations.',
+    updates: [
+      { icon: Users, color: 'bg-red-500', title: 'Train to Birmingham', text: 'A man is staring at me on board and making me feel uncomfortable.', time: '6 mins ago' },
+    ],
+    icon: Users,
+  },
+  {
+    image: thirdAdImage,
+    title: <>Keep them safe <span className="text-[#ffd21a]">on their journey.</span></>,
+    description: 'Check real-time reports and live chat updates on the stations and lines they use.',
+    updates: [
+      { icon: TrainFront, color: 'bg-blue-600', title: 'Chiltern Line', text: 'Trains running normally at the moment.', time: '2 mins ago' },
+      { icon: TrainFront, color: 'bg-emerald-500', title: 'Live chat - Marylebone', text: 'Trains are busy but running on time. No issues reported so far.', time: '4 mins ago' },
+      { icon: ShieldAlert, color: 'bg-red-500', title: 'Update from passengers', text: 'No security issues being reported on this line.', time: '6 mins ago' },
+      { icon: MessageCircle, color: 'bg-blue-600', title: 'Live chat', text: 'My train has just departed and it’s quiet. Plenty of seats.', time: '7 mins ago' },
+    ],
+    icon: MessageCircle,
+  },
+  {
+    image: fourthAdImage,
+    title: <>Passengers helping <span className="text-[#ffd21a]">passengers.</span></>,
+    description: 'Get updates, tips and alternative travel options from the Avviso community.',
+    updates: [
+      { icon: ShieldAlert, color: 'bg-red-500', title: 'Delays at Waterloo', text: 'Trains are currently delayed. No staff around here yet.', time: '12 mins ago' },
+      { icon: Users, color: 'bg-blue-600', title: 'Try the Jubilee line instead.', text: 'It’s moving now.', time: '10 mins ago' },
+      { icon: TrainFront, color: 'bg-emerald-500', title: 'Buses towards Victoria are running.', text: 'Takes about 25 mins.', time: '8 mins ago' },
+    ],
+    icon: Users,
   },
 ]
 
@@ -32,7 +54,6 @@ export default function AdSlot({ size = 'leaderboard', className = '' }) {
   const [activeSlide, setActiveSlide] = useState(0)
   const [paused, setPaused] = useState(false)
   const slide = slides[activeSlide]
-  const Icon = slide.icon
 
   useEffect(() => {
     if (paused) return undefined
@@ -49,7 +70,7 @@ export default function AdSlot({ size = 'leaderboard', className = '' }) {
   return (
     <aside
       aria-label="Advertising"
-      className={`relative overflow-hidden rounded-xl border border-slate-200 bg-slate-950 shadow-sm ${size === 'rail' ? 'min-h-[250px] lg:min-h-[280px]' : 'min-h-[220px] sm:min-h-[260px]'} ${className}`}
+      className={`relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-950 shadow-sm ${size === 'rail' ? 'min-h-[300px] sm:min-h-[360px] lg:min-h-[420px]' : 'min-h-[340px] sm:min-h-[420px] lg:min-h-[500px]'} ${className}`}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
@@ -60,57 +81,36 @@ export default function AdSlot({ size = 'leaderboard', className = '' }) {
           alt=""
           className="h-full w-full object-cover transition-opacity duration-500"
         />
-        <div className={`absolute inset-0 bg-gradient-to-r ${slide.overlay}`} />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-black/10" />
+        <div className="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-black/35 to-transparent" />
       </div>
 
-      <div className="relative flex min-h-[220px] flex-col justify-between p-5 text-white sm:min-h-[260px] sm:p-7">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-[10px] font-bold tracking-[0.24em] text-white/70">{slide.eyebrow}</p>
-            <h2 className="mt-2 max-w-[21rem] text-2xl font-extrabold leading-[1.05] sm:text-3xl">{slide.title}</h2>
-            <p className="mt-2 max-w-[22rem] text-sm text-white/85 sm:text-base">{slide.description}</p>
-          </div>
+      <div className="relative flex min-h-[340px] flex-col justify-between p-4 text-white sm:min-h-[420px] sm:p-7 lg:min-h-[500px]">
+        <img src={liveBadge} alt="Avviso Live" className="h-auto w-36 mix-blend-screen sm:w-44" />
 
-          <div className="hidden items-center gap-1.5 rounded-full bg-white/90 px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-700 shadow-sm sm:flex">
-            <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
-            Live
-          </div>
-        </div>
-
-        <div className="flex items-end justify-between gap-4">
-          <div className="flex max-w-[280px] items-center gap-2.5 rounded-xl bg-white px-3 py-2.5 text-slate-800 shadow-lg sm:max-w-[310px] sm:px-4 sm:py-3">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-500">
-              <Icon size={16} />
-            </span>
-            <div className="min-w-0">
-              <p className="truncate text-xs font-bold sm:text-sm">{slide.notification}</p>
-              <p className="truncate text-[11px] text-slate-500">{slide.notificationText}</p>
+        <div className="absolute right-3 top-20 flex w-[min(52%,300px)] flex-col gap-2 sm:right-7 sm:top-24">
+          {slide.updates.map(({ icon: UpdateIcon, color, title, text, time }) => (
+            <div key={title} className="flex items-start gap-2 rounded-2xl bg-white/95 px-3 py-2 text-slate-900 shadow-lg backdrop-blur-sm sm:gap-3 sm:px-4 sm:py-3">
+              <span className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-white ${color}`}>
+                <UpdateIcon size={15} />
+              </span>
+              <div className="min-w-0">
+                <p className="text-xs font-bold leading-tight sm:text-sm">{title}</p>
+                <p className="text-[11px] leading-tight sm:text-xs">{text}</p>
+                <p className="mt-0.5 text-[10px] text-slate-400">{time}</p>
+              </div>
+              <ChevronRight size={18} className="ml-auto mt-1 shrink-0 text-slate-300" />
             </div>
-            <span className="ml-auto shrink-0 text-[10px] text-slate-400">{slide.notificationTime}</span>
-          </div>
+          ))}
+        </div>
 
-          <div className="flex shrink-0 items-center gap-2">
-            <button
-              type="button"
-              aria-label="Previous advertisement"
-              onClick={() => showSlide(activeSlide - 1)}
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition hover:bg-black/65"
-            >
-              <ChevronLeft size={18} />
-            </button>
-            <button
-              type="button"
-              aria-label="Next advertisement"
-              onClick={() => showSlide(activeSlide + 1)}
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition hover:bg-black/65"
-            >
-              <ChevronRight size={18} />
-            </button>
-          </div>
+        <div className="max-w-[58%] pb-5 sm:max-w-[62%]">
+          <h2 className="text-3xl font-extrabold leading-[1.02] tracking-tight sm:text-4xl lg:text-5xl">{slide.title}</h2>
+          <p className="mt-2 text-base leading-tight text-white sm:text-xl">{slide.description}</p>
         </div>
       </div>
 
-      <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-1.5" role="tablist" aria-label="Advertisement slides">
+      <div className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1.5" role="tablist" aria-label="Advertisement slides">
         {slides.map((item, index) => (
           <button
             key={item.eyebrow}

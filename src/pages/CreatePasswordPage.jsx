@@ -1,20 +1,86 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import AuthLayout from '../components/AuthLayout'
 import PasswordField from '../components/PasswordField'
 import SuccessModal from '../components/SuccessModal'
+import { supabase } from '../lib/supabaseClient'
 
 export default function CreatePasswordPage() {
   const navigate = useNavigate()
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showSuccess, setShowSuccess] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [checkingSession, setCheckingSession] = useState(true)
+  const [hasRecoverySession, setHasRecoverySession] = useState(false)
+  const [error, setError] = useState('')
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    let active = true
+
+    const checkRecoverySession = async () => {
+      const { data, error: sessionError } = await supabase.auth.getSession()
+      if (!active) return
+
+      if (sessionError) {
+        setError(sessionError.message)
+      } else if (data.session) {
+        setHasRecoverySession(true)
+      } else {
+        setError('This password reset link is invalid or has expired. Please request a new one.')
+      }
+      setCheckingSession(false)
+    }
+
+    checkRecoverySession()
+
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!active) return
+      if (event === 'PASSWORD_RECOVERY' && session) {
+        setHasRecoverySession(true)
+        setError('')
+        setCheckingSession(false)
+      }
+    })
+
+    return () => {
+      active = false
+      listener.subscription.unsubscribe()
+    }
+  }, [])
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    // Front-end only for now, this is where the "set new password" API call goes once the backend is ready.
-    setShowSuccess(true)
+    setError('')
+
+    if (!hasRecoverySession) {
+      setError('This password reset link is invalid or has expired. Please request a new one.')
+      return
+    }
+
+    if (password.length < 8) {
+      setError('Password needs to be at least 8 characters.')
+      return
+    }
+    if (password !== confirmPassword) {
+      setError("Those passwords don't match.")
+      return
+    }
+
+    setLoading(true)
+    try {
+      const { error: updateError } = await supabase.auth.updateUser({ password })
+      if (updateError) {
+        setError(updateError.message)
+        return
+      }
+      setShowSuccess(true)
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : 'Unable to update your password right now.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -23,14 +89,16 @@ export default function CreatePasswordPage() {
         <h1 className="text-3xl font-bold text-slate-900 mb-2">Create a password</h1>
         <p className="text-slate-500 mb-6">Choose something secure at least 8 characters.</p>
 
-        <div className="space-y-4 mb-2">
+        {error && <p role="alert" className="mb-5 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
+
+        <div className="mb-2 space-y-4">
           <PasswordField label="Create Password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Create Password" />
           <PasswordField label="Confirm Password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirm Password" />
         </div>
         <p className="text-xs text-slate-400 mb-6">Use a strong password with letters, numbers & symbols.</p>
 
-        <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 transition-colors text-white font-medium py-3.5 rounded-full">
-          Confirm
+        <button type="submit" disabled={checkingSession || loading || !hasRecoverySession} className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 transition-colors text-white font-medium py-3.5 rounded-full">
+          {checkingSession ? 'Verifying link...' : loading ? 'Updating...' : 'Confirm'}
         </button>
 
         <p className="text-center text-sm mt-5">

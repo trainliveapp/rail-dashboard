@@ -9,7 +9,9 @@ export default function NavBar({ mapTheme = 'dark', onMapThemeChange = null }) {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
 
-  const firstName = user?.user_metadata?.first_name
+  const firstName = user?.user_metadata?.first_name?.trim()
+  const lastName = user?.user_metadata?.last_name?.trim()
+  const displayName = [firstName, lastName].filter(Boolean).join(' ') || user?.email || 'Account'
   const initial = (firstName?.[0] || user?.email?.[0] || '?').toUpperCase()
 
   const handleSignOut = async () => {
@@ -52,7 +54,8 @@ export default function NavBar({ mapTheme = 'dark', onMapThemeChange = null }) {
             <button
               type="button"
               onClick={() => setAccountOpen((o) => !o)}
-              className="w-9 h-9 rounded-full bg-brand-amber hover:bg-yellow-300 transition-colors text-brand-ink text-sm font-semibold flex items-center justify-center"
+              aria-label={`Open profile for ${displayName}`}
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-amber text-sm font-semibold text-brand-ink transition-colors hover:bg-yellow-300"
             >
               {initial}
             </button>
@@ -60,11 +63,10 @@ export default function NavBar({ mapTheme = 'dark', onMapThemeChange = null }) {
               <>
                 <button aria-label="Close account menu" onClick={() => setAccountOpen(false)} className="fixed inset-0 z-40 cursor-default" />
                 <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-50 text-slate-700">
-                  {firstName && (
-                    <div className="px-4 py-2 text-sm text-slate-400 border-b border-slate-100 mb-1">
-                      Signed in as <span className="text-slate-700 font-medium">{firstName}</span>
-                    </div>
-                  )}
+                  <div className="mb-1 border-b border-slate-100 px-4 py-3">
+                    <p className="truncate text-sm font-semibold text-slate-800">{displayName}</p>
+                    <p className="truncate text-xs text-slate-400">{user.email}</p>
+                  </div>
                   <button
                     type="button"
                     onClick={handleSignOut}

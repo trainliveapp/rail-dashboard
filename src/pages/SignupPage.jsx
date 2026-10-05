@@ -242,6 +242,11 @@ export default function SignupPage() {
     setLoading(true)
 
     try {
+      const redirectUrl = new URL(
+        'signin',
+        `${window.location.origin}${import.meta.env.BASE_URL}`,
+      ).toString()
+
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: form.email.trim(),
         password: form.password,
@@ -250,7 +255,7 @@ export default function SignupPage() {
             first_name: form.firstName.trim(),
             last_name: form.lastName.trim(),
           },
-          emailRedirectTo: `${window.location.origin}${import.meta.env.BASE_URL}signin`,
+          emailRedirectTo: redirectUrl,
         },
       })
 
