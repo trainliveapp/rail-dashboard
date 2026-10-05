@@ -162,6 +162,25 @@ button:disabled,
 .animate-splash-zoom {
   animation: splash-zoom 2.5s ease-out both;
 }
+
+@keyframes ad-update-marquee {
+  from { transform: translateY(0); }
+  to { transform: translateY(calc(-50% - 0.25rem)); }
+}
+
+.ad-update-marquee {
+  animation: ad-update-marquee 14s linear infinite;
+}
+
+.ad-update-marquee--paused {
+  animation-play-state: paused;
+}
+
+@media (max-width: 1023px) {
+  .ad-update-marquee {
+    animation: none;
+  }
+}
 @keyframes report-banner-in {
   from { opacity: 0; transform: translateY(-14px); }
   to { opacity: 1; transform: translateY(0); }

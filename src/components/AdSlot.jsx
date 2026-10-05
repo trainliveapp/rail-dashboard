@@ -70,7 +70,7 @@ export default function AdSlot({ size = 'leaderboard', className = '' }) {
   return (
     <aside
       aria-label="Advertising"
-      className={`relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-950 shadow-sm ${size === 'rail' ? 'min-h-[300px] sm:min-h-[360px] lg:min-h-[420px]' : 'min-h-[340px] sm:min-h-[420px] lg:min-h-[500px]'} ${className}`}
+      className={`relative h-[clamp(300px,62vw,500px)] overflow-hidden rounded-2xl border border-slate-200 bg-slate-950 shadow-sm ${size === 'rail' ? 'h-[clamp(280px,48vw,420px)]' : ''} ${className}`}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
@@ -85,28 +85,30 @@ export default function AdSlot({ size = 'leaderboard', className = '' }) {
         <div className="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-black/35 to-transparent" />
       </div>
 
-      <div className="relative flex min-h-[340px] flex-col justify-between p-4 text-white sm:min-h-[420px] sm:p-7 lg:min-h-[500px]">
-        <img src={liveBadge} alt="Avviso Live" className="h-auto w-36 mix-blend-screen sm:w-44" />
+      <div className="relative flex h-full flex-col justify-between p-4 text-white sm:p-7">
+        <img src={liveBadge} alt="Avviso Live" className="h-auto w-[clamp(7rem,22vw,11rem)] mix-blend-screen" />
 
-        <div className="absolute right-3 top-20 flex w-[min(52%,300px)] flex-col gap-2 sm:right-7 sm:top-24">
-          {slide.updates.map(({ icon: UpdateIcon, color, title, text, time }) => (
-            <div key={title} className="flex items-start gap-2 rounded-2xl bg-white/95 px-3 py-2 text-slate-900 shadow-lg backdrop-blur-sm sm:gap-3 sm:px-4 sm:py-3">
-              <span className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-white ${color}`}>
-                <UpdateIcon size={15} />
-              </span>
-              <div className="min-w-0">
-                <p className="text-xs font-bold leading-tight sm:text-sm">{title}</p>
-                <p className="text-[11px] leading-tight sm:text-xs">{text}</p>
-                <p className="mt-0.5 text-[10px] text-slate-400">{time}</p>
+        <div className={`absolute right-3 top-[22%] flex max-h-[68%] w-[min(52%,300px)] overflow-hidden sm:right-7 sm:top-[22%] ${activeSlide === 2 ? 'lg:ad-update-window' : ''}`}>
+          <div className={`flex w-full flex-col gap-1.5 sm:gap-2 ${activeSlide === 2 ? 'lg:ad-update-marquee' : ''} ${paused ? 'ad-update-marquee--paused' : ''}`}>
+            {[...slide.updates, ...(activeSlide === 2 ? slide.updates : [])].map(({ icon: UpdateIcon, color, title, text, time }, index) => (
+              <div key={`${title}-${index}`} className="flex shrink-0 items-start gap-1.5 rounded-2xl bg-white/95 px-2 py-1.5 text-slate-900 shadow-lg backdrop-blur-sm sm:gap-3 sm:px-4 sm:py-3">
+                <span className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-white sm:h-7 sm:w-7 ${color}`}>
+                  <UpdateIcon size={13} className="sm:h-[15px] sm:w-[15px]" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold leading-tight sm:text-sm">{title}</p>
+                  <p className="text-[9px] leading-tight sm:text-xs">{text}</p>
+                  <p className="mt-0.5 text-[9px] text-slate-400 sm:text-[10px]">{time}</p>
+                </div>
+                <ChevronRight size={16} className="ml-auto mt-1 shrink-0 text-slate-300 sm:h-[18px] sm:w-[18px]" />
               </div>
-              <ChevronRight size={18} className="ml-auto mt-1 shrink-0 text-slate-300" />
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
         <div className="max-w-[58%] pb-5 sm:max-w-[62%]">
-          <h2 className="text-3xl font-extrabold leading-[1.02] tracking-tight sm:text-4xl lg:text-5xl">{slide.title}</h2>
-          <p className="mt-2 text-base leading-tight text-white sm:text-xl">{slide.description}</p>
+          <h2 className="text-[clamp(1.5rem,4.5vw,3rem)] font-extrabold leading-[1.02] tracking-tight">{slide.title}</h2>
+          <p className="mt-2 text-[clamp(0.8rem,1.8vw,1.25rem)] leading-tight text-white">{slide.description}</p>
         </div>
       </div>
 
@@ -124,7 +126,6 @@ export default function AdSlot({ size = 'leaderboard', className = '' }) {
         ))}
       </div>
 
-      <p className="absolute right-3 top-3 text-[9px] font-bold uppercase tracking-[0.2em] text-white/60">Advertisement</p>
     </aside>
   )
 }
