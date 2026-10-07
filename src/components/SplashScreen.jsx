@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import BrandLogo from './BrandLogo'
+import officialLogo from '../../Avviso-1/JPG/Logo-1.jpg'
 
 const LOAD_DURATION_MS = 2000
 
@@ -25,19 +25,18 @@ export default function SplashScreen({ fadingOut }) {
 
   return (
     <div
-      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center transition-opacity duration-500 ${fadingOut ? 'opacity-0' : 'opacity-100'}`}
-      style={{ background: 'linear-gradient(180deg, #EEF3FC 0%, #F6F8FD 60%, #FBFCFE 100%)' }}
+      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black transition-opacity duration-500 ${fadingOut ? 'opacity-0' : 'opacity-100'}`}
     >
-      <BrandLogo framed className="w-40 sm:w-48" />
+      <img src={officialLogo} alt="Avviso" className="h-56 w-56 object-contain sm:h-72 sm:w-72" />
 
-      <div className="mt-10 h-1 w-40 overflow-hidden rounded-full bg-[#17233f]/10">
+      <div className="mt-10 h-1 w-40 overflow-hidden rounded-full bg-white/20">
         <div
-          className="h-full rounded-full bg-[#17233f] transition-[width] duration-150 ease-linear motion-reduce:transition-none"
+          className="h-full rounded-full bg-[#f9040a] transition-[width] duration-150 ease-linear motion-reduce:transition-none"
           style={{ width: `${progress}%` }}
         />
       </div>
 
-      <p className="mt-3 text-xs tracking-wide text-[#17233f]/60">Loading {progress}%</p>
+      <p className="mt-3 text-xs tracking-wide text-white/60">Loading {progress}%</p>
     </div>
   )
 }

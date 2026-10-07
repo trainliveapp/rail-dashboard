@@ -1,4 +1,4 @@
-import { AlertTriangle, Megaphone, Users, Wrench, X } from 'lucide-react'
+import { AlertTriangle, CircleUserRound, Megaphone, Users, Wrench, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../supabase'
@@ -152,8 +152,12 @@ export default function TopPromoBar() {
 
       <div className="flex items-center gap-3 shrink-0 pr-4">
         {user ? (
-          <span className="max-w-32 truncate rounded-full bg-brand-ink px-3 py-1 text-xs font-medium text-white" title={user.email}>
-            {user.user_metadata?.first_name || user.email}
+          <span
+            className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-ink text-white"
+            title={user.email}
+            aria-label={`Signed in as ${user.email}`}
+          >
+            <CircleUserRound size={17} aria-hidden="true" />
           </span>
         ) : (
           <Link
