@@ -59,12 +59,12 @@ export default function ForgotPasswordPage() {
           </div>
         </div>
 
-        <button type="submit" disabled={loading} className="w-full bg-brand-primary hover:bg-brand-primary-dark disabled:bg-slate-300 transition-colors text-white font-medium py-3.5 rounded-full">
+        <button type="submit" disabled={loading} className="w-full bg-[#101b38] hover:bg-[#17233f] disabled:bg-slate-300 transition-colors text-white font-medium py-3.5 rounded-full">
           {loading ? 'Sending...' : 'Send reset link'}
         </button>
 
         <p className="text-center text-sm mt-5">
-          <Link to="/signin" className="text-blue-600 font-medium inline-flex items-center gap-1.5">
+          <Link to="/signin" className="text-slate-700 font-medium inline-flex items-center gap-1.5 hover:text-slate-900">
             <ArrowLeft size={15} /> Back to sign in
           </Link>
         </p>
