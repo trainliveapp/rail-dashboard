@@ -13,6 +13,7 @@ const iconByKind = {
 
 const TFL_SYNC_INTERVAL = 24 * 60 * 60 * 1000
 const TFL_SYNC_STORAGE_KEY = 'trainlive-tfl-last-sync'
+const TFL_INITIAL_DELAY = 12 * 1000
 
 function formatAge(createdAt) {
   const minutes = Math.max(0, Math.round((Date.now() - new Date(createdAt).getTime()) / 60000))
@@ -53,13 +54,11 @@ export default function TopPromoBar() {
       }
     }
 
-    const loadTrending = async () => {
+    const loadTrending = async ({ includeTfL = false } = {}) => {
       setTrendingLoading(true)
       setTrendingError('')
 
       try {
-        await syncTfLIfStale()
-
         const { data, error } = await supabase
           .from('station_updates')
           .select('id, station_name, kind, message, label, confirms, created_at, status')
@@ -69,17 +68,24 @@ export default function TopPromoBar() {
           .order('created_at', { ascending: false })
           .limit(6)
 
-        const { data: tflData, error: tflError } = await supabase
-          .from('tfl_disruptions')
-          .select('source_key, line_names, severity, status_description, reason, last_seen_at')
-          .is('resolved_at', null)
-          .gte('last_seen_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-          .order('severity', { ascending: true })
-          .order('last_seen_at', { ascending: false })
-          .limit(6)
+        let tflData = []
+        let tflError = null
+        if (includeTfL) {
+          await syncTfLIfStale()
+          const result = await supabase
+            .from('tfl_disruptions')
+            .select('source_key, line_names, severity, status_description, reason, last_seen_at')
+            .is('resolved_at', null)
+            .gte('last_seen_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+            .order('severity', { ascending: true })
+            .order('last_seen_at', { ascending: false })
+            .limit(6)
+          tflData = result.data || []
+          tflError = result.error
+        }
 
         if (!active) return
-        if (error && tflError) {
+        if (error || (includeTfL && tflError)) {
           setTrendingError('Trending is temporarily unavailable.')
         } else {
           const official = (tflData || []).map((item) => ({
@@ -91,7 +97,7 @@ export default function TopPromoBar() {
             confirms: null,
             created_at: item.last_seen_at,
           }))
-          setTrending([...official, ...(data || [])].slice(0, 6))
+          setTrending([...(includeTfL ? official : []), ...(data || [])].slice(0, 6))
         }
       } catch {
         if (active) setTrendingError('Trending is temporarily unavailable.')
@@ -101,15 +107,21 @@ export default function TopPromoBar() {
     }
 
     loadTrending()
+    const initialTfLTimer = window.setTimeout(() => {
+      loadTrending({ includeTfL: true })
+    }, TFL_INITIAL_DELAY)
 
     const channel = supabase
       .channel('trending-station-updates')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'station_updates' }, loadTrending)
       .subscribe()
-    const refreshTimer = window.setInterval(loadTrending, 90 * 1000)
+    const refreshTimer = window.setInterval(() => {
+      loadTrending({ includeTfL: true })
+    }, 90 * 1000)
 
     return () => {
       active = false
+      window.clearTimeout(initialTfLTimer)
       window.clearInterval(refreshTimer)
       supabase.removeChannel(channel)
     }
@@ -182,7 +194,7 @@ export default function TopPromoBar() {
           </div>
 
           {trendingLoading && <p className="py-4 text-center text-sm text-slate-500">Loading updates...</p>}
-          {!trendingLoading && trendingError && <p className="py-4 text-center text-sm text-red-600">{trendingError}</p>}
+          {!trendingLoading && trendingError && <p className="py-4 text-center text-sm text-amber-700">{trendingError}</p>}
           {!trendingLoading && !trendingError && trending.length === 0 && (
             <p className="py-4 text-center text-sm text-slate-500">No active network updates yet.</p>
           )}

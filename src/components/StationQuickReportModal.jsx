@@ -50,7 +50,7 @@ export default function StationQuickReportModal({ station, onClose, onReportSubm
     <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-900/40">
       <div className="bg-white rounded-3xl shadow-2xl w-full max-w-[420px] max-h-[calc(100dvh-2rem)] overflow-y-auto p-4 sm:p-6">
         <div className="flex items-start gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-blue-700 flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-brand-secondary flex items-center justify-center shrink-0">
             <Info size={18} className="text-white" />
           </div>
           <div className="min-w-0">
@@ -98,7 +98,7 @@ export default function StationQuickReportModal({ station, onClose, onReportSubm
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-100 rounded-xl px-3 py-2.5 mb-4 text-xs text-red-700">{error}</div>
+          <div className="bg-amber-50 border border-amber-100 rounded-xl px-3 py-2.5 mb-4 text-xs text-amber-700">{error}</div>
         )}
 
         <div className="flex gap-3">
@@ -113,7 +113,7 @@ export default function StationQuickReportModal({ station, onClose, onReportSubm
             type="button"
             onClick={handleConfirm}
             disabled={!selected || submitting}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 transition-colors text-white font-semibold py-3 rounded-full flex items-center justify-center gap-2"
+            className="flex-1 bg-brand-primary hover:bg-brand-primary-dark disabled:bg-slate-300 transition-colors text-white font-semibold py-3 rounded-full flex items-center justify-center gap-2"
           >
             {submitting && <Loader2 size={15} className="animate-spin" />}
             Confirm Report

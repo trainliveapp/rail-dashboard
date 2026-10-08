@@ -113,7 +113,7 @@ export default function JourneyPlannerPanel({ planner, onClose }) {
                 setJourneyTab('saved')
                 setSavedOpen((o) => (journeyTab === 'saved' ? !o : true))
               }}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-semibold rounded-full transition-colors ${journeyTab === 'saved' ? 'bg-brand-amber text-brand-ink shadow-sm' : 'text-brand-slate'}`}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-semibold rounded-full transition-colors ${journeyTab === 'saved' ? 'bg-brand-primary text-white shadow-sm' : 'text-brand-slate'}`}
             >
               <Heart size={14} /> Saved Journey
             </button>
@@ -122,7 +122,7 @@ export default function JourneyPlannerPanel({ planner, onClose }) {
                 setJourneyTab('leave')
                 setSavedOpen(false)
               }}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-semibold rounded-full transition-colors ${journeyTab === 'leave' ? 'bg-brand-amber text-brand-ink shadow-sm' : 'text-brand-slate'}`}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-semibold rounded-full transition-colors ${journeyTab === 'leave' ? 'bg-brand-primary text-white shadow-sm' : 'text-brand-slate'}`}
             >
               <Clock size={14} /> Leave now
             </button>
@@ -144,9 +144,9 @@ export default function JourneyPlannerPanel({ planner, onClose }) {
                   </div>
 
                   {saveError && (
-                    <div className="flex items-start gap-2 bg-red-50 border border-red-100 rounded-lg px-2 py-2 mb-3">
-                      <AlertCircle size={12} className="text-red-500 shrink-0 mt-0.5" />
-                      <p className="text-xs text-red-700">{saveError}</p>
+                    <div className="flex items-start gap-2 bg-amber-50 border border-amber-100 rounded-lg px-2 py-2 mb-3">
+                      <AlertCircle size={12} className="text-amber-600 shrink-0 mt-0.5" />
+                      <p className="text-xs text-amber-700">{saveError}</p>
                     </div>
                   )}
 
@@ -175,9 +175,9 @@ export default function JourneyPlannerPanel({ planner, onClose }) {
                                 handleToggleFavorite(j.id, !j.favorite)
                               }}
                               aria-label={`${j.favorite ? 'Remove' : 'Add'} ${j.route} ${j.favorite ? 'from' : 'to'} favourites`}
-                              className="p-1 text-slate-300 hover:text-red-500 transition-colors"
+                              className="p-1 text-slate-300 hover:text-amber-500 transition-colors"
                             >
-                              <Heart size={14} className={j.favorite ? 'text-red-500 fill-red-500' : ''} />
+                              <Heart size={14} className={j.favorite ? 'text-amber-500 fill-amber-500' : ''} />
                             </button>
                             <button
                               type="button"
@@ -186,7 +186,7 @@ export default function JourneyPlannerPanel({ planner, onClose }) {
                                 handleDeleteSavedJourney(j.id)
                               }}
                               aria-label={`Delete saved journey ${j.route}`}
-                              className="p-1 text-slate-300 hover:text-red-500 transition-colors"
+                              className="p-1 text-slate-300 hover:text-amber-500 transition-colors"
                             >
                               <Trash2 size={14} />
                             </button>
@@ -226,9 +226,9 @@ export default function JourneyPlannerPanel({ planner, onClose }) {
           </div>
 
           {planError && (
-            <div className="flex items-start gap-2 bg-red-50 border border-red-100 rounded-xl px-3 py-2.5 mb-3 max-w-md">
-              <AlertCircle size={14} className="text-red-500 shrink-0 mt-0.5" />
-              <p className="text-xs text-red-700">{planError}</p>
+            <div className="flex items-start gap-2 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2.5 mb-3 max-w-md">
+              <AlertCircle size={14} className="text-amber-600 shrink-0 mt-0.5" />
+              <p className="text-xs text-amber-700">{planError}</p>
             </div>
           )}
 
@@ -287,7 +287,7 @@ export default function JourneyPlannerPanel({ planner, onClose }) {
           <button
             onClick={handlePlanJourney}
             disabled={planning}
-            className="w-full max-w-md bg-brand-amber hover:bg-yellow-300 disabled:bg-slate-300 disabled:text-slate-500 transition-colors text-brand-ink font-semibold text-base py-3.5 rounded-full flex items-center justify-between px-6"
+            className="w-full max-w-md bg-brand-primary hover:bg-brand-primary-dark disabled:bg-slate-300 disabled:text-slate-500 transition-colors text-white font-semibold text-base py-3.5 rounded-full flex items-center justify-between px-6"
           >
             {planning ? 'Planning…' : 'Plan Journey'} <ArrowRight size={18} />
           </button>

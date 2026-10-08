@@ -52,7 +52,7 @@ function AlertCard({ alert }) {
       <span className="inline-block text-xs bg-slate-100 text-slate-500 px-2.5 py-1 rounded-full mb-4">{alert.tag}</span>
 
       <div className={`grid gap-3 ${alert.secondaryLabel ? 'grid-cols-2' : 'grid-cols-1'}`}>
-        <button className="bg-brand-amber hover:bg-yellow-300 transition-colors text-brand-ink text-sm font-medium py-2.5 rounded-lg">
+        <button className="bg-brand-primary hover:bg-brand-primary-dark transition-colors text-white text-sm font-medium py-2.5 rounded-lg">
           {alert.primaryLabel}
         </button>
         {alert.secondaryLabel && (

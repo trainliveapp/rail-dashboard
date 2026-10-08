@@ -1,6 +1,6 @@
 import { ChevronRight, MessageCircle, ShieldAlert, TrainFront, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import liveBadge from '../assets/White Robot Live Badge with Red Record Dot.png'
+import BrandLogo from './BrandLogo'
 import firstAdImage from '../assets/1ad.png'
 import secondAdImage from '../assets/2ad.png'
 import thirdAdImage from '../assets/3ad.png'
@@ -32,7 +32,7 @@ const slides = [
     updates: [
       { icon: TrainFront, color: 'bg-blue-600', title: 'Chiltern Line', text: 'Trains running normally at the moment.', time: '2 mins ago' },
       { icon: TrainFront, color: 'bg-emerald-500', title: 'Live chat - Marylebone', text: 'Trains are busy but running on time. No issues reported so far.', time: '4 mins ago' },
-      { icon: ShieldAlert, color: 'bg-red-500', title: 'Update from passengers', text: 'No security issues being reported on this line.', time: '6 mins ago' },
+      { icon: ShieldAlert, color: 'bg-amber-500', title: 'Update from passengers', text: 'No security issues being reported on this line.', time: '6 mins ago' },
       { icon: MessageCircle, color: 'bg-blue-600', title: 'Live chat', text: 'My train has just departed and it’s quiet. Plenty of seats.', time: '7 mins ago' },
     ],
     icon: MessageCircle,
@@ -86,11 +86,11 @@ export default function AdSlot({ size = 'leaderboard', className = '' }) {
       </div>
 
       <div className="relative flex h-full flex-col justify-between p-4 text-white sm:p-7">
-        <img src={liveBadge} alt="Avviso Live" className="h-auto w-[clamp(7rem,22vw,11rem)] mix-blend-screen" />
+        <BrandLogo className="h-9 max-w-[150px] sm:h-10 sm:max-w-[170px]" />
 
-        <div className={`absolute right-3 top-[22%] flex max-h-[68%] w-[min(52%,300px)] overflow-hidden sm:right-7 sm:top-[22%] ${activeSlide === 2 ? 'lg:ad-update-window' : ''}`}>
-          <div className={`flex w-full flex-col gap-1.5 sm:gap-2 ${activeSlide === 2 ? 'lg:ad-update-marquee' : ''} ${paused ? 'ad-update-marquee--paused' : ''}`}>
-            {[...slide.updates, ...(activeSlide === 2 ? slide.updates : [])].map(({ icon: UpdateIcon, color, title, text, time }, index) => (
+        <div className={`absolute right-3 flex w-[min(52%,300px)] overflow-hidden sm:right-7 ${activeSlide === 2 ? 'top-[16%] max-h-[78%] sm:top-[16%]' : 'top-[22%] max-h-[68%] sm:top-[22%]'}`}>
+          <div className="flex w-full flex-col gap-1.5 sm:gap-2">
+            {slide.updates.map(({ icon: UpdateIcon, color, title, text, time }, index) => (
               <div key={`${title}-${index}`} className="flex shrink-0 items-start gap-1.5 rounded-2xl bg-white/95 px-2 py-1.5 text-slate-900 shadow-lg backdrop-blur-sm sm:gap-3 sm:px-4 sm:py-3">
                 <span className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-white sm:h-7 sm:w-7 ${color}`}>
                   <UpdateIcon size={13} className="sm:h-[15px] sm:w-[15px]" />

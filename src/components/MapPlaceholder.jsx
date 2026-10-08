@@ -12,7 +12,7 @@ export default function MapPlaceholder({ onOpen }) {
       </div>
       <button
         onClick={onOpen}
-        className="mt-1 bg-blue-700 hover:bg-blue-800 transition-colors text-white text-sm font-semibold px-5 py-2.5 rounded-full flex items-center gap-2"
+        className="mt-1 bg-brand-primary hover:bg-brand-primary-dark transition-colors text-white text-sm font-semibold px-5 py-2.5 rounded-full flex items-center gap-2"
       >
         View live map <ArrowRight size={15} />
       </button>

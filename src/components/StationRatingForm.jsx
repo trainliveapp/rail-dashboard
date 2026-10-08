@@ -91,13 +91,13 @@ export default function StationRatingForm({ stationName, stationId, onSubmitted 
         ))}
       </div>
 
-      {error && <p className="text-xs text-red-600 mt-2">{error}</p>}
+      {error && <p className="text-xs text-amber-700 mt-2">{error}</p>}
 
       <button
         type="button"
         disabled={ratedCount === 0 || submitting}
         onClick={handleSubmit}
-        className="w-full mt-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 transition-colors text-white text-sm font-medium py-2.5 rounded-full"
+        className="w-full mt-3 bg-brand-primary hover:bg-brand-primary-dark disabled:bg-slate-200 disabled:text-slate-400 transition-colors text-white text-sm font-medium py-2.5 rounded-full"
       >
         {submitting ? 'Submitting…' : 'Submit rating'}
       </button>

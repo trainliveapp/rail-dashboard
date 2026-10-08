@@ -89,7 +89,7 @@ export default function CreatePasswordPage() {
         <h1 className="text-3xl font-bold text-slate-900 mb-2">Create a password</h1>
         <p className="text-slate-500 mb-6">Choose something secure at least 8 characters.</p>
 
-        {error && <p role="alert" className="mb-5 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
+        {error && <p role="alert" className="mb-5 rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-700">{error}</p>}
 
         <div className="mb-2 space-y-4">
           <PasswordField label="Create Password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Create Password" />
@@ -97,7 +97,7 @@ export default function CreatePasswordPage() {
         </div>
         <p className="text-xs text-slate-400 mb-6">Use a strong password with letters, numbers & symbols.</p>
 
-        <button type="submit" disabled={checkingSession || loading || !hasRecoverySession} className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 transition-colors text-white font-medium py-3.5 rounded-full">
+        <button type="submit" disabled={checkingSession || loading || !hasRecoverySession} className="w-full bg-brand-primary hover:bg-brand-primary-dark disabled:bg-slate-300 transition-colors text-white font-medium py-3.5 rounded-full">
           {checkingSession ? 'Verifying link...' : loading ? 'Updating...' : 'Confirm'}
         </button>
 

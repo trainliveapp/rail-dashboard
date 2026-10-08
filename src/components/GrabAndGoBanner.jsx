@@ -6,7 +6,7 @@ import { Croissant, Sandwich, ShoppingBag, Coffee, Milk, Cookie, ArrowRight } fr
 // to get right. Swap or reorder freely once there's a real partnerships list.
 const shops = [
   { name: 'Greggs', deal: 'Up to 50% off', icon: Croissant, color: 'bg-blue-50 text-blue-700' },
-  { name: 'Pret A Manger', deal: 'Up to 60% off', icon: Sandwich, color: 'bg-red-50 text-red-700' },
+  { name: 'Pret A Manger', deal: 'Up to 60% off', icon: Sandwich, color: 'bg-amber-50 text-amber-700' },
   { name: "Marks & Spencer", deal: 'Up to 40% off', icon: ShoppingBag, color: 'bg-emerald-50 text-emerald-700' },
   { name: 'Black Sheep Coffee', deal: 'Up to 50% off', icon: Coffee, color: 'bg-neutral-100 text-neutral-700' },
   { name: "Puccino's", deal: 'Up to 45% off', icon: Coffee, color: 'bg-amber-50 text-amber-700' },

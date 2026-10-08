@@ -207,7 +207,7 @@ export default function ReportIssueModal({ onClose, onReportSubmitted }) {
         {!locationQuery.trim() && <div className="mb-6" />}
 
         {error && (
-          <div className="bg-red-50 border border-red-100 rounded-xl px-3 py-2.5 mb-4 text-xs text-red-700">
+          <div className="bg-amber-50 border border-amber-100 rounded-xl px-3 py-2.5 mb-4 text-xs text-amber-700">
             {error}
           </div>
         )}
@@ -215,7 +215,7 @@ export default function ReportIssueModal({ onClose, onReportSubmitted }) {
         <button
           type="submit"
           disabled={submitting}
-          className="w-full bg-brand-amber hover:bg-yellow-300 disabled:bg-slate-300 disabled:text-slate-500 transition-colors text-brand-ink font-medium py-3.5 rounded-full flex items-center justify-center gap-2"
+          className="w-full bg-brand-primary hover:bg-brand-primary-dark disabled:bg-slate-300 disabled:text-slate-500 transition-colors text-white font-medium py-3.5 rounded-full flex items-center justify-center gap-2"
         >
           {submitting ? 'Submitting…' : 'Submit report'} {!submitting && <ArrowRight size={16} />}
         </button>

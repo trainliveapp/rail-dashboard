@@ -11,7 +11,7 @@ export default function SuccessModal({ onClose }) {
         <p className="text-slate-500 mb-7">Your password is updated successfully. You can now access your account securely</p>
         <button
           onClick={onClose}
-          className="w-full bg-blue-600 hover:bg-blue-700 transition-colors text-white font-medium py-3.5 rounded-full"
+          className="w-full bg-brand-primary hover:bg-brand-primary-dark transition-colors text-white font-medium py-3.5 rounded-full"
         >
           Okay
         </button>

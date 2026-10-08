@@ -131,6 +131,7 @@ import {
 } from 'lucide-react'
 import backgroundImage from '../assets/backgroundimg.png'
 import { supabase } from '../lib/supabaseClient'
+import { getAppUrl } from '../lib/appUrl'
 import BrandLogo from '../components/BrandLogo'
 
 /* =========================================================
@@ -268,7 +269,7 @@ export default function SignInPage() {
     setError('')
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}` },
+      options: { redirectTo: getAppUrl() },
     })
 
     if (oauthError) setError(oauthError.message)
@@ -371,7 +372,7 @@ export default function SignInPage() {
             "
           >
             Know what's happening{' '}
-            <span className="text-[#ffc400]">
+            <span className="text-brand-primary">
               before you get there.
             </span>
           </h2>
@@ -449,7 +450,7 @@ export default function SignInPage() {
               happening
               <br />
 
-              <span className="text-[#ffc400]">
+              <span className="text-brand-primary">
                 before you
                 <br />
                 get there.
@@ -664,9 +665,9 @@ export default function SignInPage() {
 
           <form onSubmit={handleSubmit}>
             {error && (
-              <div role="alert" className="mb-4 flex items-start gap-2.5 rounded-xl border border-red-100 bg-red-50 px-4 py-3">
-                <AlertCircle size={16} className="mt-0.5 shrink-0 text-red-500" />
-                <p className="text-sm text-red-700">{error}</p>
+              <div role="alert" className="mb-4 flex items-start gap-2.5 rounded-xl border border-amber-100 bg-amber-50 px-4 py-3">
+                <AlertCircle size={16} className="mt-0.5 shrink-0 text-amber-600" />
+                <p className="text-sm text-amber-700">{error}</p>
               </div>
             )}
 

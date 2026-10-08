@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import officialLogo from '../../Avviso-1/JPG/Logo-1.jpg'
+import BrandLogo from './BrandLogo'
 
 const LOAD_DURATION_MS = 2000
 
@@ -25,13 +25,13 @@ export default function SplashScreen({ fadingOut }) {
 
   return (
     <div
-      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black transition-opacity duration-500 ${fadingOut ? 'opacity-0' : 'opacity-100'}`}
+      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-blue-700 transition-opacity duration-500 ${fadingOut ? 'opacity-0' : 'opacity-100'}`}
     >
-      <img src={officialLogo} alt="Avviso" className="h-56 w-56 object-contain sm:h-72 sm:w-72" />
+      <BrandLogo className="h-36 max-w-[9rem] sm:h-44 sm:max-w-[11rem]" />
 
       <div className="mt-10 h-1 w-40 overflow-hidden rounded-full bg-white/20">
         <div
-          className="h-full rounded-full bg-[#f9040a] transition-[width] duration-150 ease-linear motion-reduce:transition-none"
+          className="h-full rounded-full bg-red-600 transition-[width] duration-150 ease-linear motion-reduce:transition-none"
           style={{ width: `${progress}%` }}
         />
       </div>

@@ -161,6 +161,7 @@ import {
   ChevronDown,
 } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient'
+import { getAppUrl } from '../lib/appUrl'
 import backgroundImage from '../assets/backgroundimg.png'
 import BrandLogo from '../components/BrandLogo'
 
@@ -242,10 +243,7 @@ export default function SignupPage() {
     setLoading(true)
 
     try {
-      const redirectUrl = new URL(
-        'signin',
-        `${window.location.origin}${import.meta.env.BASE_URL}`,
-      ).toString()
+      const redirectUrl = getAppUrl('signin')
 
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: form.email.trim(),
@@ -285,7 +283,7 @@ export default function SignupPage() {
     setError('')
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}` },
+      options: { redirectTo: getAppUrl() },
     })
     if (oauthError) setError(oauthError.message)
   }
@@ -308,7 +306,7 @@ export default function SignupPage() {
         <div className="relative z-10 flex h-full flex-col justify-between p-4 pb-7 sm:p-6 sm:pb-9 md:p-8 md:pb-10">
           <BrandLogo className="h-10 max-w-[175px] sm:h-11 sm:max-w-[195px]" />
           <h2 className="max-w-[290px] text-[clamp(1.5rem,5.5vw,2.25rem)] font-extrabold leading-[1.08] tracking-tight text-white sm:max-w-[420px]">
-            Join the community <span className="text-[#ffc400]">and travel smarter.</span>
+            Join the community <span className="text-brand-primary">and travel smarter.</span>
           </h2>
         </div>
       </header>
@@ -330,7 +328,7 @@ export default function SignupPage() {
               <br />
               community
               <br />
-              <span className="text-[#ffc400]">
+              <span className="text-brand-primary">
                 and travel
                 <br />
                 smarter.
@@ -394,9 +392,9 @@ export default function SignupPage() {
           </div>
 
           {error && (
-            <div role="alert" className="mb-3 flex items-start gap-2.5 rounded-xl border border-red-100 bg-red-50 px-4 py-2.5">
-              <AlertCircle size={16} className="mt-0.5 shrink-0 text-red-500" />
-              <p className="text-sm text-red-700">{error}</p>
+            <div role="alert" className="mb-3 flex items-start gap-2.5 rounded-xl border border-amber-100 bg-amber-50 px-4 py-2.5">
+              <AlertCircle size={16} className="mt-0.5 shrink-0 text-amber-600" />
+              <p className="text-sm text-amber-700">{error}</p>
             </div>
           )}
 

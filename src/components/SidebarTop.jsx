@@ -41,7 +41,7 @@ export default function SidebarTop({ className = '', onSearch }) {
           >
             {menuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
-          <BrandLogo framed className="h-10 max-w-[175px]" />
+          <BrandLogo className="h-10 max-w-[175px]" />
         </div>
         {menuOpen && (
           <>
@@ -97,7 +97,7 @@ export default function SidebarTop({ className = '', onSearch }) {
                 setJourneyTab('saved')
                 setSavedOpen((o) => (journeyTab === 'saved' ? !o : true))
               }}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-semibold transition-colors ${journeyTab === 'saved' ? 'bg-blue-700 text-white' : 'bg-white text-blue-700'}`}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-semibold transition-colors ${journeyTab === 'saved' ? 'bg-brand-secondary text-white' : 'bg-white text-brand-secondary'}`}
             >
               <Heart size={14} /> Saved Journey
             </button>
@@ -106,7 +106,7 @@ export default function SidebarTop({ className = '', onSearch }) {
                 setJourneyTab('leave')
                 setSavedOpen(false)
               }}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-semibold transition-colors ${journeyTab === 'leave' ? 'bg-blue-700 text-white' : 'bg-white text-blue-700'}`}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-semibold transition-colors ${journeyTab === 'leave' ? 'bg-brand-secondary text-white' : 'bg-white text-brand-secondary'}`}
             >
               <Clock size={14} /> Leave now
             </button>
@@ -128,7 +128,7 @@ export default function SidebarTop({ className = '', onSearch }) {
                           <p className="text-sm font-medium text-slate-800 truncate">{j.route}</p>
                           <p className="text-xs text-slate-400 truncate">{j.stations}</p>
                         </div>
-                        <Heart size={16} className={j.favorite ? 'text-red-500 fill-red-500 shrink-0' : 'text-slate-300 shrink-0'} />
+                        <Heart size={16} className={j.favorite ? 'text-amber-500 fill-amber-500 shrink-0' : 'text-slate-300 shrink-0'} />
                       </div>
                     ))}
                   </div>
@@ -183,7 +183,7 @@ export default function SidebarTop({ className = '', onSearch }) {
 
           <button
             onClick={() => onSearch?.()}
-            className="w-full bg-blue-700 hover:bg-blue-800 transition-colors text-white font-semibold text-base py-3.5 rounded-lg flex items-center justify-between px-5"
+            className="w-full bg-brand-primary hover:bg-brand-primary-dark transition-colors text-white font-semibold text-base py-3.5 rounded-lg flex items-center justify-between px-5"
           >
             Plan Journey <ArrowRight size={18} />
           </button>

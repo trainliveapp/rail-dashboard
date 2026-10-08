@@ -17,7 +17,7 @@ function OptionPill({ option, isBest, selected, onClick }) {
         selected
           ? isBest
             ? 'bg-violet-600 border-violet-600 text-white'
-            : 'bg-brand-amber border-brand-amber text-brand-ink'
+            : 'bg-brand-primary border-brand-primary text-white'
           : 'bg-white border-slate-200 text-slate-700'
       }`}
     >
@@ -198,7 +198,7 @@ export default function JourneyResults({ journey, selectedIndex, onSelectIndex, 
         <p className="text-xs text-slate-400 mb-4 px-1">Checking for live reports on this route…</p>
       )}
       {feedError && (
-        <p className="text-xs text-red-500 mb-4 px-1">{feedError}</p>
+        <p className="text-xs text-amber-600 mb-4 px-1">{feedError}</p>
       )}
 
       <LiveUpdates updates={feed} />

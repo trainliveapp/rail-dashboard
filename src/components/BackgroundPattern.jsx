@@ -1,4 +1,4 @@
-const colors = ['#2563EB', '#059669', '#7C3AED', '#DC2626', '#EA580C', '#0D9488', '#4F46E5']
+const colors = ['#2563EB', '#059669', '#7C3AED', '#FFC400', '#EA580C', '#0D9488', '#4F46E5']
 
 // Deterministic pseudo-random layout so the pattern is stable across renders
 // instead of reshuffling every time the component re-mounts.
