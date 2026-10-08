@@ -304,7 +304,7 @@ export default function SignupPage() {
         <div className="absolute inset-0 bg-cover bg-[center_30%]" style={{ backgroundImage: `url(${backgroundImage})` }} />
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-black/20" />
         <div className="relative z-10 flex h-full flex-col justify-between p-4 pb-7 sm:p-6 sm:pb-9 md:p-8 md:pb-10">
-          <BrandLogo className="h-10 max-w-[175px] sm:h-11 sm:max-w-[195px]" />
+          <BrandLogo className="h-7 max-w-[120px] sm:h-8 sm:max-w-[135px]" />
           <h2 className="max-w-[290px] text-[clamp(1.5rem,5.5vw,2.25rem)] font-extrabold leading-[1.08] tracking-tight text-white sm:max-w-[420px]">
             Join the community <span className="text-brand-primary">and travel smarter.</span>
           </h2>
@@ -318,7 +318,7 @@ export default function SignupPage() {
         <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/55 to-transparent" />
 
         <div className="relative z-10">
-          <BrandLogo className="h-[clamp(2.5rem,6vh,3.5rem)] max-w-[230px]" />
+          <BrandLogo className="h-[clamp(1.5rem,4vh,2.25rem)] max-w-[160px]" />
         </div>
 
         <div className="relative z-10 flex flex-col gap-[4vh]">
@@ -330,7 +330,7 @@ export default function SignupPage() {
               <br />
               <span className="text-brand-primary">
                 and travel
-                <br />
+                {' '}
                 smarter.
               </span>
             </h2>
@@ -445,8 +445,8 @@ export default function SignupPage() {
           </p>
         </div>
 
-        <div className="mx-auto flex w-full max-w-[460px] flex-wrap items-center justify-between gap-x-4 gap-y-2 pt-3 text-xs text-slate-400 sm:pt-2">
-          <div className="flex gap-3 sm:gap-4">
+        <div className="mx-auto flex w-full max-w-[420px] flex-col items-center justify-center gap-2 pt-3 text-xs text-slate-400 xs:flex-row xs:justify-between sm:gap-4">
+          <div className="flex gap-4">
             <Link to="/terms" className="hover:text-slate-600">Terms</Link>
             <Link to="/privacy" className="hover:text-slate-600">Privacy</Link>
             <Link to="/help" className="hover:text-slate-600">Help</Link>

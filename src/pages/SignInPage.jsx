@@ -351,7 +351,7 @@ export default function SignInPage() {
             md:pb-10
           "
         >
-          <BrandLogo className="h-10 max-w-[175px] sm:h-11 sm:max-w-[195px]" />
+          <BrandLogo className="h-7 max-w-[120px] sm:h-8 sm:max-w-[135px]" />
 
           <h2
             className="
@@ -423,7 +423,7 @@ export default function SignInPage() {
 
         {/* Logo */}
         <div className="relative z-10">
-          <BrandLogo className="h-[clamp(2.5rem,6vh,3.5rem)] max-w-[230px]" />
+          <BrandLogo className="h-[clamp(1.5rem,4vh,2.25rem)] max-w-[160px]" />
         </div>
 
         {/* Hero Content */}
@@ -452,7 +452,7 @@ export default function SignInPage() {
 
               <span className="text-brand-primary">
                 before you
-                <br />
+                {' '}
                 get there.
               </span>
             </h2>
@@ -628,7 +628,7 @@ export default function SignInPage() {
             className="
               mb-5
 
-              lg:mb-[2.5vh]
+              lg:mb-5
             "
           >
             <h1
@@ -717,7 +717,7 @@ export default function SignInPage() {
                 relative
                 mb-6
 
-                lg:mb-[3vh]
+                lg:mb-6
               "
             >
               <label
@@ -831,7 +831,7 @@ export default function SignInPage() {
 
                 sm:my-6
 
-                lg:my-[3vh]
+                lg:my-6
               "
             >
               <div className="h-px flex-1 bg-slate-200" />
@@ -865,7 +865,7 @@ export default function SignInPage() {
                 transition
                 hover:bg-slate-50
 
-                lg:py-[clamp(0.6rem,1.9vh,0.95rem)]
+                lg:py-3
               "
             >
               <GoogleIcon />
@@ -883,7 +883,7 @@ export default function SignInPage() {
                 text-sm
                 text-slate-500
 
-                lg:mt-[2.5vh]
+                lg:mt-5
               "
             >
               Don't have an account?

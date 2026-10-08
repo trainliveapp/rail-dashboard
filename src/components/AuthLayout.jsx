@@ -13,7 +13,7 @@ export default function AuthLayout({ children, cardWidth = 'max-w-[560px]', back
       />
       <div className={`absolute inset-0 ${blurBackground ? 'bg-slate-900/55' : 'bg-slate-900/45'}`} />
 
-      <BrandLogo className="absolute left-6 top-6 z-10 h-10 max-w-[170px]" />
+      <BrandLogo className="absolute left-6 top-6 z-10 h-7 max-w-[125px]" />
 
       <div className={`relative z-10 w-full ${cardWidth}`}>
         <div className="bg-slate-50 rounded-3xl shadow-2xl px-8 sm:px-10 py-10">
