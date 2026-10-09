@@ -86,15 +86,15 @@ export default function AdSlot({ size = 'leaderboard', className = '' }) {
       </div>
 
       <div className="relative flex h-full flex-col justify-between p-4 text-white sm:p-7">
-        <div className="relative h-24 w-[210px] overflow-hidden sm:h-28 sm:w-[260px]">
+        <div className="relative aspect-[3.1] w-[clamp(150px,24vw,260px)] overflow-hidden">
           <img
             src={robotCameraLiveLogo}
             alt="Robot Camera LIVE"
-            className="absolute left-[-32px] top-[-49px] w-[210px] max-w-none sm:left-[-39px] sm:top-[-60px] sm:w-[260px]"
+            className="absolute left-0 top-0 w-full max-w-none -translate-x-[15%] -translate-y-[35%]"
           />
         </div>
 
-        <div className={`absolute right-3 flex w-[min(52%,300px)] overflow-hidden sm:right-7 ${activeSlide === 2 ? 'top-[16%] max-h-[78%] sm:top-[16%]' : 'top-[22%] max-h-[68%] sm:top-[22%]'}`}>
+        <div className={`absolute right-2 flex w-[min(58%,300px)] max-h-[68%] overflow-y-auto pr-0.5 [scrollbar-width:none] sm:right-7 sm:w-[min(52%,300px)] sm:max-h-[78%] ${activeSlide === 2 ? 'top-[14%] sm:top-[16%]' : 'top-[20%] sm:top-[22%]'}`}>
           <div className="flex w-full flex-col gap-1.5 sm:gap-2">
             {slide.updates.map(({ icon: UpdateIcon, color, title, text, time }, index) => (
               <div key={`${title}-${index}`} className="flex shrink-0 items-start gap-1.5 rounded-2xl bg-white/95 px-2 py-1.5 text-slate-900 shadow-lg backdrop-blur-sm sm:gap-3 sm:px-4 sm:py-3">
@@ -112,9 +112,9 @@ export default function AdSlot({ size = 'leaderboard', className = '' }) {
           </div>
         </div>
 
-        <div className="max-w-[58%] pb-5 sm:max-w-[62%]">
-          <h2 className="text-[clamp(1.5rem,4.5vw,3rem)] font-extrabold leading-[1.02] tracking-tight">{slide.title}</h2>
-          <p className="mt-2 text-[clamp(0.8rem,1.8vw,1.25rem)] leading-tight text-white">{slide.description}</p>
+        <div className="max-w-[38%] pb-5 sm:max-w-[62%]">
+          <h2 className="text-[clamp(1.05rem,4.5vw,3rem)] font-extrabold leading-[1.02] tracking-tight sm:text-[clamp(1.5rem,4.5vw,3rem)]">{slide.title}</h2>
+          <p className="mt-2 text-[clamp(0.62rem,1.8vw,1.25rem)] leading-tight text-white sm:text-[clamp(0.8rem,1.8vw,1.25rem)]">{slide.description}</p>
         </div>
       </div>
 
