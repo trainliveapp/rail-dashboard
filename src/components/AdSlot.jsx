@@ -1,6 +1,6 @@
 import { ChevronRight, MessageCircle, ShieldAlert, TrainFront, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import robotCameraLiveLogo from '../assets/Robot Camera LIVE Logo.png'
+import robotCameraLiveLogo from '../../Avviso-1/PNG/Logo-PNG-transparent.png'
 import firstAdImage from '../assets/1ad.png'
 import secondAdImage from '../assets/2ad.png'
 import thirdAdImage from '../assets/3ad.png'
@@ -86,11 +86,13 @@ export default function AdSlot({ size = 'leaderboard', className = '' }) {
       </div>
 
       <div className="relative flex h-full flex-col justify-between p-4 text-white sm:p-7">
-        <img
-          src={robotCameraLiveLogo}
-          alt="Robot Camera LIVE"
-          className="h-9 w-auto max-w-[170px] object-contain sm:h-10 sm:max-w-[190px]"
-        />
+        <div className="relative h-24 w-[210px] overflow-hidden sm:h-28 sm:w-[260px]">
+          <img
+            src={robotCameraLiveLogo}
+            alt="Robot Camera LIVE"
+            className="absolute left-[-32px] top-[-49px] w-[210px] max-w-none sm:left-[-39px] sm:top-[-60px] sm:w-[260px]"
+          />
+        </div>
 
         <div className={`absolute right-3 flex w-[min(52%,300px)] overflow-hidden sm:right-7 ${activeSlide === 2 ? 'top-[16%] max-h-[78%] sm:top-[16%]' : 'top-[22%] max-h-[68%] sm:top-[22%]'}`}>
           <div className="flex w-full flex-col gap-1.5 sm:gap-2">
