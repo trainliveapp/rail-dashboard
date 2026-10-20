@@ -282,12 +282,15 @@ export default function MapPanel({
 
   useEffect(() => {
     let cancelled = false
-    getStationUpdates(stations.map((s) => s.name)).then((rows) => {
+    getStationUpdates(stations.map((s) => s.name), { all: true }).then((rows) => {
       if (!cancelled) setCommunityReports(rows.filter((row) => row.kind === 'report' && row.status !== 'RESOLVED' && row.status !== 'EXPIRED'))
     }).catch(() => {})
     const unsubscribe = subscribeToStationUpdates(stations.map((s) => s.name), (row) => {
       if (row.kind !== 'report') return
-      setCommunityReports((prev) => [row, ...prev.filter((item) => !(item.stationName === row.stationName && item.category === row.category))])
+      setCommunityReports((prev) => {
+        const remaining = prev.filter((item) => item.id !== row.id)
+        return ['ACTIVE', 'CONFIRMED'].includes(row.status) ? [row, ...remaining] : remaining
+      })
     })
     return () => {
       cancelled = true
@@ -340,10 +343,7 @@ export default function MapPanel({
 
     setCommunityReports((prev) => [
       savedReport,
-      ...prev.filter((item) => (
-        item.id !== savedReport.id &&
-        !(item.stationName === savedReport.stationName && item.category === savedReport.category)
-      )),
+      ...prev.filter((item) => item.id !== savedReport.id),
     ])
   }
 
@@ -538,7 +538,7 @@ export default function MapPanel({
               >
                 {s.name}
               </Tooltip>
-              <Popup minWidth={260} className="station-popup">
+              <Popup minWidth={260} maxWidth={440} className="station-popup">
                 <StationPopup
                   stationId={s.id}
                   stationName={s.name}

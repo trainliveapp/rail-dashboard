@@ -1417,8 +1417,6 @@
 // }
 
 
-import { useNavigate } from 'react-router-dom'
-import { Link } from 'react-router-dom'
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -1434,11 +1432,10 @@ import {
 import { siFacebook, siInstagram, siTiktok, siX } from "simple-icons";
 import { supabase } from "../supabase";
 import { lineTextColors } from "./lineColors";
+import { getChatVisitorId } from "../lib/chatIdentity";
 
 const CHAT_VISIBILITY_WINDOW_MS = 24 * 60 * 60 * 1000;
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
-// Change this if your app uses a different authentication route.
-const DEFAULT_SIGN_IN_URL = "/login";
 
 const TUBE_LINES = [
   "central",
@@ -1494,7 +1491,7 @@ function totalReactionCount(reactionState) {
   );
 }
 
-export default function MapChat({ signInUrl = DEFAULT_SIGN_IN_URL }) {
+export default function MapChat() {
   const [open, setOpen] = useState(false);
   const [line, setLine] = useState("central");
   const [messages, setMessages] = useState([]);
@@ -1504,8 +1501,6 @@ export default function MapChat({ signInUrl = DEFAULT_SIGN_IN_URL }) {
   const [imageError, setImageError] = useState("");
   const [selectedIsVideo, setSelectedIsVideo] = useState(false);
   const [sending, setSending] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [authLoading, setAuthLoading] = useState(true);
   const [emojiOpen, setEmojiOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [flyingEmojis, setFlyingEmojis] = useState([]);
@@ -1519,47 +1514,18 @@ export default function MapChat({ signInUrl = DEFAULT_SIGN_IN_URL }) {
   const messagesRef = useRef([]);
   const reactionButtonRefs = useRef({});
   const chatPanelRef = useRef(null);
-  const navigate = useNavigate()
   async function getCurrentUser() {
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser();
-
-    if (error) {
-      console.error("Could not get current user:", error);
-      return null;
-    }
-
-    currentUserRef.current = user || null;
-    setIsAuthenticated(Boolean(user));
-    setAuthLoading(false);
-    return user || null;
+    const { data } = await supabase.auth.getSession();
+    const user = data?.session?.user || null;
+    currentUserRef.current = user;
+    return user;
   }
 
   useEffect(() => {
-    let mounted = true;
-
-    supabase.auth.getSession().then(({ data, error }) => {
-      if (!mounted) return;
-      if (error) console.error("Could not read auth session:", error);
-      const user = data?.session?.user || null;
-      currentUserRef.current = user;
-      setIsAuthenticated(Boolean(user));
-      setAuthLoading(false);
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      currentUserRef.current = session?.user || null;
     });
-
-    const { data: authSubscription } = supabase.auth.onAuthStateChange((_event, session) => {
-      const user = session?.user || null;
-      currentUserRef.current = user;
-      setIsAuthenticated(Boolean(user));
-      setAuthLoading(false);
-    });
-
-    return () => {
-      mounted = false;
-      authSubscription?.subscription?.unsubscribe();
-    };
+    return () => data?.subscription?.unsubscribe();
   }, []);
 
   const handleImageSelection = (event) => {
@@ -1606,7 +1572,7 @@ export default function MapChat({ signInUrl = DEFAULT_SIGN_IN_URL }) {
     };
   }, [imagePreview]);
 
-  const useEmoji = (emoji) => {
+  const insertEmoji = (emoji) => {
     setText((current) => `${current}${emoji}`);
     const id = `${Date.now()}-${Math.random()}`;
     setFlyingEmojis((current) => [
@@ -1651,7 +1617,7 @@ export default function MapChat({ signInUrl = DEFAULT_SIGN_IN_URL }) {
 
     const { data, error } = await supabase
       .from("chat_message_reactions")
-      .select("message_id, user_id, reaction")
+      .select("message_id, user_id, visitor_id, reaction")
       .in("message_id", messageIds);
 
     if (error) {
@@ -1669,7 +1635,7 @@ export default function MapChat({ signInUrl = DEFAULT_SIGN_IN_URL }) {
       next[item.message_id].counts[item.reaction] =
         (next[item.message_id].counts[item.reaction] || 0) + 1;
 
-      if (user && item.user_id === user.id) {
+      if (user ? item.user_id === user.id : item.visitor_id === getChatVisitorId()) {
         next[item.message_id].myReaction = item.reaction;
       }
     }
@@ -1740,11 +1706,8 @@ export default function MapChat({ signInUrl = DEFAULT_SIGN_IN_URL }) {
   async function toggleReaction(messageId, reaction) {
     const user = currentUserRef.current || (await getCurrentUser());
 
-    if (!user) {
-      setImageError("Please sign in before reacting to a message.");
-      setActiveReactionMessage(null);
-      return;
-    }
+    const identity = user ? { user_id: user.id } : { visitor_id: getChatVisitorId() };
+    const identityKey = user ? 'user_id' : 'visitor_id';
 
     const current = reactions[messageId] || { counts: {}, myReaction: null };
     const oldReaction = current.myReaction;
@@ -1780,10 +1743,10 @@ export default function MapChat({ signInUrl = DEFAULT_SIGN_IN_URL }) {
         .upsert(
           {
             message_id: messageId,
-            user_id: user.id,
+            ...identity,
             reaction: nextReaction,
           },
-          { onConflict: "message_id,user_id" }
+          { onConflict: `message_id,${identityKey}` }
         );
       error = result.error;
     } else {
@@ -1791,12 +1754,13 @@ export default function MapChat({ signInUrl = DEFAULT_SIGN_IN_URL }) {
         .from("chat_message_reactions")
         .delete()
         .eq("message_id", messageId)
-        .eq("user_id", user.id);
+        .eq(identityKey, identity[identityKey]);
       error = result.error;
     }
 
     if (error) {
       console.error("Reaction update failed:", error);
+      setImageError("Could not save your reaction. Please try again.");
       await loadReactions(messagesRef.current.map((message) => message.id));
     }
   }
@@ -1836,10 +1800,8 @@ export default function MapChat({ signInUrl = DEFAULT_SIGN_IN_URL }) {
         },
         async (payload) => {
           if (cancelled) return;
-          const changedReaction = payload.new || payload.old;
-          if (!changedReaction?.message_id) return;
           const ids = messagesRef.current.map((message) => message.id);
-          if (ids.includes(changedReaction.message_id)) await loadReactions(ids);
+          if (payload.eventType === "DELETE" || ids.includes(payload.new?.message_id)) await loadReactions(ids);
         }
       )
       .subscribe();
@@ -1855,10 +1817,6 @@ export default function MapChat({ signInUrl = DEFAULT_SIGN_IN_URL }) {
   }, [open, line]);
 
   async function sendMessage() {
-    if (!isAuthenticated) {
-      window.location.href = signInUrl;
-      return;
-    }
     if (sending) return;
     if (!text.trim() && !selectedImage) return;
 
@@ -1901,7 +1859,7 @@ export default function MapChat({ signInUrl = DEFAULT_SIGN_IN_URL }) {
 
       const user = await getCurrentUser();
       const payload = {
-        username: "TrainLive User",
+        username: user ? "TrainLive User" : "TrainLive Guest",
         message: text.trim(),
         line,
         image_url: imageUrl,
@@ -1999,33 +1957,6 @@ export default function MapChat({ signInUrl = DEFAULT_SIGN_IN_URL }) {
         </select>
       </div>
 
-      {!authLoading && !isAuthenticated && (
-        <div className="relative z-[25] shrink-0 border-b border-blue-100 bg-gradient-to-r from-blue-50 via-white to-amber-50 px-3 py-2.5">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600">
-              <MessageCircle size={16} />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[12px] font-bold text-slate-800">Sign in to unlock the full chat</p>
-              <p className="text-[10px] leading-4 text-slate-500">Some messages are blurred until you sign in.</p>
-            </div>
-            {/* <button
-              type="button"
-              onClick={() => { window.location.href = signInUrl; }}
-              className="shrink-0 rounded-full bg-[#168cff] px-3 py-1.5 text-[11px] font-bold text-white shadow-sm transition hover:bg-[#0b7fe6]"
-            >
-              Sign in
-            </button> */}
-<Link
-  to="/signin"
-  className="shrink-0 rounded-full bg-[#168cff] px-3 py-1.5 text-[11px] font-bold text-white shadow-sm transition hover:bg-[#0b7fe6]"
->
-  Sign in
-</Link>
-          </div>
-        </div>
-      )}
-
       <div className="relative z-10 flex-1 overflow-y-auto bg-[#efeae2] px-3 py-4 [scrollbar-width:thin]">
         {messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center px-8 text-center">
@@ -2040,13 +1971,10 @@ export default function MapChat({ signInUrl = DEFAULT_SIGN_IN_URL }) {
         ) : (
           messages.map((message, index) => {
             const reactionState = reactions[message.id] || { counts: {}, myReaction: null };
-            const myReaction = reactionState.myReaction;
             const summary = Object.entries(reactionState.counts)
               .sort((a, b) => b[1] - a[1])
               .slice(0, 3);
             const pickerOpen = activeReactionMessage === message.id;
-            // Guests can preview the conversation; selected messages are softly blurred until sign-in.
-            const guestLocked = !isAuthenticated && !authLoading && index % 3 === 2;
 
             return (
               <div key={message.id || index} className="mb-3 flex w-full justify-start">
@@ -2056,8 +1984,8 @@ export default function MapChat({ signInUrl = DEFAULT_SIGN_IN_URL }) {
                       {message.username || "TrainLive User"}
                     </p>
 
-                    <div className={guestLocked ? "relative overflow-hidden rounded-lg" : "relative"}>
-                      <div className={guestLocked ? "pointer-events-none select-none blur-[8px] scale-[1.01] transition-all duration-300" : ""} aria-hidden={guestLocked}>
+                    <div className="relative">
+                      <div>
                         {message.message && (
                           <p className="break-words whitespace-pre-wrap pr-1 text-[13.5px] leading-[1.22rem] text-slate-700">
                             {message.message}
@@ -2093,10 +2021,6 @@ export default function MapChat({ signInUrl = DEFAULT_SIGN_IN_URL }) {
                       <button
                         type="button"
                         onClick={() => {
-                          if (!isAuthenticated) {
-                            window.location.href = signInUrl;
-                            return;
-                          }
                           openReactionPicker(message.id);
                         }}
                         className="absolute -bottom-3 left-3 flex h-7 items-center gap-0.5 rounded-full border border-slate-200 bg-white px-1.5 shadow-sm transition hover:scale-[1.03]"
@@ -2118,13 +2042,9 @@ export default function MapChat({ signInUrl = DEFAULT_SIGN_IN_URL }) {
                     }}
                     type="button"
                     onClick={() => {
-                      if (!isAuthenticated) {
-                        window.location.href = signInUrl;
-                        return;
-                      }
                       openReactionPicker(message.id);
                     }}
-                    aria-label={isAuthenticated ? "Add reaction" : "Sign in to react"}
+                    aria-label="Add reaction"
                     aria-expanded={pickerOpen}
                     className={`absolute -right-3 bottom-0 flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 shadow-sm transition-all hover:scale-105 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-400/30 sm:opacity-0 sm:group-hover:opacity-100 ${
                       pickerOpen ? "opacity-100" : ""
@@ -2277,7 +2197,7 @@ export default function MapChat({ signInUrl = DEFAULT_SIGN_IN_URL }) {
                   key={emoji}
                   type="button"
                   onClick={() => {
-                    useEmoji(emoji);
+                    insertEmoji(emoji);
                     setEmojiOpen(false);
                   }}
                   className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xl hover:bg-slate-100"

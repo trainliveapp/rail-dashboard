@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Info, MapPin, Check, Loader2 } from 'lucide-react'
+import StationReportIcon from './StationReportIcon'
 import { stationReportCategories } from '../data/mockData'
 import { getStationUpdates, postReport } from '../lib/stationUpdates'
 
@@ -14,18 +15,20 @@ export default function StationQuickReportModal({ station, onClose, onReportSubm
   const [error, setError] = useState('')
 
   useEffect(() => {
-    getStationUpdates([station.name]).then((rows) => {
+    let cancelled = false
+    getStationUpdates([station.name], { all: true }).then((rows) => {
       const next = {}
       for (const cat of stationReportCategories) next[cat.key] = 0
       for (const r of rows) {
-        if (r.kind === 'report' && next[r.category] !== undefined) next[r.category] += 1
+        if (r.kind === 'report' && ['ACTIVE', 'CONFIRMED'].includes(r.status) && next[r.category] !== undefined) next[r.category] += 1
       }
-      setCounts(next)
-    })
+      if (!cancelled) setCounts(next)
+    }).catch(() => { if (!cancelled) setCounts({}) })
+    return () => { cancelled = true }
   }, [station.name])
 
   const handleConfirm = async () => {
-    if (!selected) return
+    if (!selected || submitting) return
     setSubmitting(true)
     setError('')
     try {
@@ -58,7 +61,7 @@ export default function StationQuickReportModal({ station, onClose, onReportSubm
             <p className="text-sm text-slate-400 flex items-center gap-1">
               {selected ? (
                 <>
-                  <span>{selected.emoji}</span> {selected.label} selected
+                  <StationReportIcon category={selected.key} size={14} className="text-blue-700 shrink-0" /> {selected.label} selected
                 </>
               ) : (
                 'Select a category below'
@@ -78,12 +81,13 @@ export default function StationQuickReportModal({ station, onClose, onReportSubm
             return (
               <button
                 type="button"
+                disabled={submitting}
                 key={cat.key}
                 onClick={() => setSelected(cat)}
                 className={`w-full flex items-center justify-between gap-3 rounded-2xl border-2 px-4 py-3 text-left transition-colors ${isSelected ? 'border-blue-600 bg-blue-50' : 'border-blue-100 bg-white'}`}
               >
                 <span className="flex items-center gap-3">
-                  <span className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center text-base shrink-0">{cat.emoji}</span>
+                  <span className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center text-blue-700 shrink-0"><StationReportIcon category={cat.key} /></span>
                   <span>
                     <span className={`block text-sm font-semibold ${isSelected ? 'text-blue-700' : 'text-slate-800'}`}>{cat.label}</span>
                     <span className="block text-xs text-slate-400">{counts[cat.key] ?? 0} reported</span>
@@ -105,6 +109,7 @@ export default function StationQuickReportModal({ station, onClose, onReportSubm
           <button
             type="button"
             onClick={onClose}
+            disabled={submitting}
             className="flex-1 border border-slate-200 text-slate-600 font-semibold py-3 rounded-full"
           >
             Cancel

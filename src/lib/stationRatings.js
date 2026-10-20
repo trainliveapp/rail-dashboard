@@ -1,8 +1,30 @@
 import { supabase, isSupabaseConfigured } from './supabaseClient'
 
+export const ratingCategories = [
+  { key: 'cleanliness', dbKey: 'cleanliness', label: 'Cleanliness' },
+  { key: 'staffFriendliness', dbKey: 'staff_friendliness', label: 'Customer service' },
+  { key: 'staffVisibility', dbKey: 'staff_visibility', label: 'Staff visibility' },
+  { key: 'accessibility', dbKey: 'accessibility', label: 'Accessibility' },
+  { key: 'facilities', dbKey: 'facilities', label: 'Facilities' },
+]
+
+export function subscribeToStationReviews(stationId, onChange) {
+  const onLocalChange = (event) => { if (event.detail === stationId) onChange() }
+  window.addEventListener('station-review-saved', onLocalChange)
+  const channel = isSupabaseConfigured ? supabase
+    .channel(`station-reviews-${stationId}-${crypto.randomUUID()}`)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'station_ratings', filter: `station_id=eq.${stationId}` }, onChange)
+    .subscribe() : null
+  return () => {
+    window.removeEventListener('station-review-saved', onLocalChange)
+    if (channel) supabase.removeChannel(channel)
+  }
+}
+
 // Submits a rating. Only send keys for categories the person actually
 // rated, exactly like the spec's request body, partial ratings are fine.
 export async function submitStationRating(stationId, ratings) {
+  if (!isSupabaseConfigured) throw new Error('Station reviews are currently unavailable.')
   const { data: sessionData } = await supabase.auth.getSession()
   const userId = sessionData.session?.user?.id ?? null
 
@@ -13,6 +35,22 @@ export async function submitStationRating(stationId, ratings) {
   })
 
   if (error) throw error
+  window.dispatchEvent(new CustomEvent('station-review-saved', { detail: stationId }))
+}
+
+export async function getStationReviews(stationId, page = 0) {
+  if (!isSupabaseConfigured) return []
+
+  const { data, error } = await supabase
+    .from('station_ratings')
+    .select('id, review_text, overall_rating, created_at')
+    .eq('station_id', stationId)
+    .order('created_at', { ascending: false })
+    .order('id', { ascending: false })
+    .range(page * 20, page * 20 + 19)
+
+  if (error) throw error
+  return data || []
 }
 
 // One station's score. Returns an "unrated" shape (nulls, count 0) if the
@@ -23,7 +61,7 @@ export async function getStationScore(stationId) {
   }
 
   const { data, error } = await supabase
-    .from('station_scores')
+    .from('station_review_scores')
     .select('*')
     .eq('station_id', stationId)
     .maybeSingle()
@@ -54,7 +92,7 @@ export async function getStationScores(stationIds) {
   if (!stationIds.length || !isSupabaseConfigured) return {}
 
   const { data, error } = await supabase
-    .from('station_scores')
+    .from('station_review_scores')
     .select('*')
     .in('station_id', stationIds)
 

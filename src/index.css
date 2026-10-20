@@ -235,7 +235,7 @@ button:disabled,
   height: 28px !important;
   padding: 0 !important;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.2);
+  background: #2563eb;
   color: white !important;
   font-size: 20px !important;
   line-height: 28px !important;
@@ -250,5 +250,5 @@ button:disabled,
   margin: 0 !important;
 }
 .station-popup .leaflet-popup-close-button:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: #1d4ed8;
 }

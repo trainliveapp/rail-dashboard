@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient'
+import { supabase, isSupabaseConfigured } from './supabaseClient'
 
 export const UPDATE_VISIBILITY_WINDOW_MS = 24 * 60 * 60 * 1000
 
@@ -45,29 +45,31 @@ function mapRow(row) {
   }
 }
 
-function isVisibleUpdate(row) {
-  return new Date(row.created_at).getTime() >= Date.now() - UPDATE_VISIBILITY_WINDOW_MS &&
-    (row.kind === 'chat' || row.status === 'ACTIVE' || row.status === 'CONFIRMED')
-}
-
 // Everything currently posted for the stations a journey option passes
 // through, newest first. Called once when a journey is selected.
-export async function getStationUpdates(stationNames) {
+export async function getStationUpdates(stationNames, { all = false } = {}) {
   if (!stationNames.length) return []
+  if (!isSupabaseConfigured) throw new Error('Station reporting is currently unavailable.')
 
-  const { data, error } = await supabase
-    .from('station_updates')
-    .select('*')
-    .in('station_name', stationNames)
-    .gte('created_at', activeSinceIso())
-    .order('created_at', { ascending: false })
-    .limit(20)
+  const rows = []
+  const pageSize = all ? 500 : 20
+  let offset = 0
+  while (true) {
+    const { data, error } = await supabase
+      .from('station_updates')
+      .select('*')
+      .in('station_name', stationNames)
+      .gte('created_at', activeSinceIso())
+      .order('created_at', { ascending: false })
+      .order('id', { ascending: false })
+      .range(offset, offset + pageSize - 1)
 
-  if (error) {
-    if (isMissingStationUpdatesTable(error)) return []
-    throw error
+    if (error) throw error
+    rows.push(...data)
+    if (!all || data.length < pageSize) break
+    offset += pageSize
   }
-  return data.map(mapRow).filter(isVisibleUpdate)
+  return rows.map(mapRow).filter((row) => new Date(row.createdAt).getTime() >= Date.now() - UPDATE_VISIBILITY_WINDOW_MS && (row.kind === 'chat' || ['ACTIVE', 'CONFIRMED'].includes(row.status)))
 }
 
 // Keeps the feed live: any row inserted for one of these stations while the
@@ -77,21 +79,26 @@ export async function getStationUpdates(stationNames) {
 export function subscribeToStationUpdates(stationNames, onInsert) {
   if (!stationNames.length) return () => {}
   const stationSet = new Set(stationNames)
+  const onLocalReport = (event) => { if (stationSet.has(event.detail.stationName)) onInsert(event.detail) }
+  window.addEventListener('station-report-saved', onLocalReport)
 
   const channel = supabase
-    .channel(`station-updates-${stationNames.join('-')}`)
+    .channel(`station-updates-${crypto.randomUUID()}`)
     .on(
       'postgres_changes',
-      { event: 'INSERT', schema: 'public', table: 'station_updates' },
+      { event: '*', schema: 'public', table: 'station_updates' },
       (payload) => {
-        if (stationSet.has(payload.new.station_name) && isVisibleUpdate(payload.new)) {
+        if (stationSet.has(payload.new?.station_name)) {
           onInsert(mapRow(payload.new))
         }
       }
     )
     .subscribe()
 
-  return () => supabase.removeChannel(channel)
+  return () => {
+    window.removeEventListener('station-report-saved', onLocalReport)
+    supabase.removeChannel(channel)
+  }
 }
 
 // Used by ReportIssueModal. stationName is the resolved station from the
@@ -122,7 +129,9 @@ export async function postReport({ stationName, locationText, category, label, t
     }
     throw error
   }
-  return mapRow(data)
+  const report = mapRow(data)
+  window.dispatchEvent(new CustomEvent('station-report-saved', { detail: report }))
+  return report
 }
 
 // Used by a chat-style composer at a station, short freeform updates for
@@ -131,15 +140,15 @@ export async function postReport({ stationName, locationText, category, label, t
 export async function postChatMessage({ stationName, message }) {
   const { data: sessionData } = await supabase.auth.getSession()
   const user = sessionData.session?.user
-  if (!user) throw new Error('Sign in to post an update.')
+  if (!stationName || !message?.trim()) throw new Error('Choose a station and enter a message.')
 
   const { error } = await supabase.from('station_updates').insert({
     station_name: stationName,
     kind: 'chat',
-    message,
+    message: message.trim(),
     tone: 'blue',
-    author_id: user.id,
-    author_initial: (user.email || '?')[0],
+    author_id: user?.id || null,
+    author_initial: user ? (user.email || '?')[0] : 'G',
   })
 
   if (error) throw error

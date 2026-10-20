@@ -141,7 +141,10 @@ export default function JourneyResults({ journey, selectedIndex, onSelectIndex, 
       })
 
     const unsubscribe = subscribeToStationUpdates(stationNames, (row) => {
-      setFeed((prev) => [row, ...prev])
+      setFeed((prev) => {
+        const remaining = prev.filter((item) => item.id !== row.id)
+        return row.kind === 'chat' || ['ACTIVE', 'CONFIRMED'].includes(row.status) ? [row, ...remaining] : remaining
+      })
     })
 
     return () => {
