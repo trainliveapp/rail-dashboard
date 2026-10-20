@@ -4,6 +4,7 @@ import flavioImage from '../assets/Friendly Cybernetic Portrait with Smartphone-
 import phoneImage from '../assets/Avviso Travel Companion App Mockup-3.png'
 import trainImage from '../assets/Modern Red-and-White Commuter Train-4.png'
 import avvisoLogo from '../assets/avviso-logo-transparent.png'
+import { useState } from 'react'
 import './FeatureCards.css'
 
 const benefits = [
@@ -23,6 +24,8 @@ const features = [
 ]
 
 export default function FeatureCards() {
+  const [showSupportMessage, setShowSupportMessage] = useState(false)
+
   return (
     <section className="flavio-banner" aria-labelledby="flavio-heading">
       <div className="flavio-hero">
@@ -37,7 +40,8 @@ export default function FeatureCards() {
           <span className="flavio-coming-soon">Coming soon</span>
           <h2 id="flavio-heading"><span className="flavio-meet">Meet <strong>Flavio.</strong></span><span>Your personal</span><span>AI Travel Companion.</span></h2>
           <p className="flavio-description">Flavio learns from real passenger reports, predicts potential disruptions and helps you travel smarter, safer and more in control.</p>
-          <div className="flavio-support"><Heart fill="currentColor" aria-hidden="true" /><span>Support Avviso</span><ArrowRight aria-hidden="true" /></div>
+          <button type="button" className="flavio-support" onClick={() => setShowSupportMessage(true)}><Heart fill="currentColor" aria-hidden="true" /><span>Support Avviso</span><ArrowRight aria-hidden="true" /></button>
+          <p className="flavio-support-message" role="status">{showSupportMessage ? 'Support link coming soon.' : ''}</p>
           <p className="flavio-support-note">Your support helps keep Avviso free for everyone and makes new features like Flavio possible.</p>
         </div>
 

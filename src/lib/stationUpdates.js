@@ -41,6 +41,7 @@ function mapRow(row) {
     confirms: row.confirms,
     status: row.status || 'ACTIVE',
     createdAt: row.created_at,
+    updatedAt: row.updated_at || row.created_at,
     minutesAgo: minutesAgo(row.created_at),
   }
 }
@@ -170,4 +171,9 @@ export async function confirmUpdate(id) {
     visitor_id: visitorId,
   })
   if (error) throw error
+  const { data: updated, error: refreshError } = await supabase.from('station_updates').select('*').eq('id', id).single()
+  if (refreshError) throw refreshError
+  const report = mapRow(updated)
+  window.dispatchEvent(new CustomEvent('station-report-saved', { detail: report }))
+  return report
 }

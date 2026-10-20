@@ -26,6 +26,11 @@
 .flavio-description { max-width: 38ch; margin: 16px 0; color: #e6e7ea; font-size: 14px; line-height: 1.55; }
 .flavio-support { display: flex; align-items: center; gap: 12px; width: min(100%, 330px); min-height: 48px; padding: 12px 17px; border-radius: 999px; background: var(--flavio-red); color: #fff; font-size: clamp(19px, 4.5vw, 23px); font-weight: 700; line-height: 1.15; }
 .flavio-support span { min-width: 0; }
+.flavio-support { border: 0; font-family: inherit; text-align: left; cursor: pointer; }
+.flavio-support:hover { background: #df0026; }
+.flavio-support:focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
+.flavio-support-message { margin: 10px 0 0; font-size: 14px; line-height: 1.5; }
+.flavio-support-message:empty { display: none; }
 .flavio-support svg { flex-shrink: 0; width: 25px; height: 25px; }
 .flavio-support svg:last-child { margin-left: auto; stroke-width: 1.7; }
 .flavio-support-note { max-width: 42ch; margin: 10px 0 0; color: #e6e7ea; font-size: 11px; line-height: 1.5; }

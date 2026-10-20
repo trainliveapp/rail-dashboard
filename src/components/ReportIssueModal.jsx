@@ -2,10 +2,9 @@ import { useState } from 'react'
 import {
   X, Clock3, Ban, Construction, Users, Ticket, Accessibility, Sparkles,
   ShieldAlert, ShieldCheck, Megaphone, CloudRain, CircleHelp,
-  TrainFront as TrainIcon, MapPin, LocateFixed, ArrowRight, Loader2,
+  TrainFront as TrainIcon, MapPin, ArrowRight,
 } from 'lucide-react'
 import { reportCategories, stations } from '../data/mockData'
-import { findNearestStation } from '../lib/geo'
 import { postReport } from '../lib/stationUpdates'
 
 const icons = { Clock3, Ban, Construction, Users, Ticket, Accessibility, Sparkles, ShieldAlert, ShieldCheck, Megaphone, CloudRain, CircleHelp }
@@ -23,62 +22,41 @@ const categoryTone = {
 }
 
 
-export default function ReportIssueModal({ onClose, onReportSubmitted }) {
-  const [category, setCategory] = useState('train_delay')
-  const [where, setWhere] = useState('train')
-  const [message, setMessage] = useState('')
-  const [locationQuery, setLocationQuery] = useState('')
-  const [matchedStation, setMatchedStation] = useState(null)
-  const [showStationList, setShowStationList] = useState(false)
-  const [locating, setLocating] = useState(false)
+export default function ReportIssueModal({ initialStation = null, onClose, onReportSubmitted }) {
+  const [category, setCategory] = useState('')
+  const [where, setWhere] = useState(initialStation ? 'station' : 'train')
+  const [stationQuery, setStationQuery] = useState(initialStation?.name || '')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
   const stationMatches =
-    locationQuery.trim().length > 0
-      ? stations.filter((s) => s.name.toLowerCase().includes(locationQuery.trim().toLowerCase())).slice(0, 6)
+    stationQuery.trim().length > 0
+      ? stations.filter((s) => s.name.toLowerCase().includes(stationQuery.trim().toLowerCase())).slice(0, 6)
       : []
 
-  const handleUseMyLocation = () => {
-    if (!navigator.geolocation) {
-      setError('Location is not available on this device.')
-      return
-    }
-    setError('')
-    setLocating(true)
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setLocating(false)
-        const nearest = findNearestStation(pos.coords.latitude, pos.coords.longitude, stations)
-        if (nearest) {
-          setMatchedStation(nearest.station)
-          setLocationQuery(nearest.station.name)
-        } else {
-          setMatchedStation(null)
-          setLocationQuery(`Near ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`)
-        }
-      },
-      () => {
-        setLocating(false)
-        setError('Could not get your location, check your browser/device permissions.')
-      },
-      { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
-    )
-  }
+  const matchedStation = stations.find((station) => station.name.toLowerCase() === stationQuery.trim().toLowerCase())
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (submitting) return
+    if (!matchedStation) {
+      setError('Please select a station from the search results.')
+      return
+    }
+    const cat = reportCategories.find((c) => c.key === category)
+    if (!cat) {
+      setError('Please select an issue to report.')
+      return
+    }
     setError('')
     setSubmitting(true)
-    const cat = reportCategories.find((c) => c.key === category)
     try {
       const report = {
-        stationName: matchedStation?.name || null,
-        locationText: matchedStation ? null : locationQuery.trim() || null,
+        stationName: matchedStation.name,
         category,
         label: cat.label.toUpperCase(),
         tone: categoryTone[category] || 'blue',
-        message: message.trim() || `${cat.label} reported ${where === 'train' ? 'on the train' : 'at the station'}.`,
+        message: `${cat.label} reported ${where === 'train' ? 'on the train' : 'at the station'}.`,
         whereOn: where,
       }
       const savedReport = await postReport(report)
@@ -104,6 +82,32 @@ export default function ReportIssueModal({ onClose, onReportSubmitted }) {
           </button>
         </div>
 
+        <div className="mb-6">
+          <label htmlFor="report-station" className="text-sm font-semibold text-slate-800 mb-2 block">Search Station</label>
+          <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-full px-4 py-3">
+            <MapPin size={15} className="text-slate-400 shrink-0" aria-hidden="true" />
+            <input
+              id="report-station"
+              list="report-stations"
+              value={stationQuery}
+              onChange={(e) => {
+                setStationQuery(e.target.value)
+                setError('')
+              }}
+              placeholder="Search Station"
+              required
+              autoComplete="off"
+              className="bg-transparent text-sm outline-none w-full placeholder:text-slate-400"
+            />
+            <datalist id="report-stations">
+              {stationMatches.map((station) => <option key={station.id} value={station.name} />)}
+            </datalist>
+          </div>
+          {stationQuery.trim() && !matchedStation && stationMatches.length === 0 && (
+            <p className="text-xs text-slate-500 mt-2">No stations found. Try another station name.</p>
+          )}
+        </div>
+
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
           {reportCategories.map((cat) => {
             const Icon = icons[cat.icon]
@@ -112,7 +116,11 @@ export default function ReportIssueModal({ onClose, onReportSubmitted }) {
               <button
                 type="button"
                 key={cat.key}
-                onClick={() => setCategory(cat.key)}
+                onClick={() => {
+                  setCategory(cat.key)
+                  setError('')
+                }}
+                aria-pressed={active}
                 className={`flex flex-col items-center justify-center text-center gap-2 rounded-xl border px-3 py-4 text-sm font-medium ${active ? 'border-brand-amber bg-amber-50 text-brand-ink' : 'border-brand-line bg-white text-brand-slate'}`}
               >
                 <Icon size={20} className="text-amber-700" />
@@ -139,72 +147,6 @@ export default function ReportIssueModal({ onClose, onReportSubmitted }) {
             <MapPin size={16} /> At Station
           </button>
         </div>
-
-        <label htmlFor="report-description" className="text-sm font-semibold text-slate-800 mb-2 block">Description <span className="font-normal text-slate-400">(Optional)</span></label>
-        <textarea
-          id="report-description"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder="Add a short description"
-          rows={3}
-          maxLength={500}
-          className="w-full bg-white border border-slate-200 rounded-2xl px-4 py-3 text-sm outline-none resize-none mb-5"
-        />
-
-        <h3 className="text-sm font-semibold text-slate-800 mb-2">Add Your Location <span className="font-normal text-slate-400">(Optional)</span></h3>
-        <div className="relative mb-2">
-          <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
-            <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-full px-4 py-3">
-              <MapPin size={15} className="text-slate-400" />
-              <input
-                value={locationQuery}
-                onChange={(e) => {
-                  setLocationQuery(e.target.value)
-                  setMatchedStation(null)
-                }}
-                onFocus={() => setShowStationList(true)}
-                onBlur={() => setTimeout(() => setShowStationList(false), 150)}
-                placeholder="Search a station or add your location...."
-                className="bg-transparent text-sm outline-none w-full placeholder:text-slate-400"
-              />
-            </div>
-            <button
-              type="button"
-              onClick={handleUseMyLocation}
-              disabled={locating}
-              className="flex items-center justify-center gap-2 bg-white border border-slate-200 rounded-full px-4 py-3 text-sm font-medium text-slate-700 whitespace-nowrap"
-            >
-              {locating ? <Loader2 size={15} className="text-amber-700 animate-spin" /> : <LocateFixed size={15} className="text-amber-700" />}
-              {locating ? 'Locating…' : 'Use My Location'}
-            </button>
-          </div>
-
-          {showStationList && stationMatches.length > 0 && (
-            <div className="absolute top-full left-0 right-0 sm:right-auto sm:w-[calc(100%-140px)] mt-1 bg-white rounded-xl shadow-lg border border-slate-100 py-1 z-10 max-h-48 overflow-y-auto">
-              {stationMatches.map((s) => (
-                <button
-                  key={s.id}
-                  type="button"
-                  onMouseDown={() => {
-                    setMatchedStation(s)
-                    setLocationQuery(s.name)
-                  }}
-                  className="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 flex items-center justify-between gap-2"
-                >
-                  <span className="text-slate-800">{s.name}</span>
-                  <span className="text-slate-400 shrink-0" style={{ fontSize: '10px' }}>{s.lines.join(', ')}</span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-        {matchedStation && (
-          <p className="text-xs text-blue-700 mb-4 px-1">Matched to {matchedStation.name}, this report will show up on that station's journeys.</p>
-        )}
-        {!matchedStation && locationQuery.trim() && (
-          <p className="text-xs text-slate-400 mb-4 px-1">No matching station, this will be saved as a free-text location.</p>
-        )}
-        {!locationQuery.trim() && <div className="mb-6" />}
 
         {error && (
           <div className="bg-amber-50 border border-amber-100 rounded-xl px-3 py-2.5 mb-4 text-xs text-amber-700">

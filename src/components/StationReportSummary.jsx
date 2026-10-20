@@ -1,6 +1,7 @@
-﻿import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ChevronRight, MessageCircle, Siren, Star, TriangleAlert, X } from 'lucide-react'
 import StationReportIcon from './StationReportIcon'
+import StationReportCard from './StationReportCard'
 import { stationReportCategories, lines } from '../data/mockData'
 import { getStationUpdates, subscribeToStationUpdates, UPDATE_VISIBILITY_WINDOW_MS } from '../lib/stationUpdates'
 import { getStationScore, subscribeToStationReviews, ratingCategories } from '../lib/stationRatings'
@@ -86,15 +87,17 @@ export default function StationReportSummary({ station, onReportIssue, onRate, o
         <button type="button" onClick={() => setSelectedCategory('all')} className={`${actionClass} border border-slate-300 hover:bg-slate-50`}><MessageCircle size={20} />View reports<ChevronRight size={16} className="ml-auto" /></button>
       </div>
       {selectedCategory && <section className="mb-3 rounded-lg border border-slate-200 bg-slate-50 p-3" aria-label="Live station reports">
+        <p className="!mb-2 text-[11px] text-slate-500">Reports from the last 24 hours. Confirm only issues you have seen.</p>
         <div className="mb-2 flex items-center justify-between gap-2"><h4 className="text-xs font-bold">{selectedCategory === 'all' ? 'Live station' : stationReportCategories.find((cat) => cat.key === selectedCategory)?.label} reports</h4><button type="button" onClick={() => setSelectedCategory(null)} aria-label="Close reports" className="rounded p-1 hover:bg-slate-200"><X size={16} /></button></div>
-        {loading ? <p role="status" className="text-xs text-slate-500">Loading reports…</p> : reportError ? <div role="alert" className="text-xs text-slate-600">Reports could not be loaded. <button type="button" onClick={() => setRevision((n) => n + 1)} className="font-bold text-blue-700">Try again</button></div> : selectedReports.length === 0 ? <p className="text-xs text-slate-500">No active reports in the last 24 hours.</p> : <div className="max-h-40 space-y-2 overflow-y-auto">{selectedReports.map((r) => <article key={r.id} className="border-b border-slate-200 pb-2 text-xs last:border-0"><strong>{stationReportCategories.find((cat) => cat.key === r.category)?.label || r.label}</strong><p className="!my-1 whitespace-pre-wrap break-words text-slate-600">{r.description || r.label}</p><time dateTime={r.createdAt} className="text-[10px] text-slate-500">{Math.max(0, Math.floor((Date.now() - new Date(r.createdAt).getTime()) / 60000))}m ago · {r.status === 'CONFIRMED' ? 'Confirmed' : 'Active'}</time></article>)}</div>}
+        {loading ? <p role="status" className="text-xs text-slate-500">Loading reports…</p> : reportError ? <div role="alert" className="text-xs text-slate-600">Reports could not be loaded. <button type="button" onClick={() => setRevision((n) => n + 1)} className="font-bold text-blue-700">Try again</button></div> : selectedReports.length === 0 ? <p className="text-xs text-slate-500">No active reports in the last 24 hours.</p> : <div className="max-h-40 space-y-2 overflow-y-auto">{selectedReports.map((report) => <StationReportCard key={report.id} report={report} />)}</div>}
       </section>}
       <h4 className="mb-1 text-xs font-bold">Station reviews</h4>
+      <p className="!my-1 text-[11px] text-slate-500">Passenger ratings and experiences. For current issues, use View reports above.</p>
       {scoreError ? <p role="alert" className="!my-2 text-xs text-slate-500">Reviews could not be loaded. <button type="button" onClick={() => setRevision((n) => n + 1)} className="font-semibold text-blue-700">Try again</button></p> : <div className="mb-3 grid grid-cols-[0.9fr_1.3fr] gap-3">
         <div className="border-r border-slate-200 pr-2"><div className="text-3xl font-bold leading-tight">{scoreLabel}{score?.overallScore != null && <span className="text-lg font-normal">/5</span>}</div><RatingStars value={score?.overallScore} size={22} /><p className="!my-1 text-[10px] leading-snug text-slate-500">{score == null ? 'Loading reviews…' : score.ratingCount ? `Based on ${score.ratingCount} passenger reviews` : 'Be the first to review this station'}</p></div>
         <div className="space-y-1">{ratingCategories.map((cat) => { const value = score?.categoryScores?.[cat.key]; return <div key={cat.key} className="flex items-center justify-between gap-1 text-[9px] sm:text-[10px]"><span className="flex-1">{cat.label}</span><RatingStars value={value} size={11} /><span className="w-5 text-right tabular-nums">{value == null ? '—' : Number(value).toFixed(1)}</span></div> })}</div>
       </div>}
-      <div className="grid grid-cols-2 gap-2"><button type="button" onClick={onViewReviews} className={`${actionClass} border border-slate-300 hover:bg-slate-50`}><MessageCircle size={20} />Read reviews<ChevronRight size={16} className="ml-auto" /></button><button type="button" onClick={onRate} className={`${actionClass} bg-yellow-400 hover:bg-yellow-300`}><Star size={20} />Write a review<ChevronRight size={16} className="ml-auto" /></button></div>
+      <div className="grid grid-cols-2 gap-2"><button type="button" onClick={onViewReviews} className={`${actionClass} border border-slate-300 hover:bg-slate-50`}><MessageCircle size={20} />Read station reviews<ChevronRight size={16} className="ml-auto" /></button><button type="button" onClick={onRate} className={`${actionClass} bg-yellow-400 hover:bg-yellow-300`}><Star size={20} />Write a review<ChevronRight size={16} className="ml-auto" /></button></div>
     </div>
   </div>
 }

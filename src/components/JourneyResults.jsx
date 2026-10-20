@@ -102,7 +102,7 @@ function AlertBanner({ report, onConfirm, confirming }) {
           disabled={confirming}
           className="flex items-center gap-1 text-xs text-slate-500 hover:text-brand-ink disabled:opacity-50"
         >
-          <ThumbsUp size={11} /> confirmed by {report.confirms} rider{report.confirms === 1 ? '' : 's'}
+          <ThumbsUp size={11} /> I saw this too ({report.confirms || 0})
         </button>
       </div>
     </div>
@@ -160,8 +160,8 @@ export default function JourneyResults({ journey, selectedIndex, onSelectIndex, 
   const handleConfirm = async (id) => {
     setConfirmingId(id)
     try {
-      await confirmUpdate(id)
-      setFeed((prev) => prev.map((u) => (u.id === id ? { ...u, confirms: u.confirms + 1 } : u)))
+      const updated = await confirmUpdate(id)
+      setFeed((prev) => prev.map((u) => (u.id === id ? updated : u)))
     } catch {
       // Non-critical, the tap just doesn't register, no need to block the UI on it.
     } finally {

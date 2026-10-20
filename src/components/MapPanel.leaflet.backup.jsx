@@ -2,14 +2,14 @@ import { useRef, useEffect, useState, useMemo } from 'react'
 import { MapContainer, TileLayer, Polyline, Marker, Popup, Tooltip, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet-rotate'
-import { Plus, Minus, LocateFixed, Flag, ThumbsUp, Sun, Moon, Compass, Route, CheckCircle2 } from 'lucide-react'
+import { Plus, Minus, LocateFixed, Flag, Sun, Moon, Compass, Route, CheckCircle2 } from 'lucide-react'
 import { lines, housingPins, coffeePins, liveEventPin, stations } from '../data/mockData'
 import { tubeLineGeometry } from '../data/tubeLineGeometry'
 import { getStationScores } from '../lib/stationRatings'
-import { getStationUpdates, subscribeToStationUpdates, confirmUpdate } from '../lib/stationUpdates'
+import { getStationUpdates, subscribeToStationUpdates } from '../lib/stationUpdates'
 import ReportIssueModal from './ReportIssueModal'
 import StationPopup from './StationPopup'
-import StationQuickReportModal from './StationQuickReportModal'
+import StationReportCard from './StationReportCard'
 
 const CENTER = [51.5246, -0.1339]
 const MAP_THEMES = {
@@ -266,10 +266,8 @@ export default function MapPanel({
   const [zoom, setZoom] = useState(16)
   const [bearing, setBearing] = useState(0)
   const [directionMode, setDirectionMode] = useState(false)
-  const [reportingStation, setReportingStation] = useState(null)
-  const [reportModalOpen, setReportModalOpen] = useState(false)
+  const [reportContext, setReportContext] = useState(null)
   const [communityReports, setCommunityReports] = useState([])
-  const [confirmingReport, setConfirmingReport] = useState(null)
   const [reportNotice, setReportNotice] = useState(null)
   useEffect(() => {
     getStationScores(stations.map((s) => s.id)).then(setStationScores)
@@ -345,19 +343,6 @@ export default function MapPanel({
       savedReport,
       ...prev.filter((item) => item.id !== savedReport.id),
     ])
-  }
-
-  const handleConfirmReport = async (report) => {
-    if (confirmingReport) return
-    setConfirmingReport(report.id)
-    try {
-      await confirmUpdate(report.id)
-      setCommunityReports((prev) => prev.map((item) => item.id === report.id ? { ...item, confirms: item.confirms + 1 } : item))
-    } catch {
-      // The pin remains usable if the network request fails.
-    } finally {
-      setConfirmingReport(null)
-    }
   }
 
   // A new live-tracked journey should resume auto-follow, even if the user
@@ -543,7 +528,7 @@ export default function MapPanel({
                   stationId={s.id}
                   stationName={s.name}
                   stationLines={s.lines}
-                  onReportIssue={(station) => setReportingStation(station)}
+                  onReportIssue={(station) => setReportContext({ station })}
                   onGetDirections={onGetDirections}
                 />
               </Popup>
@@ -555,15 +540,10 @@ export default function MapPanel({
             <Popup minWidth={240}>
               <div className="text-sm text-slate-800">
                 <p className="font-bold text-yellow-700 mb-1">{report.reportCount} community report{report.reportCount === 1 ? '' : 's'}</p>
-                <p className="font-semibold">{report.label || report.category}</p>
-                <p className="text-slate-500">{report.station.name}</p>
-                {report.categories.length > 1 && <p className="text-xs text-slate-500 mt-1">{report.categories.join(' · ')}</p>}
-                {report.description && <p className="mt-2">{report.description}</p>}
-                <div className="flex items-center justify-between gap-2 mt-3 text-xs text-slate-400">
-                  <span>{report.reportCount} report{report.reportCount === 1 ? '' : 's'} · {report.status || 'ACTIVE'}</span>
-                  <button type="button" onClick={() => handleConfirmReport(report)} disabled={confirmingReport === report.id} className="flex items-center gap-1 text-blue-700 disabled:opacity-50">
-                    <ThumbsUp size={12} /> {report.confirms || 0} confirm
-                  </button>
+                <p className="font-semibold">{report.station.name}</p>
+                <p className="text-xs text-slate-500 mt-1">Issue reports from the last 24 hours. Confirm only issues you have seen.</p>
+                <div className="max-h-64 overflow-y-auto">
+                  {communityReports.filter((item) => item.stationName === report.station.name).map((item) => <StationReportCard key={item.id} report={item} />)}
                 </div>
               </div>
             </Popup>
@@ -627,7 +607,7 @@ export default function MapPanel({
       )}
 
       <div className="absolute right-3 top-3 z-[1000] flex flex-col gap-1.5 sm:gap-2">
-        <button aria-label="Report an issue" onClick={() => setReportModalOpen(true)} className="w-8 h-8 sm:w-10 sm:h-10 bg-brand-amber hover:bg-yellow-300 shadow-sm rounded-lg flex items-center justify-center text-brand-ink">
+        <button aria-label="Report an issue" onClick={() => setReportContext({ station: null })} className="w-8 h-8 sm:w-10 sm:h-10 bg-brand-amber hover:bg-yellow-300 shadow-sm rounded-lg flex items-center justify-center text-brand-ink">
           <Flag size={15} />
         </button>
         <button aria-label="Zoom in" onClick={() => mapRef.current?.zoomIn()} className="w-8 h-8 sm:w-10 sm:h-10 bg-white shadow-sm rounded-lg flex items-center justify-center text-slate-600 active:bg-slate-50">
@@ -706,16 +686,10 @@ export default function MapPanel({
         </div>
       </div> */}
 
-      {reportingStation && (
-        <StationQuickReportModal
-          station={reportingStation}
-          onClose={() => setReportingStation(null)}
-          onReportSubmitted={handleReportSubmitted}
-        />
-      )}
-      {reportModalOpen && (
+      {reportContext && (
         <ReportIssueModal
-          onClose={() => setReportModalOpen(false)}
+          initialStation={reportContext.station}
+          onClose={() => setReportContext(null)}
           onReportSubmitted={handleReportSubmitted}
         />
       )}
