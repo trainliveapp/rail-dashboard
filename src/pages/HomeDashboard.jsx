@@ -215,7 +215,11 @@ export default function HomeDashboard() {
         <AdSlot className="mx-auto w-full max-w-4xl" />
         <SidebarBottom nearby={nearby} toggleNearby={toggleNearby} layers={layers} toggleLayer={toggleLayer} className="border border-slate-200 rounded-xl" />
         <DepartureBoards />
-        <FeatureCards />
+      </div>
+
+      <FeatureCards />
+
+      <div className="px-4 sm:px-6 lg:px-8 py-6 space-y-6 max-w-6xl mx-auto w-full">
         <NextDeparturesPanel />
         <SustainabilityBanner />
         <Footer />

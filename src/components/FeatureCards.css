@@ -1,0 +1,119 @@
+﻿.flavio-banner {
+  --flavio-red: #ff002b;
+  isolation: isolate;
+  width: 100%;
+  overflow: hidden;
+  background: #071019;
+  color: #fff;
+  font-family: var(--font-sans);
+}
+.flavio-banner *, .flavio-banner *::before, .flavio-banner *::after { box-sizing: border-box; }
+.flavio-hero { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); overflow: hidden; }
+.flavio-platform, .flavio-shade { position: absolute; inset: 0; width: 100%; height: 100%; }
+.flavio-platform { object-fit: cover; object-position: 40% center; }
+.flavio-shade { background: linear-gradient(90deg, rgb(0 5 10 / 85%), rgb(0 5 10 / 25%)), linear-gradient(0deg, #071019 4%, transparent 75%); }
+.flavio-copy { position: relative; z-index: 2; min-width: 0; padding: 24px 20px 0; }
+.flavio-brand-row { display: flex; align-items: center; gap: clamp(14px, 3vw, 28px); margin-bottom: 18px; }
+.flavio-logo { display: block; width: clamp(88px, 20vw, 116px); height: auto; flex-shrink: 0; }
+.flavio-handwritten { font-family: 'Segoe Print', 'Bradley Hand', 'Comic Sans MS', cursive; font-style: italic; font-weight: 600; line-height: 1.2; }
+.flavio-brand-note { position: relative; margin: 0; font-size: clamp(12px, 2.8vw, 17px); transform: rotate(-6deg); }
+.flavio-brand-note::after, .flavio-footer-note::after { content: ''; display: block; width: 78%; height: 3px; margin: 7px auto 0; background: var(--flavio-red); clip-path: polygon(0 100%, 100% 0, 92% 100%); }
+.flavio-coming-soon { display: inline-block; margin-bottom: 8px; font-size: 10px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; }
+.flavio-copy h2 { margin: 0; font-size: clamp(25px, 6vw, 36px); font-weight: 750; letter-spacing: -.045em; line-height: 1.12; overflow-wrap: break-word; }
+.flavio-copy h2 > span { display: block; }
+.flavio-copy h2 .flavio-meet { margin-bottom: 3px; font-size: 1.42em; font-weight: 800; letter-spacing: -.05em; }
+.flavio-meet strong { color: var(--flavio-red); font-weight: inherit; }
+.flavio-description { max-width: 38ch; margin: 16px 0; color: #e6e7ea; font-size: 14px; line-height: 1.55; }
+.flavio-support { display: flex; align-items: center; gap: 12px; width: min(100%, 330px); min-height: 48px; padding: 12px 17px; border-radius: 999px; background: var(--flavio-red); color: #fff; font-size: clamp(19px, 4.5vw, 23px); font-weight: 700; line-height: 1.15; }
+.flavio-support span { min-width: 0; }
+.flavio-support svg { flex-shrink: 0; width: 25px; height: 25px; }
+.flavio-support svg:last-child { margin-left: auto; stroke-width: 1.7; }
+.flavio-support-note { max-width: 42ch; margin: 10px 0 0; color: #e6e7ea; font-size: 11px; line-height: 1.5; }
+.flavio-art { position: relative; min-width: 0; width: 100%; max-width: 540px; height: clamp(290px, 80vw, 430px); margin: 12px auto 0; overflow: hidden; pointer-events: none; }
+.flavio-portrait { position: absolute; left: 0; top: 0; width: 66%; height: 110%; object-fit: cover; object-position: center top; mask-image: linear-gradient(90deg, transparent, black 12%, black 88%, transparent), linear-gradient(0deg, transparent, black 16%, black 94%, transparent); mask-composite: intersect; }
+.flavio-phone { position: absolute; right: -4%; top: 12px; width: 61%; height: 105%; object-fit: contain; object-position: center top; transform: rotate(-3deg); mask-image: linear-gradient(90deg, transparent, black 13%, black 87%, transparent); }
+.flavio-benefits { position: relative; z-index: 3; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; min-width: 0; padding: 0 16px 32px; }
+.flavio-benefit { display: flex; align-items: flex-start; gap: 10px; min-width: 0; padding: 14px 12px; border: 1px solid rgb(255 255 255 / 13%); border-radius: 16px; background: rgb(0 10 20 / 94%); box-shadow: 0 6px 15px rgb(0 0 0 / 15%); }
+.flavio-benefit > div { min-width: 0; }
+.flavio-benefit-icon { display: flex; width: 36px; height: 36px; align-items: center; justify-content: center; flex-shrink: 0; border-radius: 50%; }
+.flavio-benefit-icon svg { width: 22px; height: 22px; }
+.flavio-benefit h3 { margin: 0 0 6px; font-size: 13px; font-weight: 650; line-height: 1.25; }
+.flavio-benefit p { margin: 0; color: #dce0e5; font-size: 11px; line-height: 1.45; }
+.flavio-footer { position: relative; z-index: 4; display: grid; grid-template-columns: minmax(0, 1fr) minmax(85px, 28%); align-items: center; gap: 22px 12px; margin-top: -14px; padding: 24px 18px 18px; border-radius: 26px 26px 0 0; background: #fff; }
+.flavio-feature-list { display: grid; grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 10px; min-width: 0; margin: 0; padding: 0; list-style: none; }
+.flavio-feature-list li { display: flex; align-items: center; gap: 9px; min-width: 0; min-height: 34px; }
+.flavio-feature-list svg { width: 28px; height: 30px; flex-shrink: 0; }
+.flavio-feature-list span { color: #17233f; font-size: 12px; font-weight: 500; line-height: 1.35; }
+.flavio-footer-note { justify-self: center; margin: 0; color: #111; font-size: clamp(13px, 3.5vw, 20px); transform: rotate(-5deg); }
+.flavio-train-wrap { position: relative; display: flex; align-items: center; min-width: 0; min-height: 64px; }
+.flavio-train-wrap::before { position: absolute; inset: 0; content: ''; border-radius: 50%; background: linear-gradient(135deg, #ffd0d6, #fff 75%); }
+.flavio-train { position: relative; display: block; width: 100%; height: auto; }
+
+/* Narrow phones keep each benefit readable rather than squeezing two cards. */
+@media (max-width: 419px) {
+  .flavio-benefits { grid-template-columns: minmax(0, 1fr); }
+  .flavio-benefit { align-items: center; padding: 14px 16px; }
+  .flavio-benefit-icon { width: 40px; height: 40px; }
+  .flavio-copy { padding-inline: 16px; }
+}
+
+/* Tablets give the copy and artwork their own columns and let cards flow below. */
+@media (min-width: 640px) and (max-width: 1199px) {
+  .flavio-hero { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: stretch; }
+  .flavio-copy { padding: 28px 0 24px 28px; }
+  .flavio-brand-row { gap: 15px; }
+  .flavio-logo { width: 100px; }
+  .flavio-brand-note { font-size: 13px; }
+  .flavio-copy h2 { font-size: clamp(25px, 3.2vw, 36px); }
+  .flavio-description { font-size: 14px; }
+  .flavio-art { align-self: stretch; height: auto; min-height: 430px; margin: 0; max-width: none; }
+  .flavio-portrait { left: -9%; width: 83%; height: 106%; }
+  .flavio-phone { right: -14%; top: 40px; width: 77%; height: 100%; }
+  .flavio-benefits { grid-column: 1 / -1; padding: 8px 28px 38px; gap: 14px; }
+  .flavio-benefit { padding: 17px; }
+  .flavio-benefit-icon { width: 42px; height: 42px; }
+  .flavio-benefit h3 { font-size: 15px; }
+  .flavio-benefit p { font-size: 12px; }
+}
+@media (min-width: 540px) and (max-width: 1199px) {
+  .flavio-footer { grid-template-columns: minmax(0, 1fr) 170px; padding: 26px 28px; }
+  .flavio-feature-list { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px 16px; }
+  .flavio-footer-note { font-size: 21px; }
+}
+@media (min-width: 1000px) and (max-width: 1199px) {
+  .flavio-benefits { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .flavio-benefit { flex-direction: column; }
+}
+
+/* Wide screens retain the layered composition from the reference. */
+@media (min-width: 1200px) {
+  .flavio-hero { display: block; min-height: clamp(500px, 35vw, 720px); }
+  .flavio-platform { object-position: center 48%; }
+  .flavio-shade { background: linear-gradient(90deg, rgb(0 5 10 / 80%), rgb(0 5 10 / 23%) 44%, transparent 70%, rgb(0 5 10 / 25%)); }
+  .flavio-copy { width: 37%; padding: clamp(24px, 2.2vw, 44px) 0 42px clamp(28px, 4.5vw, 90px); }
+  .flavio-brand-row { gap: clamp(20px, 2vw, 38px); margin-bottom: 22px; }
+  .flavio-logo { width: clamp(108px, 9vw, 160px); }
+  .flavio-brand-note { font-size: clamp(15px, 1.35vw, 23px); white-space: nowrap; }
+  .flavio-copy h2 { font-size: clamp(30px, 2.65vw, 48px); }
+  .flavio-description { max-width: 37ch; font-size: clamp(14px, 1.15vw, 19px); margin-block: 18px; }
+  .flavio-support { width: min(100%, 400px); min-height: 54px; font-size: clamp(22px, 1.9vw, 30px); }
+  .flavio-support svg { width: 30px; height: 30px; }
+  .flavio-support-note { max-width: 45ch; font-size: clamp(11px, .9vw, 15px); }
+  .flavio-art { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; margin: 0; }
+  .flavio-portrait { left: 29%; top: auto; bottom: -31%; width: 41%; height: 133%; }
+  .flavio-phone { right: 12%; top: -3%; width: 35%; height: 126%; object-fit: cover; }
+  .flavio-benefits { position: absolute; top: 30px; right: clamp(16px, 2vw, 40px); bottom: 35px; width: 19%; grid-template-columns: minmax(0, 1fr); grid-template-rows: repeat(4, minmax(0, 1fr)); padding: 0; gap: 12px; }
+  .flavio-benefit { gap: 11px; padding: clamp(12px, 1vw, 20px); }
+  .flavio-benefit-icon { width: clamp(40px, 3.7vw, 60px); height: clamp(40px, 3.7vw, 60px); }
+  .flavio-benefit-icon svg { width: 55%; height: 55%; }
+  .flavio-benefit h3 { font-size: clamp(13px, 1.1vw, 18px); }
+  .flavio-benefit p { font-size: clamp(11px, .85vw, 14px); }
+  .flavio-footer { grid-template-columns: minmax(0, 1fr) minmax(190px, 18%) minmax(150px, 16%); gap: 24px; min-height: 115px; padding: 20px clamp(28px, 3vw, 64px); border-radius: 36px 36px 0 0; }
+  .flavio-feature-list { grid-column: auto; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0; }
+  .flavio-feature-list li { padding-inline: 10px; border-right: 1px solid #dce1e8; }
+  .flavio-feature-list li:first-child { padding-left: 0; }
+  .flavio-feature-list li:last-child { border-right: 0; }
+  .flavio-feature-list svg { width: clamp(25px, 2.5vw, 40px); height: clamp(28px, 2.5vw, 40px); }
+  .flavio-feature-list span { font-size: clamp(10px, .85vw, 14px); }
+  .flavio-footer-note { font-size: clamp(18px, 1.65vw, 28px); white-space: nowrap; }
+}
