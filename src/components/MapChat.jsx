@@ -1901,16 +1901,16 @@ export default function MapChat() {
         sm:left-5 sm:right-auto sm:bottom-5 sm:w-[400px] sm:h-[min(680px,calc(100dvh-40px))]"
       style={{ isolation: "isolate" }}
     >
-      <div className="relative z-30 flex h-[72px] shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 shadow-sm">
+      <div className="relative z-30 flex h-[72px] shrink-0 items-center justify-between border-b border-yellow-500 bg-yellow-400 px-4 text-brand-ink shadow-sm">
         <div className="flex min-w-0 items-center gap-3">
           <div className="relative flex h-11 w-11 shrink-0 items-center justify-center">
             {/* Pulsing rings */}
-            <span className="absolute inset-0 rounded-full bg-[#ff6b16]/35 animate-ping" />
+            <span className="absolute inset-0 rounded-full bg-yellow-500/35 animate-ping" />
 
             <span className="absolute inset-[-3px] rounded-full  animate-pulse" />
 
             {/* Chatter button */}
-            <div className="relative z-10 flex h-11 w-11 items-center justify-center rounded-full bg-[#ff6b16] text-[11px] font-black text-white shadow-sm">
+            <div className="relative z-10 flex h-11 w-11 items-center justify-center rounded-full bg-yellow-400 text-[11px] font-black text-brand-ink shadow-sm">
               chatter
             </div>
           </div>
@@ -1922,7 +1922,7 @@ export default function MapChat() {
             setActiveReactionMessage(null);
           }}
           aria-label="Close chatter"
-          className="flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+          className="flex h-9 w-9 items-center justify-center rounded-full text-brand-ink/70 transition hover:bg-black/10 hover:text-brand-ink"
         >
           <X size={20} />
         </button>
@@ -2284,7 +2284,7 @@ export default function MapChat() {
           position: absolute;
           inset: 4px;
           border-radius: 9999px;
-          border: 2px solid rgba(255, 107, 22, 0.42);
+          border: 2px solid color-mix(in srgb, var(--color-yellow-400) 42%, transparent);
           pointer-events: none;
           animation: trainlive-chatter-pulse 2.2s ease-out infinite;
         }
@@ -2314,11 +2314,11 @@ export default function MapChat() {
             type="button"
             onClick={() => setOpen(true)}
             aria-label="Open chatter"
-            className="chatter-launcher fixed bottom-5 left-5 z-[2147483000] flex h-16 w-16 items-center justify-center rounded-full text-[10px] font-black text-white transition hover:-translate-y-0.5"
+            className="chatter-launcher fixed bottom-5 left-5 z-[2147483000] flex h-16 w-16 items-center justify-center rounded-full text-[10px] font-black text-brand-ink transition hover:-translate-y-0.5"
           >
             <span className="chatter-pulse-ring chatter-pulse-ring--one" aria-hidden="true" />
             <span className="chatter-pulse-ring chatter-pulse-ring--two" aria-hidden="true" />
-            <span className="relative z-10 flex h-14 w-14 items-center justify-center rounded-full bg-[#ff6b16] shadow-[0_8px_24px_rgba(255,107,22,0.38)]">chatter</span>
+            <span className="relative z-10 flex h-14 w-14 items-center justify-center rounded-full bg-yellow-400 shadow-[0_8px_24px_color-mix(in_srgb,var(--color-yellow-400)_38%,transparent)]">chatter</span>
           </button>,
           document.body
         )}

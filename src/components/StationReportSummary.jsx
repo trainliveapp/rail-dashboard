@@ -83,7 +83,7 @@ export default function StationReportSummary({ station, onReportIssue, onRate, o
         </button>)}
       </div>
       <div className="mb-3 grid grid-cols-2 gap-2">
-        <button type="button" onClick={() => onReportIssue(station)} className={`${actionClass} bg-yellow-400 hover:bg-yellow-300`}><TriangleAlert size={20} />Report an issue<ChevronRight size={16} className="ml-auto" /></button>
+        <button type="button" onClick={() => onReportIssue(station)} className={`${actionClass} bg-yellow-400 hover:bg-yellow-300`}><TriangleAlert size={20} />What do you see<ChevronRight size={16} className="ml-auto" /></button>
         <button type="button" onClick={() => setSelectedCategory('all')} className={`${actionClass} border border-slate-300 hover:bg-slate-50`}><MessageCircle size={20} />View reports<ChevronRight size={16} className="ml-auto" /></button>
       </div>
       {selectedCategory && <section className="mb-3 rounded-lg border border-slate-200 bg-slate-50 p-3" aria-label="Live station reports">

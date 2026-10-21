@@ -607,7 +607,7 @@ export default function MapPanel({
       )}
 
       <div className="absolute right-3 top-3 z-[1000] flex flex-col gap-1.5 sm:gap-2">
-        <button aria-label="Report an issue" onClick={() => setReportContext({ station: null })} className="w-8 h-8 sm:w-10 sm:h-10 bg-brand-amber hover:bg-yellow-300 shadow-sm rounded-lg flex items-center justify-center text-brand-ink">
+        <button aria-label="What do you see" onClick={() => setReportContext({ station: null })} className="w-8 h-8 sm:w-10 sm:h-10 bg-brand-amber hover:bg-yellow-300 shadow-sm rounded-lg flex items-center justify-center text-brand-ink">
           <Flag size={15} />
         </button>
         <button aria-label="Zoom in" onClick={() => mapRef.current?.zoomIn()} className="w-8 h-8 sm:w-10 sm:h-10 bg-white shadow-sm rounded-lg flex items-center justify-center text-slate-600 active:bg-slate-50">
