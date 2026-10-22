@@ -8,8 +8,10 @@ import CheckEmailPage from './pages/CheckEmailPage'
 import CreatePasswordPage from './pages/CreatePasswordPage'
 import AlertsPage from './pages/AlertsPage'
 import SplashScreen from './components/SplashScreen'
+import useVisibleViewport from './lib/useVisibleViewport'
 
 export default function App() {
+  useVisibleViewport()
   const [showSplash, setShowSplash] = useState(true)
   const [fadingOut, setFadingOut] = useState(false)
 

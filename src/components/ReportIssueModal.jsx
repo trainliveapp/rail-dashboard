@@ -71,7 +71,7 @@ export default function ReportIssueModal({ initialStation = null, onClose, onRep
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-900/40"
+    <div className="viewport-overlay fixed inset-0 z-[2000] flex items-center justify-center p-3 sm:p-4 bg-slate-900/40"
       onPointerDown={(event) => event.stopPropagation()}
       onClick={(event) => event.stopPropagation()}
       onDoubleClick={(event) => event.stopPropagation()}
@@ -79,17 +79,17 @@ export default function ReportIssueModal({ initialStation = null, onClose, onRep
       onTouchStart={(event) => event.stopPropagation()}
       onTouchMove={(event) => event.stopPropagation()}
     >
-      <form ref={panelRef} style={style} role="dialog" aria-modal="true" aria-labelledby="report-title" onSubmit={handleSubmit} className="flex flex-col bg-slate-50 rounded-3xl shadow-2xl w-full max-w-[620px] max-h-[calc(100dvh-2rem)] overflow-hidden p-4 sm:p-8">
+      <form ref={panelRef} style={style} role="dialog" aria-modal="true" aria-labelledby="report-title" onSubmit={handleSubmit} className="viewport-panel flex min-w-0 flex-col bg-slate-50 rounded-3xl shadow-2xl w-full max-w-[620px] overflow-hidden p-4 sm:p-8">
         <div className="flex shrink-0 items-start justify-between gap-3 mb-4">
           <div>
-            <h2 id="report-title" className="text-xl font-bold text-slate-900">What Is Happening?</h2>
+            <h2 id="report-title" className="text-xl font-bold text-slate-900">Seen Something?</h2>
             <p className="text-slate-500 text-sm">Report Issue</p>
             <button type="button" {...handleProps} aria-label="Move reporting box. Drag or use arrow keys. Double-click to centre."
               className={`mt-2 flex touch-none select-none items-center gap-1.5 rounded-lg px-2 py-1 text-xs text-slate-500 hover:bg-slate-200 focus-visible:outline-2 focus-visible:outline-blue-600 ${dragging ? 'cursor-grabbing' : '!cursor-grab'}`}>
               <GripHorizontal size={16} aria-hidden="true" /> Drag to move
             </button>
           </div>
-          <button type="button" onClick={onClose} aria-label="Close" className="w-9 h-9 rounded-full bg-white flex items-center justify-center text-slate-500 shrink-0">
+          <button type="button" onClick={onClose} aria-label="Close" className="w-11 h-11 rounded-full bg-white flex items-center justify-center text-slate-500 shrink-0">
             <X size={16} />
           </button>
         </div>

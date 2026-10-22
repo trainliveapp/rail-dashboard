@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { constrainPanelPosition } from './panelPosition.js'
+import { visibleViewportBounds } from './viewportBounds.js'
 
 export default function useDraggablePanel() {
   const panelRef = useRef(null)
@@ -11,7 +12,7 @@ export default function useDraggablePanel() {
     const rect = panelRef.current.getBoundingClientRect()
     return constrainPanelPosition(next,
       { left: rect.left - current.x, top: rect.top - current.y }, rect,
-      { width: document.documentElement.clientWidth, height: window.innerHeight })
+      visibleViewportBounds({ width: document.documentElement.clientWidth, height: window.innerHeight }, window.visualViewport))
   }, [])
 
   useEffect(() => {
@@ -19,9 +20,13 @@ export default function useDraggablePanel() {
     const observer = new ResizeObserver(keepInView)
     observer.observe(panelRef.current)
     window.addEventListener('resize', keepInView)
+    window.visualViewport?.addEventListener('resize', keepInView)
+    window.visualViewport?.addEventListener('scroll', keepInView)
     return () => {
       observer.disconnect()
       window.removeEventListener('resize', keepInView)
+      window.visualViewport?.removeEventListener('resize', keepInView)
+      window.visualViewport?.removeEventListener('scroll', keepInView)
     }
   }, [constrain])
 

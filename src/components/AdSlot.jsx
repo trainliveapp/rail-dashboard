@@ -70,7 +70,7 @@ export default function AdSlot({ size = 'leaderboard', className = '' }) {
   return (
     <aside
       aria-label="Advertising"
-      className={`relative h-[clamp(300px,62vw,500px)] overflow-hidden rounded-2xl border border-slate-200 bg-slate-950 shadow-sm ${size === 'rail' ? 'h-[clamp(280px,48vw,420px)]' : ''} ${className}`}
+      className={`ad-slot relative h-[clamp(300px,62vw,500px)] overflow-hidden rounded-2xl border border-slate-200 bg-slate-950 shadow-sm ${size === 'rail' ? 'h-[clamp(280px,48vw,420px)]' : ''} ${className}`}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
@@ -85,7 +85,7 @@ export default function AdSlot({ size = 'leaderboard', className = '' }) {
         <div className="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-black/35 to-transparent" />
       </div>
 
-      <div className="relative flex h-full flex-col justify-between p-4 text-white sm:p-7">
+      <div className="ad-content relative flex h-full flex-col justify-between p-4 text-white sm:p-7">
         <div className="relative aspect-[3.1] w-[clamp(150px,24vw,260px)] overflow-hidden">
           <img
             src={robotCameraLiveLogo}
@@ -94,7 +94,7 @@ export default function AdSlot({ size = 'leaderboard', className = '' }) {
           />
         </div>
 
-        <div className={`absolute right-2 flex w-[min(58%,300px)] max-h-[68%] overflow-y-auto pr-0.5 [scrollbar-width:none] sm:right-7 sm:w-[min(52%,300px)] sm:max-h-[78%] ${activeSlide === 2 ? 'top-[14%] sm:top-[16%]' : 'top-[20%] sm:top-[22%]'}`}>
+        <div className={`ad-updates absolute right-2 flex w-[min(58%,300px)] max-h-[68%] overflow-y-auto pr-0.5 [scrollbar-width:none] sm:right-7 sm:w-[min(52%,300px)] sm:max-h-[78%] ${activeSlide === 2 ? 'top-[14%] sm:top-[16%]' : 'top-[20%] sm:top-[22%]'}`}>
           <div className="flex w-full flex-col gap-1.5 sm:gap-2">
             {slide.updates.map(({ icon: UpdateIcon, color, title, text, time }, index) => (
               <div key={`${title}-${index}`} className="flex shrink-0 items-start gap-1.5 rounded-2xl bg-white/95 px-2 py-1.5 text-slate-900 shadow-lg backdrop-blur-sm sm:gap-3 sm:px-4 sm:py-3">
@@ -112,23 +112,25 @@ export default function AdSlot({ size = 'leaderboard', className = '' }) {
           </div>
         </div>
 
-        <div className="max-w-[38%] pb-5 sm:max-w-[62%]">
+        <div className="ad-copy max-w-[38%] pb-5 sm:max-w-[62%]">
           <h2 className="text-[clamp(1.05rem,4.5vw,3rem)] font-extrabold leading-[1.02] tracking-tight sm:text-[clamp(1.5rem,4.5vw,3rem)]">{slide.title}</h2>
           <p className="mt-2 text-[clamp(0.62rem,1.8vw,1.25rem)] leading-tight text-white sm:text-[clamp(0.8rem,1.8vw,1.25rem)]">{slide.description}</p>
         </div>
       </div>
 
-      <div className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1.5" role="tablist" aria-label="Advertisement slides">
+      <div className="absolute bottom-1 left-1/2 z-10 flex -translate-x-1/2 items-center" role="tablist" aria-label="Advertisement slides">
         {slides.map((item, index) => (
           <button
-            key={item.eyebrow}
+            key={item.image}
             type="button"
             role="tab"
             aria-label={`Show advertisement ${index + 1}`}
             aria-selected={activeSlide === index}
             onClick={() => showSlide(index)}
-            className={`h-1.5 rounded-full transition-all ${activeSlide === index ? 'w-5 bg-white' : 'w-1.5 bg-white/55 hover:bg-white/80'}`}
-          />
+            className="flex h-11 w-11 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-white"
+          >
+            <span aria-hidden="true" className={`h-1.5 rounded-full transition-all ${activeSlide === index ? 'w-5 bg-white' : 'w-1.5 bg-white/55 hover:bg-white/80'}`} />
+          </button>
         ))}
       </div>
 

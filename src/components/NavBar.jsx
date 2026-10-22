@@ -22,11 +22,11 @@ export default function NavBar({ mapTheme = 'dark', onMapThemeChange = null }) {
 
   return (
     <div className="relative bg-blue-700 border-b border-blue-800 text-white">
-      <div className="flex items-center justify-between px-4 py-3">
-        <div className="flex items-center gap-2">
-          <BrandLogo className="h-9 max-w-[150px] sm:h-10 sm:max-w-[170px]" />
+      <div className="flex min-w-0 items-center justify-between gap-3 px-3 py-3 sm:px-4">
+        <div className="flex min-w-0 items-center gap-2">
+          <BrandLogo className="h-8 max-w-[120px] sm:h-10 sm:max-w-[170px]" />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           <div className="flex items-center gap-1 rounded-lg border border-white/15 bg-white/10 p-1" role="group" aria-label="Map theme">
             <button
               type="button"
@@ -34,7 +34,7 @@ export default function NavBar({ mapTheme = 'dark', onMapThemeChange = null }) {
               aria-pressed={mapTheme === 'light'}
               title="Light map"
               onClick={() => onMapThemeChange?.('light')}
-              className={`flex h-8 w-8 items-center justify-center rounded-md transition-colors ${mapTheme === 'light' ? 'bg-brand-primary text-white' : 'text-white/75 hover:bg-white/10 hover:text-white'}`}
+              className={`flex h-11 w-11 items-center justify-center rounded-md transition-colors ${mapTheme === 'light' ? 'bg-brand-primary text-white' : 'text-white/75 hover:bg-white/10 hover:text-white'}`}
             >
               <Sun size={16} />
             </button>
@@ -44,7 +44,7 @@ export default function NavBar({ mapTheme = 'dark', onMapThemeChange = null }) {
               aria-pressed={mapTheme === 'dark'}
               title="Dark map"
               onClick={() => onMapThemeChange?.('dark')}
-              className={`flex h-8 w-8 items-center justify-center rounded-md transition-colors ${mapTheme === 'dark' ? 'bg-brand-primary text-white' : 'text-white/75 hover:bg-white/10 hover:text-white'}`}
+              className={`flex h-11 w-11 items-center justify-center rounded-md transition-colors ${mapTheme === 'dark' ? 'bg-brand-primary text-white' : 'text-white/75 hover:bg-white/10 hover:text-white'}`}
             >
               <Moon size={16} />
             </button>
@@ -55,7 +55,7 @@ export default function NavBar({ mapTheme = 'dark', onMapThemeChange = null }) {
               type="button"
               onClick={() => setAccountOpen((o) => !o)}
               aria-label={`Open profile for ${displayName}`}
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-primary text-sm font-semibold text-white transition-colors hover:bg-brand-primary-dark"
+              className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-primary text-sm font-semibold text-white transition-colors hover:bg-brand-primary-dark"
             >
               {initial}
             </button>

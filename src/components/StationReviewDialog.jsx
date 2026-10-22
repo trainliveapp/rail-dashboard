@@ -56,8 +56,8 @@ export default function StationReviewDialog({ stationId, stationName, initialVie
   }, [stationId, page, revision, view])
 
   return createPortal(
-    <div className="fixed inset-0 z-[3000] flex items-center justify-center bg-slate-900/50 p-4" onClick={(event) => { event.stopPropagation(); if (event.target === event.currentTarget) onClose() }} onPointerDown={(event) => event.stopPropagation()}>
-      <section ref={panelRef} role="dialog" aria-modal="true" aria-label={`${view === 'rating' ? 'Write a review' : 'Station reviews'}: ${stationName}`} tabIndex={-1} className="relative max-h-[calc(100dvh-2rem)] w-[min(27.5rem,calc(100vw-2rem))] overflow-y-auto rounded-2xl bg-white shadow-2xl outline-none">
+    <div className="viewport-overlay fixed inset-0 z-[3000] flex items-center justify-center bg-slate-900/50 p-3 sm:p-4" onClick={(event) => { event.stopPropagation(); if (event.target === event.currentTarget) onClose() }} onPointerDown={(event) => event.stopPropagation()}>
+      <section ref={panelRef} role="dialog" aria-modal="true" aria-label={`${view === 'rating' ? 'Write a review' : 'Station reviews'}: ${stationName}`} tabIndex={-1} className="viewport-panel relative w-full max-w-[27.5rem] overflow-y-auto overscroll-contain rounded-2xl bg-white shadow-2xl outline-none">
         <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3">
           <h2 className="font-bold text-slate-900">{view === 'rating' ? 'Write a review' : 'Station reviews'}</h2>
           <button type="button" onClick={onClose} aria-label="Close station reviews" className="rounded-full p-2 text-slate-500 hover:bg-slate-100"><X size={20} /></button>

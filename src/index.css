@@ -41,6 +41,88 @@ body {
   font-family: var(--font-sans);
   background-color: var(--color-brand-page);
   color: var(--color-brand-ink);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+:root {
+  --visible-left: 0px;
+  --visible-top: 0px;
+  --visible-width: 100vw;
+  --visible-height: 100dvh;
+}
+
+.viewport-overlay {
+  inset: auto;
+  top: var(--visible-top);
+  left: var(--visible-left);
+  width: var(--visible-width);
+  height: var(--visible-height);
+  padding-top: max(12px, env(safe-area-inset-top));
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+}
+.viewport-panel {
+  max-height: calc(var(--visible-height) - max(12px, env(safe-area-inset-top)) - max(12px, env(safe-area-inset-bottom)));
+}
+.station-search-options { max-height: min(320px, calc(var(--visible-height) * .35)); }
+.train-search-panel { max-height: calc(var(--visible-height) - 6rem); }
+.trainlive-chat-panel { container: chat-panel / size; }
+
+/* A keyboard or landscape phone leaves less room for decorative spacing. */
+@container chat-panel (max-height: 460px) {
+  .chat-panel-header { height: 48px; padding-inline: 12px; }
+  .chat-channel { padding: 8px 12px; }
+  .chat-channel label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .chat-composer { padding: 8px; }
+  .chat-compose-field input { padding-block: 4px; }
+}
+
+@media (max-width: 767px) {
+  /* Keep iOS from zooming the page when a text field receives focus. */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  textarea, select { font-size: max(1rem, 1em); }
+
+  .trainlive-chat-panel {
+    top: calc(var(--visible-top) + max(12px, env(safe-area-inset-top)));
+    bottom: auto;
+    height: min(680px, calc(var(--visible-height) - max(12px, env(safe-area-inset-top)) - max(12px, env(safe-area-inset-bottom))));
+  }
+  .chat-composer { padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+  .chat-composer > div:first-child { align-items: flex-end; }
+  .chat-compose-field {
+    display: grid;
+    grid-template-columns: repeat(3, 44px) minmax(0, 1fr);
+    border-radius: 20px;
+  }
+  .chat-compose-field input { grid-column: 1 / -1; grid-row: 1; padding-inline: 12px; }
+  .chatter-launcher { bottom: max(20px, env(safe-area-inset-bottom)); }
+
+  .station-summary {
+    display: flex;
+    flex-direction: column;
+    max-height: min(560px, calc(65svh - 4rem));
+  }
+  .station-summary-body { flex: 1; }
+  /* Keep the toolbar from covering the station card on narrow maps. */
+  .map-panel:has(.station-popup) .map-controls { visibility: hidden; }
+  .map-panel .station-popup .leaflet-popup-close-button {
+    top: 5px !important;
+    right: 5px !important;
+    width: 44px !important;
+    height: 44px !important;
+    line-height: 44px !important;
+  }
+}
+
+@media (max-width: 639px) {
+  /* Stack ad copy and example updates so neither needs miniature text. */
+  .ad-slot { height: auto; min-height: 300px; }
+  .ad-content { height: auto; gap: 16px; padding-bottom: 52px; }
+  .ad-copy { order: 2; max-width: 100%; padding-bottom: 0; }
+  .ad-copy h2 { font-size: clamp(24px, 6vw, 32px); line-height: 1.15; }
+  .ad-copy p { font-size: 14px; line-height: 1.5; }
+  .ad-updates { position: relative; inset: auto; order: 3; width: 100%; max-height: none; overflow: visible; }
+  .ad-updates p { font-size: 12px; line-height: 1.4; }
 }
 
 .chatter-icon {

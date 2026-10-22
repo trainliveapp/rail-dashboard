@@ -109,20 +109,23 @@ function ToggleRow({ icon, label, enabled }) {
   const Icon = settingIcons[icon]
   const [on, setOn] = useState(enabled)
   return (
-    <div className="bg-white border border-slate-200 rounded-xl px-5 py-4 flex items-center justify-between">
-      <span className="flex items-center gap-3 text-sm text-slate-700">
-        <span className="w-9 h-9 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
+    <div className="bg-white border border-slate-200 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
+      <span className="flex min-w-0 items-center gap-3 text-sm text-slate-700">
+        <span className="w-9 h-9 shrink-0 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
           <Icon size={16} />
         </span>
         {label}
       </span>
       <button
         role="switch"
+        aria-label={label}
         aria-checked={on}
         onClick={() => setOn((o) => !o)}
-        className={`w-10 h-5 rounded-full transition-colors relative shrink-0 ${on ? 'bg-brand-amber' : 'bg-slate-200'}`}
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg focus-visible:outline-2 focus-visible:outline-blue-600"
       >
-        <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${on ? 'translate-x-5' : ''}`} />
+        <span className={`relative h-5 w-10 rounded-full transition-colors ${on ? 'bg-brand-amber' : 'bg-slate-200'}`}>
+          <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${on ? 'translate-x-5' : ''}`} />
+        </span>
       </button>
     </div>
   )
@@ -132,7 +135,7 @@ function SettingsTab() {
   return (
     <div className="space-y-8">
       <section>
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <h2 className="font-semibold text-slate-900">1. What would you like to alerts for?</h2>
           <span className="flex items-center gap-2 text-sm text-slate-500">
             All

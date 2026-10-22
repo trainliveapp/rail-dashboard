@@ -231,7 +231,7 @@
 //               type="button"
 //               onClick={() => setOpen(false)}
 //               aria-label="Close chatter"
-//               className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-300 transition-colors hover:bg-white/10 hover:text-white"
+//               className="flex h-11 w-11 items-center justify-center rounded-lg text-slate-300 transition-colors hover:bg-white/10 hover:text-white"
 //             >
 //               <X size={19} />
 //             </button>
@@ -364,7 +364,7 @@
 //                 type="button"
 //                 aria-label="Attach image or video"
 //                 onClick={() => fileInputRef.current?.click()}
-//                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
+//                 className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
 //               >
 //                 <Paperclip size={16} />
 //               </button>
@@ -373,7 +373,7 @@
 //                 aria-label="Take a photo or video"
 //                 title="Take a photo or video"
 //                 onClick={() => cameraInputRef.current?.click()}
-//                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
+//                 className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
 //               >
 //                 <Camera size={16} />
 //               </button>
@@ -382,7 +382,7 @@
 //                 aria-label="Share TrainLive"
 //                 aria-expanded={shareOpen}
 //                 onClick={() => setShareOpen((open) => !open)}
-//                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
+//                 className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
 //               >
 //                 <Share2 size={16} />
 //               </button>
@@ -398,7 +398,7 @@
 //                 type="button"
 //                 onClick={sendMessage}
 //                 aria-label="Send message"
-//                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-amber text-brand-ink transition-colors hover:bg-yellow-300 disabled:bg-slate-300 disabled:text-slate-500"
+//                 className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-brand-amber text-brand-ink transition-colors hover:bg-yellow-300 disabled:bg-slate-300 disabled:text-slate-500"
 //                 disabled={sending || (!text.trim() && !selectedImage)}
 //               >
 //                 {sending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
@@ -984,7 +984,7 @@
 //             setActiveReactionMessage(null);
 //           }}
 //           aria-label="Close chatter"
-//           className="flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+//           className="flex h-11 w-11 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
 //         >
 //           <X size={20} />
 //         </button>
@@ -1040,7 +1040,7 @@
 //         </div>
 //       )}
 
-//       <div className="relative z-10 flex-1 overflow-y-auto bg-[#efeae2] px-3 py-4 [scrollbar-width:thin]">
+//       <div className="relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain bg-[#efeae2] px-3 py-4 [scrollbar-width:thin]">
 //         {messages.length === 0 ? (
 //           <div className="flex h-full flex-col items-center justify-center px-8 text-center">
 //             <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm">
@@ -1064,7 +1064,7 @@
 
 //             return (
 //               <div key={message.id || index} className="mb-3 flex w-full justify-start">
-//                 <div className="group relative w-full max-w-[94%]">
+//                 <div className="group relative min-w-0 w-full max-w-[94%]">
 //                   <div className="relative rounded-[14px] rounded-tl-[4px] bg-white px-3 py-2 text-slate-800 shadow-[0_1px_1px_rgba(0,0,0,0.08)]">
 //                     <p className="mb-1 text-[11px] font-bold text-slate-700">
 //                       {message.username || "TrainLive User"}
@@ -1073,7 +1073,7 @@
 //                     <div className={guestLocked ? "relative overflow-hidden rounded-lg" : "relative"}>
 //                       <div className={guestLocked ? "pointer-events-none select-none blur-[8px] scale-[1.01] transition-all duration-300" : ""} aria-hidden={guestLocked}>
 //                         {message.message && (
-//                           <p className="break-words whitespace-pre-wrap pr-1 text-[13.5px] leading-[1.22rem] text-slate-700">
+//                           <p className="break-words [overflow-wrap:anywhere] whitespace-pre-wrap pr-1 text-[13.5px] leading-[1.22rem] text-slate-700">
 //                             {message.message}
 //                           </p>
 //                         )}
@@ -1194,7 +1194,7 @@
 //         </div>
 //       )}
 
-//       <div className="relative z-50 shrink-0 border-t border-slate-200 bg-[#f7f8fa] p-3">
+//       <div className="chat-composer relative z-50 shrink-0 border-t border-slate-200 bg-[#f7f8fa] p-3">
 //         <>
 
 //         <div className="flex items-center gap-2 rounded-[18px] border border-slate-200 bg-white p-1.5 pl-2.5 shadow-sm focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-400/10">
@@ -1206,7 +1206,7 @@
 //                 setEmojiOpen((value) => !value);
 //                 setShareOpen(false);
 //               }}
-//               className={`flex h-9 w-9 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 ${emojiOpen ? "bg-slate-100 text-slate-800" : ""}`}
+//               className={`flex h-11 w-11 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 ${emojiOpen ? "bg-slate-100 text-slate-800" : ""}`}
 //             >
 //               <Smile size={19} />
 //             </button>
@@ -1232,7 +1232,7 @@
 //             type="button"
 //             aria-label="Attach image or video"
 //             onClick={() => fileInputRef.current?.click()}
-//             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+//             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
 //           >
 //             <Paperclip size={18} />
 //           </button>
@@ -1241,7 +1241,7 @@
 //             type="button"
 //             aria-label="Take a photo"
 //             onClick={() => cameraInputRef.current?.click()}
-//             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+//             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
 //           >
 //             <Camera size={18} />
 //           </button>
@@ -1295,7 +1295,7 @@
 //                   useEmoji(emoji);
 //                   setEmojiOpen(false);
 //                 }}
-//                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xl hover:bg-slate-100"
+//                 className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-xl hover:bg-slate-100"
 //                 aria-label={`Use ${emoji}`}
 //               >
 //                 {emoji}
@@ -1319,7 +1319,7 @@
 //                       "noopener,noreferrer"
 //                     )
 //                   }
-//                   className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+//                   className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
 //                   style={{ backgroundColor: `#${icon.hex}` }}
 //                   aria-label={`Share on ${label}`}
 //                   title={label}
@@ -1865,7 +1865,7 @@ export default function MapChat() {
         sm:left-5 sm:right-auto sm:bottom-5 sm:w-[400px] sm:h-[min(680px,calc(100dvh-40px))]"
       style={{ isolation: "isolate" }}
     >
-      <div className="relative z-30 flex h-[72px] shrink-0 items-center justify-between border-b border-yellow-500 bg-yellow-400 px-4 text-brand-ink shadow-sm">
+      <div className="chat-panel-header relative z-30 flex h-[72px] shrink-0 items-center justify-between border-b border-yellow-500 bg-yellow-400 px-4 text-brand-ink shadow-sm">
         <div className="flex min-w-0 items-center gap-3">
           <div className="relative flex h-11 w-11 shrink-0 items-center justify-center">
             {/* Pulsing rings */}
@@ -1885,13 +1885,13 @@ export default function MapChat() {
             setOpen(false);
           }}
           aria-label="Close chatter"
-          className="flex h-9 w-9 items-center justify-center rounded-full text-brand-ink/70 transition hover:bg-black/10 hover:text-brand-ink"
+          className="flex h-11 w-11 items-center justify-center rounded-full text-brand-ink/70 transition hover:bg-black/10 hover:text-brand-ink"
         >
           <X size={20} />
         </button>
       </div>
 
-      <div className="relative z-20 shrink-0 border-b border-slate-100 bg-slate-50 px-4 py-3">
+      <div className="chat-channel relative z-20 shrink-0 border-b border-slate-100 bg-slate-50 px-4 py-3">
         <label
           htmlFor="chat-line"
           className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.08em] text-slate-400"
@@ -1920,7 +1920,7 @@ export default function MapChat() {
         </select>
       </div>
 
-      <div className="relative z-10 flex-1 overflow-y-auto bg-[#efeae2] px-3 py-4 [scrollbar-width:thin]">
+      <div className="relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain bg-[#efeae2] px-3 py-4 [scrollbar-width:thin]">
         {messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center px-8 text-center">
             <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm">
@@ -1940,7 +1940,7 @@ export default function MapChat() {
 
             return (
               <div key={message.id || index} className="mb-3 flex w-full justify-start">
-                <div className="group relative w-full max-w-[94%]">
+                <div className="group relative min-w-0 w-full max-w-[94%]">
                   <div className="relative rounded-[14px] rounded-tl-[4px] bg-white px-3 py-2 text-slate-800 shadow-[0_1px_1px_rgba(0,0,0,0.08)]">
                     <p className="mb-1 text-[11px] font-bold text-slate-700">
                       {message.username || "TrainLive User"}
@@ -1949,7 +1949,7 @@ export default function MapChat() {
                     <div className="relative">
                       <div>
                         {message.message && (
-                          <p className="break-words whitespace-pre-wrap pr-1 text-[13.5px] leading-[1.22rem] text-slate-700">
+                          <p className="break-words [overflow-wrap:anywhere] whitespace-pre-wrap pr-1 text-[13.5px] leading-[1.22rem] text-slate-700">
                             {message.message}
                           </p>
                         )}
@@ -2069,10 +2069,10 @@ export default function MapChat() {
         </div>
       )}
 
-      <div className="relative z-50 shrink-0 border-t border-slate-200 bg-[#f7f8fa] p-3">
+      <div className="chat-composer relative z-50 shrink-0 border-t border-slate-200 bg-[#f7f8fa] p-3">
         <>
           <div className="flex items-center gap-2">
-          <div className="flex min-w-0 flex-1 items-center gap-0.5 rounded-full border border-slate-200 bg-white p-1 pl-1.5 shadow-sm focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-400/10">
+          <div className="chat-compose-field flex min-w-0 flex-1 items-center gap-0.5 rounded-full border border-slate-200 bg-white p-1 pl-1.5 shadow-sm focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-400/10">
             <div className="relative shrink-0">
               <button
                 type="button"
@@ -2080,7 +2080,7 @@ export default function MapChat() {
                 onClick={() => {
                   setEmojiOpen((value) => !value);
                 }}
-                className={`flex h-9 w-9 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 ${emojiOpen ? "bg-slate-100 text-slate-800" : ""}`}
+                className={`flex h-11 w-11 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 ${emojiOpen ? "bg-slate-100 text-slate-800" : ""}`}
               >
                 <Smile size={23} strokeWidth={1.8} />
               </button>
@@ -2106,7 +2106,7 @@ export default function MapChat() {
               type="button"
               aria-label="Attach image or video"
               onClick={() => fileInputRef.current?.click()}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
             >
               <Paperclip size={23} strokeWidth={1.8} />
             </button>
@@ -2115,7 +2115,7 @@ export default function MapChat() {
               type="button"
               aria-label="Take a photo"
               onClick={() => cameraInputRef.current?.click()}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
             >
               <Camera size={23} strokeWidth={1.8} />
             </button>
@@ -2157,7 +2157,7 @@ export default function MapChat() {
                     insertEmoji(emoji);
                     setEmojiOpen(false);
                   }}
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xl hover:bg-slate-100"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-xl hover:bg-slate-100"
                   aria-label={`Use ${emoji}`}
                 >
                   {emoji}

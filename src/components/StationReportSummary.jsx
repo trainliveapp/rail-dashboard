@@ -60,15 +60,15 @@ export default function StationReportSummary({ station, onReportIssue, onRate, o
   const stationLines = (station.lines || []).map((name) => lines.find((line) => line.name === name) || { name, color: '#17428b' })
   const selectedReports = activeReports.filter((r) => selectedCategory === 'all' || r.category === selectedCategory)
   const scoreLabel = score?.overallScore == null ? 'New' : Number(score.overallScore).toFixed(1)
-  const actionClass = 'flex items-center justify-center gap-2 rounded-lg px-2 py-2.5 text-xs sm:text-sm font-bold transition-colors focus-visible:outline-2 focus-visible:outline-blue-600'
+  const actionClass = 'flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-lg px-2 py-2.5 text-sm font-bold transition-colors [&>svg]:shrink-0 focus-visible:outline-2 focus-visible:outline-blue-600'
 
   return <div className="station-summary w-[min(27.5rem,calc(100vw-3rem))] overflow-hidden rounded-xl bg-white text-slate-900 shadow-xl">
-    <header className="bg-gradient-to-r from-blue-900 to-blue-600 px-4 py-3 pr-11">
-      <h3 className="text-lg font-bold leading-tight text-white">{station.name}</h3>
+    <header className="shrink-0 bg-gradient-to-r from-blue-900 to-blue-600 px-4 py-3 pr-14">
+      <h3 className="break-words text-lg font-bold leading-tight text-white">{station.name}</h3>
       <div className="mt-1.5 flex flex-wrap gap-1">{stationLines.map((line) => <span key={line.name} className="rounded-full px-2 py-0.5 text-[10px] font-semibold text-white" style={{ backgroundColor: line.color }}>{line.name}</span>)}</div>
     </header>
-    <div className="max-h-[min(65dvh,560px)] overflow-y-auto p-3">
-      <div className="mb-2 grid grid-cols-2 gap-2">
+    <div className="station-summary-body min-h-0 max-h-[min(65dvh,560px)] overflow-y-auto overscroll-contain p-3">
+      <div className="mb-2 grid grid-cols-1 min-[360px]:grid-cols-2 gap-2">
         <button type="button" onClick={() => setSelectedCategory('all')} className="flex items-center gap-2 rounded-lg bg-rose-50 px-2.5 py-2 text-left text-red-600">
           <Siren size={25} className="shrink-0" /><span className="min-w-0 flex-1"><strong className="block text-xl leading-tight">{loading ? '…' : reportError ? '—' : activeReports.length}</strong><span className="block text-[11px]">{reportError ? 'Reports unavailable' : 'Active reports'}</span></span><ChevronRight size={16} />
         </button>
@@ -76,14 +76,14 @@ export default function StationReportSummary({ station, onReportIssue, onRate, o
           <Star size={27} className="shrink-0 fill-amber-400 text-amber-400" /><span className="min-w-0 flex-1"><strong className="block text-xl leading-tight">{scoreError ? '—' : scoreLabel}{score?.overallScore != null && <span className="text-sm font-normal">/5</span>}</strong><span className="block text-[11px] text-slate-500">{scoreError ? 'Reviews unavailable' : score == null ? 'Loading reviews…' : `(${score.ratingCount} reviews)`}</span></span><ChevronRight size={16} />
         </button>
       </div>
-      <div className="mb-2 grid grid-cols-4 gap-1">
+      <div className="mb-2 grid grid-cols-[repeat(auto-fit,minmax(4.5rem,1fr))] gap-1.5">
         {stationReportCategories.map((cat) => <button type="button" key={cat.key} onClick={() => setSelectedCategory(cat.key)} aria-expanded={selectedCategory === cat.key} aria-label={`${cat.label}: ${counts[cat.key]} active reports`} className={`flex min-w-0 flex-col items-center rounded-lg px-0.5 py-2 text-center transition-colors hover:bg-blue-100 ${selectedCategory === cat.key ? 'bg-blue-100 ring-1 ring-blue-500' : 'bg-slate-50'}`}>
           <StationReportIcon category={cat.key} size={19} className={['revenue', 'fare_dodgers'].includes(cat.key) ? 'text-amber-500' : cat.key === 'antisocial' ? 'text-red-500' : 'text-teal-600'} />
-          <span className="mt-1 flex min-h-8 items-center text-[8px] sm:text-[10px] leading-tight">{cat.label}</span><strong className={`text-sm ${counts[cat.key] > 0 ? 'text-red-600' : 'text-slate-500'}`}>{loading || reportError ? '—' : counts[cat.key]}</strong>
+          <span className="mt-1 flex min-h-11 items-center break-words text-xs leading-tight">{cat.label}</span><strong className={`text-sm ${counts[cat.key] > 0 ? 'text-red-600' : 'text-slate-500'}`}>{loading || reportError ? '—' : counts[cat.key]}</strong>
         </button>)}
       </div>
-      <div className="mb-3 grid grid-cols-2 gap-2">
-        <button type="button" onClick={() => onReportIssue(station)} className={`${actionClass} bg-yellow-400 hover:bg-yellow-300`}><TriangleAlert size={20} />Seen something<ChevronRight size={16} className="ml-auto" /></button>
+      <div className="mb-3 grid grid-cols-1 min-[400px]:grid-cols-2 gap-2">
+        <button type="button" onClick={() => onReportIssue(station)} className={`${actionClass} w-full bg-yellow-400 hover:bg-yellow-300`}><TriangleAlert size={20} /><span className="min-w-0 flex-1 whitespace-normal break-words text-center leading-snug">Seen Something?</span><ChevronRight size={16} /></button>
         <button type="button" onClick={() => setSelectedCategory('all')} className={`${actionClass} border border-slate-300 hover:bg-slate-50`}><MessageCircle size={20} />View reports<ChevronRight size={16} className="ml-auto" /></button>
       </div>
       {selectedCategory && <section className="mb-3 rounded-lg border border-slate-200 bg-slate-50 p-3" aria-label="Live station reports">
@@ -93,11 +93,11 @@ export default function StationReportSummary({ station, onReportIssue, onRate, o
       </section>}
       <h4 className="mb-1 text-xs font-bold">Station reviews</h4>
       <p className="!my-1 text-[11px] text-slate-500">Passenger ratings and experiences. For current issues, use View reports above.</p>
-      {scoreError ? <p role="alert" className="!my-2 text-xs text-slate-500">Reviews could not be loaded. <button type="button" onClick={() => setRevision((n) => n + 1)} className="font-semibold text-blue-700">Try again</button></p> : <div className="mb-3 grid grid-cols-[0.9fr_1.3fr] gap-3">
-        <div className="border-r border-slate-200 pr-2"><div className="text-3xl font-bold leading-tight">{scoreLabel}{score?.overallScore != null && <span className="text-lg font-normal">/5</span>}</div><RatingStars value={score?.overallScore} size={22} /><p className="!my-1 text-[10px] leading-snug text-slate-500">{score == null ? 'Loading reviews…' : score.ratingCount ? `Based on ${score.ratingCount} passenger reviews` : 'Be the first to review this station'}</p></div>
-        <div className="space-y-1">{ratingCategories.map((cat) => { const value = score?.categoryScores?.[cat.key]; return <div key={cat.key} className="flex items-center justify-between gap-1 text-[9px] sm:text-[10px]"><span className="flex-1">{cat.label}</span><RatingStars value={value} size={11} /><span className="w-5 text-right tabular-nums">{value == null ? '—' : Number(value).toFixed(1)}</span></div> })}</div>
+      {scoreError ? <p role="alert" className="!my-2 text-xs text-slate-500">Reviews could not be loaded. <button type="button" onClick={() => setRevision((n) => n + 1)} className="font-semibold text-blue-700">Try again</button></p> : <div className="mb-3 grid grid-cols-1 gap-3">
+        <div className="border-b border-slate-200 pb-2"><div className="text-3xl font-bold leading-tight">{scoreLabel}{score?.overallScore != null && <span className="text-lg font-normal">/5</span>}</div><RatingStars value={score?.overallScore} size={22} /><p className="!my-1 text-xs leading-snug text-slate-500">{score == null ? 'Loading reviews…' : score.ratingCount ? `Based on ${score.ratingCount} passenger reviews` : 'Be the first to review this station'}</p></div>
+        <div className="min-w-0 space-y-2">{ratingCategories.map((cat) => { const value = score?.categoryScores?.[cat.key]; return <div key={cat.key} className="flex items-center justify-between gap-2 text-xs"><span className="min-w-0 flex-1 break-words">{cat.label}</span><RatingStars value={value} size={14} /><span className="w-5 shrink-0 text-right tabular-nums">{value == null ? '—' : Number(value).toFixed(1)}</span></div> })}</div>
       </div>}
-      <div className="grid grid-cols-2 gap-2"><button type="button" onClick={onViewReviews} className={`${actionClass} border border-slate-300 hover:bg-slate-50`}><MessageCircle size={20} />Read station reviews<ChevronRight size={16} className="ml-auto" /></button><button type="button" onClick={onRate} className={`${actionClass} bg-yellow-400 hover:bg-yellow-300`}><Star size={20} />Write a review<ChevronRight size={16} className="ml-auto" /></button></div>
+      <div className="grid grid-cols-1 min-[400px]:grid-cols-2 gap-2"><button type="button" onClick={onViewReviews} className={`${actionClass} border border-slate-300 hover:bg-slate-50`}><MessageCircle size={20} />Read station reviews<ChevronRight size={16} className="ml-auto" /></button><button type="button" onClick={onRate} className={`${actionClass} bg-yellow-400 hover:bg-yellow-300`}><Star size={20} />Write a review<ChevronRight size={16} className="ml-auto" /></button></div>
     </div>
   </div>
 }

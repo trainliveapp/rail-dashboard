@@ -747,7 +747,7 @@ export default function SignInPage() {
                 value={form.password}
                 onChange={update('password')}
                 placeholder="Password"
-                className={`${inputClass} pr-11`}
+                className={`${inputClass} pr-28`}
               />
 
               <Link

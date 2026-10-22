@@ -6,9 +6,9 @@ const CATEGORIES = ratingCategories
 
 function StarRow({ label, value, onChange }) {
   return (
-    <div className="flex items-center justify-between py-2.5">
+    <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 py-2.5">
       <span className="text-sm text-slate-700">{label}</span>
-      <div className="flex gap-1" role="group" aria-label={label}>
+      <div className="flex shrink-0" role="group" aria-label={label}>
         {[1, 2, 3, 4, 5].map((n) => (
           <button
             key={n}
@@ -16,7 +16,7 @@ function StarRow({ label, value, onChange }) {
             aria-label={`${n} star${n > 1 ? 's' : ''}`}
             aria-pressed={n === value}
             onClick={() => onChange(n === value ? undefined : n)}
-            className="p-0.5"
+            className="flex h-11 w-11 items-center justify-center rounded-lg focus-visible:outline-2 focus-visible:outline-blue-600"
           >
             <Star
               size={20}
@@ -62,7 +62,7 @@ export default function StationRatingForm({ stationName, stationId, onSubmitted,
 
   if (done) {
     return (
-      <div className="w-[min(27.5rem,calc(100vw-3rem))] rounded-xl bg-white flex flex-col items-center text-center py-6 px-4">
+      <div className="w-full min-w-0 rounded-xl bg-white flex flex-col items-center text-center py-6 px-4">
         <div className="w-11 h-11 rounded-full bg-emerald-100 flex items-center justify-center mb-3">
           <Check size={22} className="text-emerald-600" />
         </div>
@@ -74,7 +74,7 @@ export default function StationRatingForm({ stationName, stationId, onSubmitted,
   }
 
   return (
-    <div className="rounded-xl bg-white p-4 w-[min(27.5rem,calc(100vw-3rem))] max-h-[65dvh] overflow-y-auto">
+    <div className="w-full min-w-0 rounded-xl bg-white p-4">
       <button type="button" onClick={onCancel} disabled={submitting} className="flex items-center gap-1 text-xs font-semibold text-slate-500 mb-3"><ArrowLeft size={14} /> Back to station</button>
       <p className="text-sm font-semibold text-slate-900 mb-1">Review {stationName}</p>
       <p className="text-xs text-slate-500 mb-2">Share your experience and rate any categories you like.</p>

@@ -5,7 +5,7 @@ export default function AuthLayout({ children, cardWidth = 'max-w-[560px]', back
   const bgSrc = backgroundImage || authBg
 
   return (
-    <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden py-10 px-4">
+    <div className="relative min-h-dvh w-full flex items-center justify-center overflow-hidden pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-24 px-4 sm:py-24">
       <img
         src={bgSrc}
         alt=""
@@ -16,7 +16,7 @@ export default function AuthLayout({ children, cardWidth = 'max-w-[560px]', back
       <BrandLogo className="absolute left-6 top-6 z-10 h-7 max-w-[125px]" />
 
       <div className={`relative z-10 w-full ${cardWidth}`}>
-        <div className="bg-slate-50 rounded-3xl shadow-2xl px-8 sm:px-10 py-10">
+        <div className="min-w-0 break-words bg-slate-50 rounded-3xl shadow-2xl px-5 sm:px-10 py-6 sm:py-10">
           {children}
         </div>
         <p className="text-center text-xs text-slate-200 mt-5">

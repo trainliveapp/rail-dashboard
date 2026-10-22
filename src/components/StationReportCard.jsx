@@ -31,7 +31,7 @@ export default function StationReportCard({ report }) {
     <time dateTime={current.createdAt} className="text-[10px] text-slate-500">{Math.max(0, Math.floor((Date.now() - new Date(current.createdAt).getTime()) / 60000))}m ago · {current.status === 'CONFIRMED' ? 'Confirmed by passengers' : 'Reported'}</time>
     <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
       <span className="text-slate-500">{current.confirms || 0} passenger confirmation{current.confirms === 1 ? '' : 's'}</span>
-      <button type="button" onClick={handleConfirm} disabled={submitting || confirmed} className="flex items-center gap-1 font-semibold text-blue-700 disabled:opacity-50"><ThumbsUp size={12} />{submitting ? 'Saving…' : confirmed ? 'Confirmation saved' : 'I saw this too'}</button>
+      <button type="button" onClick={handleConfirm} disabled={submitting || confirmed} className="flex min-h-11 items-center gap-1 px-2 font-semibold text-blue-700 disabled:opacity-50"><ThumbsUp size={14} />{submitting ? 'Saving…' : confirmed ? 'Confirmation saved' : 'I saw this too'}</button>
     </div>
     {error && <p role="alert" className="!mt-2 text-amber-700">{error}</p>}
   </article>

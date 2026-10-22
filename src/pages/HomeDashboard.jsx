@@ -174,7 +174,7 @@ export default function HomeDashboard() {
       <TopPromoBar />
       <NavBar mapTheme={mapTheme} onMapThemeChange={selectMapTheme} />
 
-      <div className="relative h-[65vh] sm:h-[75vh] lg:h-[calc(100vh-130px)] min-h-[420px] w-full">
+      <div className="relative h-[65svh] sm:h-[75svh] lg:h-[calc(100dvh-130px)] min-h-[360px] sm:min-h-[420px] w-full">
         <MapPanel
           layers={layers}
           nearby={nearby}

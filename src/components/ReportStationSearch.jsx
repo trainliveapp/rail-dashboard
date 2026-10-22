@@ -53,7 +53,7 @@ export default function ReportStationSearch({ value, onChange, id = 'report-stat
       <div className="rounded-2xl bg-[#b2b9d1] p-3">
       <div className="flex items-center gap-1 rounded-md border border-[#9299ac] bg-white py-1.5 pl-3 pr-1.5 focus-within:border-blue-600 focus-within:ring-1 focus-within:ring-blue-600">
         <div className="min-w-0 flex-1">
-        <label htmlFor={id} className="block text-[10px] leading-4 text-slate-700">Enter station name</label>
+        <span className="block text-xs leading-4 text-slate-700">Enter station name</span>
         <input
           ref={inputRef}
           id={id}
@@ -75,7 +75,7 @@ export default function ReportStationSearch({ value, onChange, id = 'report-stat
           placeholder="Search station name or code"
           required
           autoComplete="off"
-          className="block w-full min-w-0 bg-transparent text-[15px] leading-6 text-slate-900 outline-none placeholder:text-slate-400"
+          className="block w-full min-w-0 bg-transparent text-base leading-6 text-slate-900 outline-none placeholder:text-slate-400"
         />
         </div>
         {value && (
@@ -89,7 +89,7 @@ export default function ReportStationSearch({ value, onChange, id = 'report-stat
               inputRef.current?.focus()
               setOpen(true)
             }}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded text-[#332879] hover:bg-slate-100"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded text-[#332879] hover:bg-slate-100"
           >
             <X size={20} strokeWidth={1.5} />
           </button>
@@ -106,7 +106,7 @@ export default function ReportStationSearch({ value, onChange, id = 'report-stat
             setActiveIndex(-1)
             setOpen(nextOpen)
           }}
-          className="flex h-9 w-8 shrink-0 items-center justify-center rounded text-[#332879] hover:bg-slate-100"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded text-[#332879] hover:bg-slate-100"
         >
           <ChevronDown size={18} className={open ? 'rotate-180' : ''} />
         </button>
@@ -114,11 +114,11 @@ export default function ReportStationSearch({ value, onChange, id = 'report-stat
       </div>
       <p id={`${id}-help`} className="sr-only">Type a name or three-letter code, or use the arrow to browse all stations.</p>
       {open && (
-        <div className="absolute left-1.5 right-1.5 top-[calc(100%-6px)] z-50 rounded-md border border-slate-300 bg-white shadow-[0_3px_10px_rgba(15,23,42,0.28)] before:absolute before:-top-2 before:left-5 before:h-4 before:w-4 before:rotate-45 before:border-l before:border-t before:border-slate-300 before:bg-white">
+        <div className="relative z-50 mt-2 rounded-md border border-slate-300 bg-white shadow-[0_3px_10px_rgba(15,23,42,0.28)]">
           <p role="status" className={matches.length ? 'sr-only' : 'relative rounded-md bg-white px-3 py-3 text-sm text-slate-500'}>
             {matches.length ? `${matches.length.toLocaleString('en-GB')} stations${browseAll || !value.trim() ? ' · A–Z' : ' found'}` : 'No stations found. Try another name or code.'}
           </p>
-          <ul ref={listRef} id={`${id}-list`} role="listbox" aria-label="Stations" className="no-scrollbar relative max-h-[min(360px,40dvh)] overflow-y-auto overscroll-contain rounded-md bg-white">
+          <ul ref={listRef} id={`${id}-list`} role="listbox" aria-label="Stations" className="station-search-options no-scrollbar relative overflow-y-auto overscroll-contain rounded-md bg-white">
             {matches.map((station, index) => {
               const matchStart = browseAll ? -1 : station.name.toLowerCase().indexOf(value.trim().toLowerCase())
               const matchLength = value.trim().length
@@ -135,7 +135,7 @@ export default function ReportStationSearch({ value, onChange, id = 'report-stat
                 <svg viewBox="0 0 24 24" className="h-5 w-6 shrink-0 fill-[#ed1736]" aria-hidden="true">
                   <path d={siNationalrail.path} />
                 </svg>
-                <span>
+                <span className="min-w-0 break-words">
                   {matchStart >= 0 && matchLength > 0 ? <>
                     {station.name.slice(0, matchStart)}
                     <strong className="font-semibold">{station.name.slice(matchStart, matchStart + matchLength)}</strong>

@@ -423,7 +423,7 @@ export default function MapPanel({
   }
 
   return (
-    <div className={`relative w-full ${className} overflow-hidden bg-slate-100`}>
+    <div className={`map-panel relative w-full ${className} overflow-hidden bg-slate-100`}>
       <MapContainer
         center={CENTER}
         zoom={16}
@@ -601,20 +601,20 @@ export default function MapPanel({
         <div className="pointer-events-none absolute top-3 left-3 right-16 z-[1050] flex justify-center report-banner-in">
           <div className="flex max-w-[360px] items-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-lg ring-1 ring-slate-200/80">
             <CheckCircle2 size={17} className="shrink-0 text-emerald-600" />
-            <span>Report submitted for {reportNotice.location}</span>
+            <span className="min-w-0 break-words">Report submitted for {reportNotice.location}</span>
           </div>
         </div>
       )}
 
-      <div className="absolute right-3 top-3 z-[1000] flex flex-col gap-1.5 sm:gap-2">
-        <button aria-label="Seen something" onClick={() => setReportContext({ station: null })} className="w-8 h-8 sm:w-10 sm:h-10 bg-brand-amber hover:bg-yellow-300 shadow-sm rounded-lg flex items-center justify-center text-brand-ink">
-          <Flag size={15} />
+      <div className="map-controls absolute right-3 top-3 z-[1000] flex flex-col gap-1.5 sm:gap-2">
+        <button aria-label="Seen Something?" onClick={() => setReportContext({ station: null })} className="w-11 h-11 bg-brand-amber hover:bg-yellow-300 shadow-sm rounded-lg flex items-center justify-center text-brand-ink">
+          <Flag size={18} />
         </button>
-        <button aria-label="Zoom in" onClick={() => mapRef.current?.zoomIn()} className="w-8 h-8 sm:w-10 sm:h-10 bg-white shadow-sm rounded-lg flex items-center justify-center text-slate-600 active:bg-slate-50">
-          <Plus size={15} />
+        <button aria-label="Zoom in" onClick={() => mapRef.current?.zoomIn()} className="w-11 h-11 bg-white shadow-sm rounded-lg flex items-center justify-center text-slate-600 active:bg-slate-50">
+          <Plus size={18} />
         </button>
-        <button aria-label="Zoom out" onClick={() => mapRef.current?.zoomOut()} className="w-8 h-8 sm:w-10 sm:h-10 bg-white shadow-sm rounded-lg flex items-center justify-center text-slate-600 active:bg-slate-50">
-          <Minus size={15} />
+        <button aria-label="Zoom out" onClick={() => mapRef.current?.zoomOut()} className="w-11 h-11 bg-white shadow-sm rounded-lg flex items-center justify-center text-slate-600 active:bg-slate-50">
+          <Minus size={18} />
         </button>
         <button
           type="button"
@@ -632,7 +632,7 @@ export default function MapPanel({
               setFollowSuspended(false)
             }
           }}
-          className={`w-8 h-8 sm:w-10 sm:h-10 shadow-sm rounded-lg flex items-center justify-center active:bg-slate-50 ${
+          className={`w-11 h-11 shadow-sm rounded-lg flex items-center justify-center active:bg-slate-50 ${
             liveLocationEnabled ? 'bg-brand-amber text-brand-ink' : 'bg-white text-brand-ink'
           }`}
         >
@@ -652,7 +652,7 @@ export default function MapPanel({
                 setDirectionMode(true)
               }
             }}
-            className={`w-8 h-8 sm:w-10 sm:h-10 shadow-sm rounded-lg flex items-center justify-center active:bg-slate-50 ${
+            className={`w-11 h-11 shadow-sm rounded-lg flex items-center justify-center active:bg-slate-50 ${
               directionMode ? 'bg-white' : 'bg-slate-700'
             }`}
           >
@@ -669,7 +669,7 @@ export default function MapPanel({
             aria-label="Show route overview"
             title="Show route overview"
             onClick={showRouteOverview}
-            className="w-8 h-8 sm:w-10 sm:h-10 bg-white shadow-sm rounded-lg flex items-center justify-center text-slate-600 active:bg-slate-50"
+            className="w-11 h-11 bg-white shadow-sm rounded-lg flex items-center justify-center text-slate-600 active:bg-slate-50"
           >
             <Route size={15} />
           </button>
