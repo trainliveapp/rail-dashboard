@@ -577,6 +577,7 @@ export const stations = [
 ]
 
 export const reportCategories = [
+  { key: 'delays', label: 'Delays', icon: 'Clock3' },
   { key: 'police', label: 'Police', icon: 'ShieldAlert' },
   { key: 'safety', label: 'Safety', icon: 'ShieldCheck' },
   { key: 'revenue', label: 'Revenue Protection', icon: 'Ticket' },
@@ -633,6 +634,7 @@ export const liveFeed = [
 ]
 
 export const stationReportCategories = [
+  { key: 'delays', label: 'Delays', emoji: '\u23f1\ufe0f', tone: 'amber' },
   { key: 'police', label: 'Police', emoji: '\ud83d\udee1\ufe0f', tone: 'amber' },
   { key: 'safety', label: 'Safety', emoji: '\ud83d\udee1\ufe0f', tone: 'amber' },
   { key: 'revenue', label: 'Revenue Protection', emoji: '\ud83c\udfab', tone: 'amber' },

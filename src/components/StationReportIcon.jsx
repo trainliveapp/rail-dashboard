@@ -1,6 +1,7 @@
-import { BadgeCheck, ShieldCheck, TicketCheck, Siren, ShieldAlert, TicketX } from 'lucide-react'
+import { BadgeCheck, ShieldCheck, TicketCheck, Siren, ShieldAlert, TicketX, Clock3 } from 'lucide-react'
 
 const categoryIcons = {
+  delays: Clock3,
   police: BadgeCheck,
   safety: ShieldCheck,
   revenue: TicketCheck,

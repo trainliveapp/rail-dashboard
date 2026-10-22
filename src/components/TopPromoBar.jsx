@@ -1,8 +1,7 @@
-import { AlertTriangle, CircleUserRound, Megaphone, Users, Wrench, X } from 'lucide-react'
+import { AlertTriangle, Megaphone, Users, Wrench, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { supabase } from '../supabase'
-import { useAuth } from '../lib/AuthContext'
+import TrainSearch from './TrainSearch'
 
 const feedIcons = { AlertTriangle, Users, Wrench, Megaphone }
 
@@ -25,7 +24,6 @@ function formatAge(createdAt) {
 }
 
 export default function TopPromoBar() {
-  const { user } = useAuth()
   const [trendingOpen, setTrendingOpen] = useState(false)
   const [trending, setTrending] = useState([])
   const [trendingLoading, setTrendingLoading] = useState(false)
@@ -138,7 +136,7 @@ export default function TopPromoBar() {
     : []
 
   return (
-    <div className="relative bg-yellow-400 text-brand-ink text-sm py-2.5 flex items-center gap-3 overflow-hidden">
+    <div className="relative z-[1200] bg-yellow-400 text-brand-ink text-sm py-2.5 flex items-center gap-3">
       {/* min-w-0 is the important part here: without it, a flex child is never
           allowed to shrink below its content size, so the wide scrolling
           track underneath would force this whole bar (and the page) wider
@@ -163,22 +161,7 @@ export default function TopPromoBar() {
       </div>
 
       <div className="flex items-center gap-3 shrink-0 pr-4">
-        {user ? (
-          <span
-            className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-ink text-white"
-            title={user.email}
-            aria-label={`Signed in as ${user.email}`}
-          >
-            <CircleUserRound size={17} aria-hidden="true" />
-          </span>
-        ) : (
-          <Link
-            to="/signin"
-            className="flex items-center gap-1 whitespace-nowrap rounded-full bg-brand-ink px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-slate-800"
-          >
-            Sign in
-          </Link>
-        )}
+        <TrainSearch />
       </div>
 
       {trendingOpen && (

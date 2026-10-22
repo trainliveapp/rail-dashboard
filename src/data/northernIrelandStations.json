@@ -1,0 +1,15 @@
+{
+  "source": "https://www.translink.co.uk/getmedia/75f785a5-032e-4327-b11b-bbf683fe5e28/Network_Statement_2025.pdf",
+  "retrievedOn": "2026-10-22",
+  "stations": [
+    "Adelaide", "Antrim", "Ballycarry", "Ballymena", "Ballymoney", "Balmoral",
+    "Bangor (Northern Ireland)", "Bangor West", "Belfast Grand Central", "Belfast Lanyon Place",
+    "Bellarena", "Botanic", "Carnalea", "Carrickfergus", "Castlerock", "City Hospital",
+    "Clipperstown", "Coleraine", "Cullybackey", "Cultra", "Derriaghy", "Derry~Londonderry",
+    "Dhu Varren", "Downshire", "Dunmurry", "Finaghy", "Glynn", "Greenisland", "Helen's Bay",
+    "Hilden", "Holywood", "Jordanstown", "Lambeg", "Larne Town", "Larne Harbour", "Lisburn",
+    "Lurgan", "Magheramorne", "Marino", "Moira", "Mossley West", "Newry", "Portadown",
+    "Portrush", "Poyntzpass", "Scarva", "Seahill", "Sydenham", "Titanic Quarter",
+    "Trooperslane", "University", "Whiteabbey", "Whitehead", "York Street"
+  ]
+}

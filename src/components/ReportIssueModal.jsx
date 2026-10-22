@@ -1,11 +1,15 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import {
   X, Clock3, Ban, Construction, Users, Ticket, Accessibility, Sparkles,
   ShieldAlert, ShieldCheck, Megaphone, CloudRain, CircleHelp,
-  TrainFront as TrainIcon, MapPin, ArrowRight,
+  TrainFront as TrainIcon, MapPin, ArrowRight, GripHorizontal,
 } from 'lucide-react'
-import { reportCategories, stations } from '../data/mockData'
+import { reportCategories } from '../data/mockData'
 import { postReport } from '../lib/stationUpdates'
+import { resolveReportStation } from '../lib/reportStations'
+import ReportStationSearch from './ReportStationSearch'
+import useDraggablePanel from '../lib/useDraggablePanel'
 
 const icons = { Clock3, Ban, Construction, Users, Ticket, Accessibility, Sparkles, ShieldAlert, ShieldCheck, Megaphone, CloudRain, CircleHelp }
 
@@ -13,6 +17,7 @@ const icons = { Clock3, Ban, Construction, Users, Ticket, Accessibility, Sparkle
 // categories are informational (blue), a few carry more weight and get the
 // amber/rose treatment already used elsewhere in the app for warnings.
 const categoryTone = {
+  delays: 'amber',
   police: 'amber',
   revenue: 'amber',
   antisocial: 'amber',
@@ -28,13 +33,9 @@ export default function ReportIssueModal({ initialStation = null, onClose, onRep
   const [stationQuery, setStationQuery] = useState(initialStation?.name || '')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const { panelRef, style, dragging, handleProps } = useDraggablePanel()
 
-  const stationMatches =
-    stationQuery.trim().length > 0
-      ? stations.filter((s) => s.name.toLowerCase().includes(stationQuery.trim().toLowerCase())).slice(0, 6)
-      : []
-
-  const matchedStation = stations.find((station) => station.name.toLowerCase() === stationQuery.trim().toLowerCase())
+  const matchedStation = resolveReportStation(stationQuery)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -69,44 +70,35 @@ export default function ReportIssueModal({ initialStation = null, onClose, onRep
     }
   }
 
-  return (
-    <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-900/40">
-      <form onSubmit={handleSubmit} className="bg-slate-50 rounded-3xl shadow-2xl w-full max-w-[620px] max-h-[calc(100dvh-2rem)] overflow-y-auto p-4 sm:p-8">
-        <div className="flex items-start justify-between mb-6">
+  return createPortal(
+    <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-900/40"
+      onPointerDown={(event) => event.stopPropagation()}
+      onClick={(event) => event.stopPropagation()}
+      onDoubleClick={(event) => event.stopPropagation()}
+      onWheel={(event) => event.stopPropagation()}
+      onTouchStart={(event) => event.stopPropagation()}
+      onTouchMove={(event) => event.stopPropagation()}
+    >
+      <form ref={panelRef} style={style} role="dialog" aria-modal="true" aria-labelledby="report-title" onSubmit={handleSubmit} className="flex flex-col bg-slate-50 rounded-3xl shadow-2xl w-full max-w-[620px] max-h-[calc(100dvh-2rem)] overflow-hidden p-4 sm:p-8">
+        <div className="flex shrink-0 items-start justify-between gap-3 mb-4">
           <div>
-            <h2 className="text-xl font-bold text-slate-900">What Is Happening?</h2>
+            <h2 id="report-title" className="text-xl font-bold text-slate-900">What Is Happening?</h2>
             <p className="text-slate-500 text-sm">Report Issue</p>
+            <button type="button" {...handleProps} aria-label="Move reporting box. Drag or use arrow keys. Double-click to centre."
+              className={`mt-2 flex touch-none select-none items-center gap-1.5 rounded-lg px-2 py-1 text-xs text-slate-500 hover:bg-slate-200 focus-visible:outline-2 focus-visible:outline-blue-600 ${dragging ? 'cursor-grabbing' : '!cursor-grab'}`}>
+              <GripHorizontal size={16} aria-hidden="true" /> Drag to move
+            </button>
           </div>
           <button type="button" onClick={onClose} aria-label="Close" className="w-9 h-9 rounded-full bg-white flex items-center justify-center text-slate-500 shrink-0">
             <X size={16} />
           </button>
         </div>
 
-        <div className="mb-6">
-          <label htmlFor="report-station" className="text-sm font-semibold text-slate-800 mb-2 block">Search Station</label>
-          <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-full px-4 py-3">
-            <MapPin size={15} className="text-slate-400 shrink-0" aria-hidden="true" />
-            <input
-              id="report-station"
-              list="report-stations"
-              value={stationQuery}
-              onChange={(e) => {
-                setStationQuery(e.target.value)
-                setError('')
-              }}
-              placeholder="Search Station"
-              required
-              autoComplete="off"
-              className="bg-transparent text-sm outline-none w-full placeholder:text-slate-400"
-            />
-            <datalist id="report-stations">
-              {stationMatches.map((station) => <option key={station.id} value={station.name} />)}
-            </datalist>
-          </div>
-          {stationQuery.trim() && !matchedStation && stationMatches.length === 0 && (
-            <p className="text-xs text-slate-500 mt-2">No stations found. Try another station name.</p>
-          )}
-        </div>
+        <div className="no-scrollbar min-h-0 overflow-y-auto overscroll-contain">
+        <ReportStationSearch value={stationQuery} onChange={(value) => {
+          setStationQuery(value)
+          setError('')
+        }} />
 
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
           {reportCategories.map((cat) => {
@@ -161,7 +153,9 @@ export default function ReportIssueModal({ initialStation = null, onClose, onRep
         >
           {submitting ? 'Submitting…' : 'Submit report'} {!submitting && <ArrowRight size={16} />}
         </button>
+        </div>
       </form>
-    </div>
+    </div>,
+    document.body
   )
 }

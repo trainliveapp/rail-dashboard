@@ -76,14 +76,14 @@ export default function StationReportSummary({ station, onReportIssue, onRate, o
           <Star size={27} className="shrink-0 fill-amber-400 text-amber-400" /><span className="min-w-0 flex-1"><strong className="block text-xl leading-tight">{scoreError ? '—' : scoreLabel}{score?.overallScore != null && <span className="text-sm font-normal">/5</span>}</strong><span className="block text-[11px] text-slate-500">{scoreError ? 'Reviews unavailable' : score == null ? 'Loading reviews…' : `(${score.ratingCount} reviews)`}</span></span><ChevronRight size={16} />
         </button>
       </div>
-      <div className="mb-2 grid grid-cols-6 gap-1">
+      <div className="mb-2 grid grid-cols-4 gap-1">
         {stationReportCategories.map((cat) => <button type="button" key={cat.key} onClick={() => setSelectedCategory(cat.key)} aria-expanded={selectedCategory === cat.key} aria-label={`${cat.label}: ${counts[cat.key]} active reports`} className={`flex min-w-0 flex-col items-center rounded-lg px-0.5 py-2 text-center transition-colors hover:bg-blue-100 ${selectedCategory === cat.key ? 'bg-blue-100 ring-1 ring-blue-500' : 'bg-slate-50'}`}>
           <StationReportIcon category={cat.key} size={19} className={['revenue', 'fare_dodgers'].includes(cat.key) ? 'text-amber-500' : cat.key === 'antisocial' ? 'text-red-500' : 'text-teal-600'} />
           <span className="mt-1 flex min-h-8 items-center text-[8px] sm:text-[10px] leading-tight">{cat.label}</span><strong className={`text-sm ${counts[cat.key] > 0 ? 'text-red-600' : 'text-slate-500'}`}>{loading || reportError ? '—' : counts[cat.key]}</strong>
         </button>)}
       </div>
       <div className="mb-3 grid grid-cols-2 gap-2">
-        <button type="button" onClick={() => onReportIssue(station)} className={`${actionClass} bg-yellow-400 hover:bg-yellow-300`}><TriangleAlert size={20} />What do you see<ChevronRight size={16} className="ml-auto" /></button>
+        <button type="button" onClick={() => onReportIssue(station)} className={`${actionClass} bg-yellow-400 hover:bg-yellow-300`}><TriangleAlert size={20} />Seen something<ChevronRight size={16} className="ml-auto" /></button>
         <button type="button" onClick={() => setSelectedCategory('all')} className={`${actionClass} border border-slate-300 hover:bg-slate-50`}><MessageCircle size={20} />View reports<ChevronRight size={16} className="ml-auto" /></button>
       </div>
       {selectedCategory && <section className="mb-3 rounded-lg border border-slate-200 bg-slate-50 p-3" aria-label="Live station reports">
