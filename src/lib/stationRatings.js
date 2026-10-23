@@ -1,4 +1,5 @@
 import { supabase, isSupabaseConfigured } from './supabaseClient'
+import { getReviewVisitorToken, validateStationReview } from './reviewRules'
 
 export const ratingCategories = [
   { key: 'cleanliness', dbKey: 'cleanliness', label: 'Cleanliness' },
@@ -21,20 +22,34 @@ export function subscribeToStationReviews(stationId, onChange) {
   }
 }
 
-// Submits a rating. Only send keys for categories the person actually
-// rated, exactly like the spec's request body, partial ratings are fine.
+export async function getMyStationReview(stationId) {
+  if (!isSupabaseConfigured) throw new Error('Station reviews are currently unavailable.')
+  const { data, error } = await supabase.rpc('get_my_station_review', {
+    p_station_id: stationId,
+    p_guest_token: getReviewVisitorToken(),
+  })
+  if (error) throw new Error('Could not load your existing review. Please try again.')
+  return data?.[0] || null
+}
+
+// Account identity or a private guest token identifies one editable review.
+// Never fall back to an unrestricted insert.
 export async function submitStationRating(stationId, ratings) {
   if (!isSupabaseConfigured) throw new Error('Station reviews are currently unavailable.')
-  const { data: sessionData } = await supabase.auth.getSession()
-  const userId = sessionData.session?.user?.id ?? null
-
-  const { error } = await supabase.from('station_ratings').insert({
-    station_id: stationId,
-    user_id: userId,
-    ...ratings,
+  const payload = validateStationReview(stationId, ratings)
+  const { review_text, ...categoryRatings } = payload
+  const { error } = await supabase.rpc('save_station_review', {
+    p_station_id: stationId.trim(),
+    p_ratings: categoryRatings,
+    p_review_text: review_text,
+    p_guest_token: getReviewVisitorToken(),
   })
 
-  if (error) throw error
+  if (error) {
+    if (error.code === 'PGRST202' || error.code === '42883') throw new Error('Review submission is temporarily unavailable. Please try again later.')
+    if (error.code === '42501' || error.code === '22023') throw new Error(error.message)
+    throw new Error('Could not save your review. Please try again.')
+  }
   window.dispatchEvent(new CustomEvent('station-review-saved', { detail: stationId }))
 }
 

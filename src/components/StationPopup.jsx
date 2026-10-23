@@ -8,13 +8,20 @@ export default function StationPopup({ stationId, stationName, stationLines, onR
 
   useEffect(() => { setReviewView(null) }, [stationId])
 
-  return <>
+  // Review controls replace the clicked button during the same event. Stop the
+  // event here so Leaflet cannot mistake that detached target for a map click.
+  return <div
+    onClick={(event) => event.stopPropagation()}
+    onDoubleClick={(event) => event.stopPropagation()}
+    onPointerDown={(event) => event.stopPropagation()}
+  >
     <StationReportSummary
       station={{ id: stationId, name: stationName, lines: stationLines }}
       onReportIssue={onReportIssue}
       onRate={() => setReviewView('rating')}
       onViewReviews={() => setReviewView('reviews')}
+      reviewView={reviewView}
+      reviewContent={reviewView && <StationReviewDialog key={`${stationId}-${reviewView}`} stationId={stationId} stationName={stationName} initialView={reviewView} onClose={closeReviews} embedded />}
     />
-    {reviewView && <StationReviewDialog key={stationId} stationId={stationId} stationName={stationName} initialView={reviewView} onClose={closeReviews} />}
-  </>
+  </div>
 }

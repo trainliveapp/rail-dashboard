@@ -1,10 +1,10 @@
 ﻿import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { ArrowLeft, Star, X } from 'lucide-react'
+import { ArrowLeft, ChevronRight, Star, X } from 'lucide-react'
 import StationRatingForm from './StationRatingForm'
 import { getStationReviews, subscribeToStationReviews } from '../lib/stationRatings'
 
-export default function StationReviewDialog({ stationId, stationName, initialView = 'rating', onClose }) {
+export default function StationReviewDialog({ stationId, stationName, initialView = 'rating', onClose, embedded = false }) {
   const [view, setView] = useState(initialView)
   const [reviews, setReviews] = useState([])
   const [status, setStatus] = useState('loading')
@@ -13,6 +13,10 @@ export default function StationReviewDialog({ stationId, stationName, initialVie
   const panelRef = useRef(null)
 
   useEffect(() => {
+    if (embedded) {
+      panelRef.current?.focus({ preventScroll: true })
+      return
+    }
     const previouslyFocused = document.activeElement
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
@@ -35,7 +39,7 @@ export default function StationReviewDialog({ stationId, stationName, initialVie
       document.removeEventListener('keydown', onKeyDown)
       if (previouslyFocused?.isConnected) previouslyFocused.focus()
     }
-  }, [onClose])
+  }, [onClose, embedded])
 
   useEffect(() => {
     if (view !== 'reviews') return
@@ -55,17 +59,15 @@ export default function StationReviewDialog({ stationId, stationName, initialVie
     return () => { cancelled = true }
   }, [stationId, page, revision, view])
 
-  return createPortal(
-    <div className="viewport-overlay fixed inset-0 z-[3000] flex items-center justify-center bg-slate-900/50 p-3 sm:p-4" onClick={(event) => { event.stopPropagation(); if (event.target === event.currentTarget) onClose() }} onPointerDown={(event) => event.stopPropagation()}>
-      <section ref={panelRef} role="dialog" aria-modal="true" aria-label={`${view === 'rating' ? 'Write a review' : 'Station reviews'}: ${stationName}`} tabIndex={-1} className="viewport-panel relative w-full max-w-[27.5rem] overflow-y-auto overscroll-contain rounded-2xl bg-white shadow-2xl outline-none">
+  const content = <section ref={panelRef} role={embedded ? 'region' : 'dialog'} aria-modal={embedded ? undefined : true} aria-label={`${view === 'rating' ? 'Write a review' : 'Station reviews'}: ${stationName}`} tabIndex={-1} className={embedded ? 'w-full min-w-0 rounded-xl border border-slate-200 bg-white outline-none' : 'viewport-panel relative w-full max-w-[27.5rem] overflow-y-auto overscroll-contain rounded-2xl bg-white shadow-2xl outline-none'}>
         <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3">
           <h2 className="font-bold text-slate-900">{view === 'rating' ? 'Write a review' : 'Station reviews'}</h2>
-          <button type="button" onClick={onClose} aria-label="Close station reviews" className="rounded-full p-2 text-slate-500 hover:bg-slate-100"><X size={20} /></button>
+          <button type="button" onClick={onClose} aria-label={view === 'rating' ? 'Close review form' : 'Close station reviews'} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100"><X size={20} /></button>
         </div>
         {view === 'rating' ? <StationRatingForm stationId={stationId} stationName={stationName} onCancel={onClose} onSubmitted={() => { setPage(0); setRevision((n) => n + 1); setView('reviews') }} /> : <div className="p-4">
           <button type="button" onClick={onClose} className="mb-3 flex items-center gap-1 text-xs font-semibold text-slate-500"><ArrowLeft size={14} /> Back to station</button>
           <h3 className="mb-3 text-base font-bold text-slate-900">Reviews for {stationName}</h3>
-          {status === 'loading' ? <p role="status" className="text-sm text-slate-500">Loading reviews…</p> : status === 'error' ? <div role="alert" className="text-sm text-slate-600"><p>Reviews could not be loaded.</p><button type="button" onClick={() => setRevision((n) => n + 1)} className="mt-2 font-semibold text-blue-700">Try again</button></div> : reviews.length === 0 ? <p className="text-sm text-slate-500">{page === 0 ? 'No reviews yet. Be the first to share your experience.' : 'No more reviews. Return to the previous page.'}</p> : <div className="max-h-[45dvh] space-y-3 overflow-y-auto">
+          {status === 'loading' ? <p role="status" className="text-sm text-slate-500">Loading reviews…</p> : status === 'error' ? <div role="alert" className="text-sm text-slate-600"><p>Reviews could not be loaded.</p><button type="button" onClick={() => setRevision((n) => n + 1)} className="mt-2 font-semibold text-blue-700">Try again</button></div> : reviews.length === 0 ? <p className="text-sm text-slate-500">{page === 0 ? 'No reviews yet. Be the first to share your experience.' : 'No more reviews. Return to the previous page.'}</p> : <div className={embedded ? 'space-y-3' : 'max-h-[45dvh] space-y-3 overflow-y-auto'}>
             {reviews.map((review) => <article key={review.id} className="border-b border-slate-100 pb-3 last:border-0">
               <div className="mb-1 flex items-center gap-1">
                 {review.overall_rating != null && <Star size={13} className="fill-amber-400 text-amber-400" />}
@@ -76,9 +78,13 @@ export default function StationReviewDialog({ stationId, stationName, initialVie
             </article>)}
           </div>}
           {(page > 0 || reviews.length === 20) && <div className="mt-3 flex items-center justify-between text-xs"><button type="button" disabled={page === 0 || status === 'loading'} onClick={() => setPage((n) => n - 1)} className="font-semibold text-blue-700 disabled:text-slate-300">Previous</button><span>Page {page + 1}</span><button type="button" disabled={reviews.length < 20 || status === 'loading'} onClick={() => setPage((n) => n + 1)} className="font-semibold text-blue-700 disabled:text-slate-300">Next</button></div>}
-          <button type="button" onClick={() => setView('rating')} className="mt-3 w-full rounded-lg bg-yellow-400 py-2 text-xs font-semibold text-slate-950">Write a review</button>
+          <button type="button" onClick={() => setView('rating')} className="mt-3 flex min-h-11 w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-lg bg-yellow-400 px-3 py-2.5 text-xs font-semibold text-slate-900 transition-colors hover:bg-yellow-300 focus-visible:outline-2 focus-visible:outline-blue-600"><Star size={16} className="shrink-0" /><span className="flex-1">Write a review</span><ChevronRight size={12} className="shrink-0" /></button>
         </div>}
       </section>
+
+  return embedded ? content : createPortal(
+    <div className="viewport-overlay fixed inset-0 z-[3000] flex items-center justify-center bg-slate-900/50 p-3 sm:p-4" onClick={(event) => { event.stopPropagation(); if (event.target === event.currentTarget) onClose() }} onPointerDown={(event) => event.stopPropagation()}>
+      {content}
     </div>, document.body
   )
 }
