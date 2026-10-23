@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react'
-import { ChevronRight, MessageCircle, Siren, Star, TriangleAlert, X } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { ChevronDown, ChevronRight, MessageCircle, Siren, Star, TriangleAlert, X } from 'lucide-react'
 import StationReportIcon from './StationReportIcon'
 import StationReportCard from './StationReportCard'
 import { stationReportCategories, lines } from '../data/mockData'
 import { getStationUpdates, subscribeToStationUpdates, UPDATE_VISIBILITY_WINDOW_MS } from '../lib/stationUpdates'
 import { getStationScore, subscribeToStationReviews, ratingCategories } from '../lib/stationRatings'
+import { useAuth } from '../lib/AuthContext'
+import { getReportInteraction } from '../lib/reportInteractions'
 
 export function RatingStars({ value, size = 14 }) {
   return <span className="inline-flex shrink-0" aria-label={value == null ? 'Not rated' : `${Number(value).toFixed(1)} out of 5 stars`}>
@@ -16,13 +18,19 @@ export function RatingStars({ value, size = 14 }) {
 }
 
 export default function StationReportSummary({ station, onReportIssue, onRate, onViewReviews }) {
+  const { user } = useAuth()
   const [reports, setReports] = useState([])
   const [loading, setLoading] = useState(true)
   const [score, setScore] = useState(null)
-  const [selectedCategory, setSelectedCategory] = useState(null)
+  const [selectedCategory, setSelectedCategory] = useState('all')
   const [reportError, setReportError] = useState(false)
   const [scoreError, setScoreError] = useState(false)
   const [revision, setRevision] = useState(0)
+  const bodyRef = useRef(null)
+
+  useEffect(() => {
+    if (bodyRef.current) bodyRef.current.scrollTop = 0
+  }, [station.id])
 
   useEffect(() => {
     let cancelled = false
@@ -31,7 +39,7 @@ export default function StationReportSummary({ station, onReportIssue, onRate, o
     setLoading(true)
     setReports([])
     setScore(null)
-    setSelectedCategory(null)
+    setSelectedCategory('all')
     const refreshReports = async () => {
       const request = ++reportRequest
       try {
@@ -57,23 +65,24 @@ export default function StationReportSummary({ station, onReportIssue, onRate, o
 
   const activeReports = reports.filter((r) => r.kind === 'report' && ['ACTIVE', 'CONFIRMED'].includes(r.status) && Date.now() - new Date(r.createdAt).getTime() < UPDATE_VISIBILITY_WINDOW_MS)
   const counts = Object.fromEntries(stationReportCategories.map((cat) => [cat.key, activeReports.filter((r) => r.category === cat.key).length]))
+  const hasOwnReport = activeReports.some((report) => getReportInteraction(report, user?.id).isOwn)
   const stationLines = (station.lines || []).map((name) => lines.find((line) => line.name === name) || { name, color: '#17428b' })
   const selectedReports = activeReports.filter((r) => selectedCategory === 'all' || r.category === selectedCategory)
-  const scoreLabel = score?.overallScore == null ? 'New' : Number(score.overallScore).toFixed(1)
-  const actionClass = 'flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-lg px-2 py-2.5 text-sm font-bold transition-colors [&>svg]:shrink-0 focus-visible:outline-2 focus-visible:outline-blue-600'
+  const scoreLabel = score == null ? 'Loading…' : score.overallScore == null ? 'Not rated yet' : Number(score.overallScore).toFixed(1)
+  const actionClass = 'flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-lg px-2 py-2.5 text-xs sm:text-sm font-bold transition-colors [&>svg]:shrink-0 focus-visible:outline-2 focus-visible:outline-blue-600'
 
   return <div className="station-summary w-[min(27.5rem,calc(100vw-3rem))] overflow-hidden rounded-xl bg-white text-slate-900 shadow-xl">
     <header className="shrink-0 bg-gradient-to-r from-blue-900 to-blue-600 px-4 py-3 pr-14">
       <h3 className="break-words text-lg font-bold leading-tight text-white">{station.name}</h3>
       <div className="mt-1.5 flex flex-wrap gap-1">{stationLines.map((line) => <span key={line.name} className="rounded-full px-2 py-0.5 text-[10px] font-semibold text-white" style={{ backgroundColor: line.color }}>{line.name}</span>)}</div>
     </header>
-    <div className="station-summary-body min-h-0 max-h-[min(65dvh,560px)] overflow-y-auto overscroll-contain p-3">
+    <div ref={bodyRef} className="station-summary-body min-h-0 max-h-[min(65dvh,560px)] overflow-y-auto overscroll-contain p-3">
       <div className="mb-2 grid grid-cols-1 min-[360px]:grid-cols-2 gap-2">
         <button type="button" onClick={() => setSelectedCategory('all')} className="flex items-center gap-2 rounded-lg bg-rose-50 px-2.5 py-2 text-left text-red-600">
           <Siren size={25} className="shrink-0" /><span className="min-w-0 flex-1"><strong className="block text-xl leading-tight">{loading ? '…' : reportError ? '—' : activeReports.length}</strong><span className="block text-[11px]">{reportError ? 'Reports unavailable' : 'Active reports'}</span></span><ChevronRight size={16} />
         </button>
         <button type="button" onClick={onViewReviews} className="flex items-center gap-2 rounded-lg bg-slate-50 px-2.5 py-2 text-left">
-          <Star size={27} className="shrink-0 fill-amber-400 text-amber-400" /><span className="min-w-0 flex-1"><strong className="block text-xl leading-tight">{scoreError ? '—' : scoreLabel}{score?.overallScore != null && <span className="text-sm font-normal">/5</span>}</strong><span className="block text-[11px] text-slate-500">{scoreError ? 'Reviews unavailable' : score == null ? 'Loading reviews…' : `(${score.ratingCount} reviews)`}</span></span><ChevronRight size={16} />
+          <Star size={27} className="shrink-0 fill-amber-400 text-amber-400" /><span className="min-w-0 flex-1"><strong className={`block leading-tight ${score?.overallScore == null ? 'text-sm' : 'text-xl'}`}>{scoreError ? '—' : scoreLabel}{score?.overallScore != null && <span className="text-sm font-normal">/5</span>}</strong><span className="block text-[11px] text-slate-500">{scoreError ? 'Reviews unavailable' : 'Station reviews'}</span></span><ChevronRight size={16} />
         </button>
       </div>
       <div className="mb-2 grid grid-cols-[repeat(auto-fit,minmax(4.5rem,1fr))] gap-1.5">
@@ -83,18 +92,17 @@ export default function StationReportSummary({ station, onReportIssue, onRate, o
         </button>)}
       </div>
       <div className="mb-3 grid grid-cols-1 min-[400px]:grid-cols-2 gap-2">
-        <button type="button" onClick={() => onReportIssue(station)} className={`${actionClass} w-full bg-yellow-400 hover:bg-yellow-300`}><TriangleAlert size={20} /><span className="min-w-0 flex-1 whitespace-normal break-words text-center leading-snug">Seen Something?</span><ChevronRight size={16} /></button>
-        <button type="button" onClick={() => setSelectedCategory('all')} className={`${actionClass} border border-slate-300 hover:bg-slate-50`}><MessageCircle size={20} />View reports<ChevronRight size={16} className="ml-auto" /></button>
+        <button type="button" onClick={() => onReportIssue(station)} className={`${actionClass} w-full bg-yellow-400 hover:bg-yellow-300 max-sm:gap-1`}><TriangleAlert size={20} className="max-sm:size-4" /><span className="min-w-0 flex-1 whitespace-nowrap text-center text-xs leading-snug sm:text-sm">{hasOwnReport ? 'Report new issue' : 'Seen Something?'}</span><ChevronRight size={16} className="max-sm:size-3" /></button>
+        <button type="button" onClick={() => setSelectedCategory((current) => current ? null : 'all')} aria-expanded={Boolean(selectedCategory)} aria-controls="station-live-reports" className={`${actionClass} border border-slate-300 hover:bg-slate-50`}><MessageCircle size={20} />{selectedCategory ? 'Hide reports' : 'View reports'}<ChevronDown size={16} className={`ml-auto transition-transform ${selectedCategory ? 'rotate-180' : ''}`} /></button>
       </div>
-      {selectedCategory && <section className="mb-3 rounded-lg border border-slate-200 bg-slate-50 p-3" aria-label="Live station reports">
-        <p className="!mb-2 text-[11px] text-slate-500">Reports from the last 24 hours. Confirm only issues you have seen.</p>
+      {selectedCategory && <section id="station-live-reports" className="mb-3 rounded-lg border border-slate-200 bg-slate-50 p-3" aria-label="Live station reports">
         <div className="mb-2 flex items-center justify-between gap-2"><h4 className="text-xs font-bold">{selectedCategory === 'all' ? 'Live station' : stationReportCategories.find((cat) => cat.key === selectedCategory)?.label} reports</h4><button type="button" onClick={() => setSelectedCategory(null)} aria-label="Close reports" className="rounded p-1 hover:bg-slate-200"><X size={16} /></button></div>
-        {loading ? <p role="status" className="text-xs text-slate-500">Loading reports…</p> : reportError ? <div role="alert" className="text-xs text-slate-600">Reports could not be loaded. <button type="button" onClick={() => setRevision((n) => n + 1)} className="font-bold text-blue-700">Try again</button></div> : selectedReports.length === 0 ? <p className="text-xs text-slate-500">No active reports in the last 24 hours.</p> : <div className="max-h-40 space-y-2 overflow-y-auto">{selectedReports.map((report) => <StationReportCard key={report.id} report={report} />)}</div>}
+        {loading ? <p role="status" className="!my-1 text-xs text-slate-500">Loading reports…</p> : reportError ? <div role="alert" className="text-xs text-slate-600">Reports could not be loaded. <button type="button" onClick={() => setRevision((n) => n + 1)} className="font-bold text-blue-700">Try again</button></div> : selectedReports.length === 0 ? <p className="!my-1 text-xs text-slate-500">{selectedCategory === 'all' ? 'No active reports in the last 24 hours.' : 'No active reports for this category in the last 24 hours.'}</p> : <><p className="!my-1 text-[11px] text-slate-500">Last 24 hours · Confirm only issues you have seen.</p><div className="space-y-2">{selectedReports.map((report) => <StationReportCard key={report.id} report={report} />)}</div></>}
       </section>}
       <h4 className="mb-1 text-xs font-bold">Station reviews</h4>
-      <p className="!my-1 text-[11px] text-slate-500">Passenger ratings and experiences. For current issues, use View reports above.</p>
+      <p className="!my-1 text-[11px] text-slate-500">Passenger ratings and experiences.</p>
       {scoreError ? <p role="alert" className="!my-2 text-xs text-slate-500">Reviews could not be loaded. <button type="button" onClick={() => setRevision((n) => n + 1)} className="font-semibold text-blue-700">Try again</button></p> : <div className="mb-3 grid grid-cols-1 gap-3">
-        <div className="border-b border-slate-200 pb-2"><div className="text-3xl font-bold leading-tight">{scoreLabel}{score?.overallScore != null && <span className="text-lg font-normal">/5</span>}</div><RatingStars value={score?.overallScore} size={22} /><p className="!my-1 text-xs leading-snug text-slate-500">{score == null ? 'Loading reviews…' : score.ratingCount ? `Based on ${score.ratingCount} passenger reviews` : 'Be the first to review this station'}</p></div>
+        <div className="border-b border-slate-200 pb-2"><div className={`${score?.overallScore == null ? 'text-base' : 'text-3xl'} font-bold leading-tight`}>{scoreLabel}{score?.overallScore != null && <span className="text-lg font-normal">/5</span>}</div><RatingStars value={score?.overallScore} size={22} /><p className="!my-1 text-xs leading-snug text-slate-500">{score == null ? 'Loading reviews…' : score.ratingCount ? `Based on ${score.ratingCount} passenger reviews` : 'Be the first to review this station'}</p></div>
         <div className="min-w-0 space-y-2">{ratingCategories.map((cat) => { const value = score?.categoryScores?.[cat.key]; return <div key={cat.key} className="flex items-center justify-between gap-2 text-xs"><span className="min-w-0 flex-1 break-words">{cat.label}</span><RatingStars value={value} size={14} /><span className="w-5 shrink-0 text-right tabular-nums">{value == null ? '—' : Number(value).toFixed(1)}</span></div> })}</div>
       </div>}
       <div className="grid grid-cols-1 min-[400px]:grid-cols-2 gap-2"><button type="button" onClick={onViewReviews} className={`${actionClass} border border-slate-300 hover:bg-slate-50`}><MessageCircle size={20} />Read station reviews<ChevronRight size={16} className="ml-auto" /></button><button type="button" onClick={onRate} className={`${actionClass} bg-yellow-400 hover:bg-yellow-300`}><Star size={20} />Write a review<ChevronRight size={16} className="ml-auto" /></button></div>

@@ -1,7 +1,7 @@
 ﻿import { ArrowRight, Bell, CalendarDays, ChartNoAxesColumnIncreasing, Heart, MessageSquare, Route, ShieldCheck, Users } from 'lucide-react'
 import platformImage from '../assets/Cinematic Commuter Train Platform-1.png'
 import flavioImage from '../assets/Friendly Cybernetic Portrait with Smartphone-2.png'
-import phoneImage from '../assets/Avviso Travel Companion App Mockup-3.png'
+import phoneImage from '../assets/Avviso Transit Alerts iPhone Mockup.png'
 import trainImage from '../assets/Modern Red-and-White Commuter Train-4.png'
 import avvisoLogo from '../assets/avviso-logo-transparent.png'
 import { useState } from 'react'
@@ -47,7 +47,7 @@ export default function FeatureCards() {
 
         <div className="flavio-art">
           <img src={flavioImage} alt="Flavio, your friendly AI travel companion, holding a smartphone" className="flavio-portrait" loading="lazy" />
-          <img src={phoneImage} alt="Preview of the Avviso travel companion app" className="flavio-phone" loading="lazy" />
+          <img src={phoneImage} alt="Preview of Avviso transit alerts on iPhone" className="flavio-phone" loading="lazy" />
         </div>
 
         <div className="flavio-benefits" aria-label="Coming soon with Flavio">

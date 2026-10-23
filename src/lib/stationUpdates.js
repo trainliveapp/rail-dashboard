@@ -1,4 +1,5 @@
 import { supabase, isSupabaseConfigured } from './supabaseClient'
+import { getReportInteraction, rememberReportInteraction } from './reportInteractions'
 
 export const UPDATE_VISIBILITY_WINDOW_MS = 24 * 60 * 60 * 1000
 
@@ -28,6 +29,7 @@ function minutesAgo(isoString) {
 function mapRow(row) {
   return {
     id: row.id,
+    authorId: row.author_id,
     stationName: row.station_name,
     kind: row.kind,
     category: row.category,
@@ -131,6 +133,7 @@ export async function postReport({ stationName, locationText, category, label, t
     throw error
   }
   const report = mapRow(data)
+  rememberReportInteraction(report.id, 'submitted', user?.id)
   window.dispatchEvent(new CustomEvent('station-report-saved', { detail: report }))
   return report
 }
@@ -157,6 +160,14 @@ export async function postChatMessage({ stationName, message }) {
 
 // The tap-to-confirm ("confirmed by N riders") action on a report.
 export async function confirmUpdate(id) {
+  const { data: sessionData } = await supabase.auth.getSession()
+  const userId = sessionData.session?.user?.id
+  const { data: existing, error: lookupError } = await supabase.from('station_updates').select('*').eq('id', id).single()
+  if (lookupError) throw lookupError
+  const current = mapRow(existing)
+  const interaction = getReportInteraction(current, userId)
+  if (interaction.isOwn) throw new Error('Other passengers can confirm your report. You cannot confirm it yourself.')
+  if (interaction.hasConfirmed) return current
   let visitorId = null
   if (typeof window !== 'undefined') {
     visitorId = window.localStorage.getItem('rail-dashboard-visitor-id')
@@ -171,6 +182,7 @@ export async function confirmUpdate(id) {
     visitor_id: visitorId,
   })
   if (error) throw error
+  rememberReportInteraction(id, 'confirmed', userId)
   const { data: updated, error: refreshError } = await supabase.from('station_updates').select('*').eq('id', id).single()
   if (refreshError) throw refreshError
   const report = mapRow(updated)

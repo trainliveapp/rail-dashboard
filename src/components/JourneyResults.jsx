@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import { ArrowLeft, Clock, ArrowRightLeft, Footprints, Flag, MapPin, ChevronDown, ThumbsUp } from 'lucide-react'
 import { getStationUpdates, subscribeToStationUpdates, confirmUpdate } from '../lib/stationUpdates'
+import { useAuth } from '../lib/AuthContext'
+import { getReportInteraction } from '../lib/reportInteractions'
 
 const tagStyles = {
   amber: { bg: '#fefce8', text: '#a16207', border: '#fde047' },
@@ -81,6 +83,8 @@ function LiveUpdates({ updates }) {
 }
 
 function AlertBanner({ report, onConfirm, confirming }) {
+  const { user } = useAuth()
+  const { isOwn, hasConfirmed } = getReportInteraction(report, user?.id)
   const tone = tagStyles[report.tone] || tagStyles.amber
   return (
     <div className="bg-white border rounded-2xl px-4 py-3 mb-3" style={{ borderColor: tone.border }}>
@@ -96,14 +100,14 @@ function AlertBanner({ report, onConfirm, confirming }) {
       <p className="text-sm text-slate-700 mb-1.5">{report.description}</p>
       <div className="flex items-center justify-between">
         <span className="text-xs text-slate-400">{report.minutesAgo}m ago</span>
-        <button
+        {isOwn ? <span className="text-xs text-blue-700">Your report · {report.confirms || 0} confirmations</span> : <button
           type="button"
           onClick={() => onConfirm(report.id)}
-          disabled={confirming}
+          disabled={confirming || hasConfirmed}
           className="flex items-center gap-1 text-xs text-slate-500 hover:text-brand-ink disabled:opacity-50"
         >
-          <ThumbsUp size={11} /> I saw this too ({report.confirms || 0})
-        </button>
+          <ThumbsUp size={11} /> {hasConfirmed ? 'You confirmed this' : 'I saw this too'} ({report.confirms || 0})
+        </button>}
       </div>
     </div>
   )

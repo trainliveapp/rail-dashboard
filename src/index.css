@@ -309,6 +309,22 @@ button:disabled,
   display: none !important; /* Removes the tooltip arrow */
 }
 
+:where(.station-summary) {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - 10rem);
+}
+
+.station-summary-body {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.station-summary-body::-webkit-scrollbar { width: 6px; }
+.station-summary-body::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+.station-summary-body::-webkit-scrollbar-track { background: transparent; }
+.station-summary-body::-webkit-scrollbar-button { display: none; }
+
 .station-popup .leaflet-popup-close-button {
   top: 10px !important;
   right: 10px !important;
