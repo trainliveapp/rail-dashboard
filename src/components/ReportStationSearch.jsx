@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { ChevronDown, X } from 'lucide-react'
-import { siNationalrail } from 'simple-icons'
+import { ChevronDown, MapPin, X } from 'lucide-react'
 import { findReportStations, resolveReportStation } from '../lib/reportStations'
 
 export default function ReportStationSearch({ value, onChange, id = 'report-station', label = 'Search Station', findStations = findReportStations, resolveStation = resolveReportStation }) {
@@ -50,8 +49,8 @@ export default function ReportStationSearch({ value, onChange, id = 'report-stat
       if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false)
     }}>
       <label htmlFor={id} className="text-sm font-semibold text-slate-800 mb-2 block">{label}</label>
-      <div className="rounded-2xl bg-[#b2b9d1] p-3">
-      <div className="flex items-center gap-1 rounded-md border border-[#9299ac] bg-white py-1.5 pl-3 pr-1.5 focus-within:border-blue-600 focus-within:ring-1 focus-within:ring-blue-600">
+      <div className="rounded-2xl bg-blue-50 p-3">
+      <div className="flex items-center gap-1 rounded-md border border-blue-200 bg-white py-1.5 pl-3 pr-1.5 focus-within:border-brand-blue focus-within:ring-1 focus-within:ring-brand-blue">
         <div className="min-w-0 flex-1">
         <span className="block text-xs leading-4 text-slate-700">Enter station name</span>
         <input
@@ -89,7 +88,7 @@ export default function ReportStationSearch({ value, onChange, id = 'report-stat
               inputRef.current?.focus()
               setOpen(true)
             }}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded text-[#332879] hover:bg-slate-100"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded text-brand-blue hover:bg-blue-50"
           >
             <X size={20} strokeWidth={1.5} />
           </button>
@@ -106,7 +105,7 @@ export default function ReportStationSearch({ value, onChange, id = 'report-stat
             setActiveIndex(-1)
             setOpen(nextOpen)
           }}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded text-[#332879] hover:bg-slate-100"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded text-brand-blue hover:bg-blue-50"
         >
           <ChevronDown size={18} className={open ? 'rotate-180' : ''} />
         </button>
@@ -130,11 +129,9 @@ export default function ReportStationSearch({ value, onChange, id = 'report-stat
                 aria-selected={selected?.name === station.name}
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => choose(station)}
-                className={`flex min-h-11 cursor-pointer items-center gap-2 border-b border-slate-200 px-3 py-2.5 text-[13px] leading-5 text-slate-900 last:border-b-0 hover:bg-[#ffc542] hover:shadow-[inset_0_0_0_2px_#1688ff] ${activeIndex === index || selected?.name === station.name ? 'bg-[#ffc542] shadow-[inset_0_0_0_2px_#1688ff]' : ''}`}
+                className={`flex min-h-11 cursor-pointer items-center gap-2 border-b border-slate-200 px-3 py-2.5 text-[13px] leading-5 text-slate-900 last:border-b-0 hover:bg-blue-50 hover:inset-ring-2 hover:inset-ring-brand-blue ${activeIndex === index || selected?.name === station.name ? 'bg-blue-50 inset-ring-2 inset-ring-brand-blue' : ''}`}
               >
-                <svg viewBox="0 0 24 24" className="h-5 w-6 shrink-0 fill-[#ed1736]" aria-hidden="true">
-                  <path d={siNationalrail.path} />
-                </svg>
+                <MapPin className="h-5 w-6 shrink-0 text-brand-blue" aria-hidden="true" />
                 <span className="min-w-0 break-words">
                   {matchStart >= 0 && matchLength > 0 ? <>
                     {station.name.slice(0, matchStart)}

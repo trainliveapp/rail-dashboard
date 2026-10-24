@@ -113,9 +113,9 @@ export default function ReportIssueModal({ initialStation = null, onClose, onRep
                   setError('')
                 }}
                 aria-pressed={active}
-                className={`flex flex-col items-center justify-center text-center gap-2 rounded-xl border px-3 py-4 text-sm font-medium ${active ? 'border-brand-amber bg-amber-50 text-brand-ink' : 'border-brand-line bg-white text-brand-slate'}`}
+                className={`flex flex-col items-center justify-center text-center gap-2 rounded-xl border px-3 py-4 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue ${active ? 'border-brand-blue bg-blue-50 text-brand-blue' : 'border-brand-line bg-white text-brand-slate hover:border-brand-blue hover:bg-blue-50'}`}
               >
-                <Icon size={20} className="text-amber-700" />
+                <Icon size={20} className="text-brand-blue" />
                 {cat.label}
               </button>
             )
@@ -127,14 +127,16 @@ export default function ReportIssueModal({ initialStation = null, onClose, onRep
           <button
             type="button"
             onClick={() => setWhere('train')}
-            className={`flex items-center justify-center gap-2 rounded-full border px-4 py-3 text-sm font-medium ${where === 'train' ? 'border-brand-amber bg-amber-50 text-brand-ink' : 'border-brand-line bg-white text-brand-slate'}`}
+            aria-pressed={where === 'train'}
+            className={`flex items-center justify-center gap-2 rounded-full border px-4 py-3 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue ${where === 'train' ? 'border-brand-blue bg-blue-50 text-brand-blue' : 'border-brand-line bg-white text-brand-slate hover:border-brand-blue hover:bg-blue-50'}`}
           >
             <TrainIcon size={16} /> On Train
           </button>
           <button
             type="button"
             onClick={() => setWhere('station')}
-            className={`flex items-center justify-center gap-2 rounded-full border px-4 py-3 text-sm font-medium ${where === 'station' ? 'border-brand-amber bg-amber-50 text-brand-ink' : 'border-brand-line bg-white text-brand-slate'}`}
+            aria-pressed={where === 'station'}
+            className={`flex items-center justify-center gap-2 rounded-full border px-4 py-3 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue ${where === 'station' ? 'border-brand-blue bg-blue-50 text-brand-blue' : 'border-brand-line bg-white text-brand-slate hover:border-brand-blue hover:bg-blue-50'}`}
           >
             <MapPin size={16} /> At Station
           </button>
@@ -149,7 +151,7 @@ export default function ReportIssueModal({ initialStation = null, onClose, onRep
         <button
           type="submit"
           disabled={submitting}
-          className="w-full bg-brand-primary hover:bg-brand-primary-dark disabled:bg-slate-300 disabled:text-slate-500 transition-colors text-white font-medium py-3.5 rounded-full flex items-center justify-center gap-2"
+          className="w-full bg-brand-blue hover:bg-brand-secondary-light focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue disabled:bg-slate-300 disabled:text-slate-500 transition-colors text-white font-medium py-3.5 rounded-full flex items-center justify-center gap-2"
         >
           {submitting ? 'Submitting…' : 'Submit report'} {!submitting && <ArrowRight size={16} />}
         </button>
