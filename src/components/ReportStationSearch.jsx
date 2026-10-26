@@ -74,7 +74,7 @@ export default function ReportStationSearch({ value, onChange, id = 'report-stat
           placeholder="Search station name or code"
           required
           autoComplete="off"
-          className="block w-full min-w-0 bg-transparent text-base leading-6 text-slate-900 outline-none placeholder:text-slate-400"
+          className="block w-full min-w-0 bg-transparent text-base leading-6 text-blue-700 outline-none placeholder:text-blue-700"
         />
         </div>
         {value && (

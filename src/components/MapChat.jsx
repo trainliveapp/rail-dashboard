@@ -1865,19 +1865,9 @@ export default function MapChat() {
         sm:left-5 sm:right-auto sm:bottom-5 sm:w-[400px] sm:h-[min(680px,calc(100dvh-40px))]"
       style={{ isolation: "isolate" }}
     >
-      <div className="chat-panel-header relative z-30 flex h-[72px] shrink-0 items-center justify-between border-b border-yellow-500 bg-yellow-400 px-4 text-brand-ink shadow-sm">
+      <div className="chat-panel-header relative z-30 flex h-[52px] shrink-0 items-center justify-between border-b border-yellow-500 bg-yellow-400 px-3 text-brand-ink shadow-sm">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="relative flex h-11 w-11 shrink-0 items-center justify-center">
-            {/* Pulsing rings */}
-            <span className="absolute inset-0 rounded-full bg-yellow-500/35 animate-ping" />
-
-            <span className="absolute inset-[-3px] rounded-full  animate-pulse" />
-
-            {/* Chatter button */}
-            <div className="relative z-10 flex h-11 w-11 items-center justify-center rounded-full bg-yellow-400 text-[11px] font-black text-brand-ink shadow-sm">
-              chatter
-            </div>
-          </div>
+          <span className="text-sm font-black text-brand-ink">chatter</span>
         </div>
         <button
           type="button"
@@ -1939,10 +1929,10 @@ export default function MapChat() {
             const saved = savedMessages.includes(message.id);
 
             return (
-              <div key={message.id || index} className="mb-3 flex w-full justify-start">
+              <div key={message.id || index} className="mb-2 flex w-full justify-start">
                 <div className="group relative min-w-0 w-full max-w-[94%]">
-                  <div className="relative rounded-[14px] rounded-tl-[4px] bg-white px-3 py-2 text-slate-800 shadow-[0_1px_1px_rgba(0,0,0,0.08)]">
-                    <p className="mb-1 text-[11px] font-bold text-slate-700">
+                  <div className="relative rounded-2xl rounded-tl-[4px] bg-white px-2.5 py-1.5 text-slate-800 shadow-[0_1px_1px_rgba(0,0,0,0.08)]">
+                    <p className="mb-0.5 text-[11px] font-bold text-slate-700">
                       {message.username || "TrainLive User"}
                     </p>
 
@@ -1979,41 +1969,41 @@ export default function MapChat() {
                       {formatMessageTime(message.created_at)}
                     </div>
 
-                    <div className="mt-2 flex items-center justify-between border-t border-slate-100 pt-1.5" role="group" aria-label="Message actions">
+                    <div className="mt-1 flex items-center justify-between gap-1 border-t border-slate-100 pt-0.5" role="group" aria-label="Message actions">
                       <button
                         type="button"
                         onClick={() => toggleReaction(message.id, liked ? reactionState.myReaction : HEART_REACTION)}
                         aria-label={liked ? "Unlike message" : "Like message"}
                         aria-pressed={liked}
-                        className="flex min-h-11 items-center gap-2 rounded-lg px-2 text-rose-500 transition hover:bg-rose-50 focus-visible:ring-2 focus-visible:ring-rose-300"
+                        className={`flex min-h-8 shrink-0 items-center gap-1 rounded-lg px-1.5 transition hover:bg-rose-50 focus-visible:ring-2 focus-visible:ring-rose-300 ${liked ? 'text-red-500' : 'text-slate-600'}`}
                       >
-                        <Heart size={22} fill="currentColor" strokeWidth={1.8} />
+                        <Heart size={18} fill={liked ? 'currentColor' : 'white'} strokeWidth={1.8} />
                         <span className="text-xs text-slate-500">{heartCount}</span>
                       </button>
                       <button
                         type="button"
                         onClick={() => commentOnMessage(message)}
                         aria-label="Comment on message"
-                        className="flex h-11 w-11 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-300"
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-300"
                       >
-                        <MessageCircle size={22} strokeWidth={1.8} />
+                        <MessageCircle size={18} strokeWidth={1.8} />
                       </button>
                       <button
                         type="button"
                         onClick={() => toggleSavedMessage(message.id)}
                         aria-label={saved ? "Remove bookmark" : "Bookmark message on this device"}
                         aria-pressed={saved}
-                        className="flex h-11 w-11 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-300"
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-300"
                       >
-                        <Bookmark size={22} strokeWidth={1.8} fill={saved ? "currentColor" : "none"} />
+                        <Bookmark size={18} strokeWidth={1.8} fill={saved ? "currentColor" : "none"} />
                       </button>
                       <button
                         type="button"
                         onClick={() => shareMessage(message)}
                         aria-label="Share message"
-                        className="flex h-11 w-11 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-300"
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-300"
                       >
-                        <Share2 size={22} strokeWidth={1.8} />
+                        <Share2 size={18} strokeWidth={1.8} />
                       </button>
                     </div>
                   </div>

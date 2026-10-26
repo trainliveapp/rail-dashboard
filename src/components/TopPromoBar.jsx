@@ -1,7 +1,6 @@
 import { AlertTriangle, Megaphone, Users, Wrench, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabase'
-import TrainSearch from './TrainSearch'
 
 const feedIcons = { AlertTriangle, Users, Wrench, Megaphone }
 
@@ -158,10 +157,6 @@ export default function TopPromoBar() {
             <span className="shrink-0 font-semibold">Live travel updates from the community</span>
           )}
         </div>
-      </div>
-
-      <div className="flex items-center gap-3 shrink-0 pr-4">
-        <TrainSearch />
       </div>
 
       {trendingOpen && (
