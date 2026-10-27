@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { ChevronDown, ChevronRight, MessageCircle, Siren, Star, TriangleAlert, X } from 'lucide-react'
-import StationReportIcon from './StationReportIcon'
+import ReportCategoryImage from './ReportCategoryImage'
 import StationReportCard from './StationReportCard'
 import { stationReportCategories, lines } from '../data/mockData'
 import { getStationUpdates, subscribeToStationUpdates, UPDATE_VISIBILITY_WINDOW_MS } from '../lib/stationUpdates'
@@ -93,10 +93,10 @@ export default function StationReportSummary({ station, onReportIssue, onRate, o
           <Star size={27} className="shrink-0 fill-amber-400 text-amber-400" /><span className="min-w-0 flex-1"><strong className={`block leading-tight ${score?.overallScore == null ? 'text-sm' : 'text-xl'}`}>{scoreError ? '—' : scoreLabel}{score?.overallScore != null && <span className="text-sm font-normal">/5</span>}</strong><span className="block text-[11px] text-slate-500">{scoreError ? 'Reviews unavailable' : 'Station reviews'}</span></span><ChevronRight size={16} />
         </button>
       </div>
-      <div className="mb-2 grid grid-cols-[repeat(auto-fit,minmax(4.5rem,1fr))] gap-1.5">
-        {stationReportCategories.map((cat) => <button type="button" key={cat.key} onClick={() => setSelectedCategory(cat.key)} aria-expanded={selectedCategory === cat.key} aria-label={`${cat.label}: ${counts[cat.key]} active reports`} className={`flex min-w-0 flex-col items-center rounded-lg px-0.5 py-2 text-center transition-colors hover:bg-blue-100 ${selectedCategory === cat.key ? 'bg-blue-100 ring-1 ring-blue-500' : 'bg-slate-50'}`}>
-          <StationReportIcon category={cat.key} size={19} className={['revenue', 'fare_dodgers'].includes(cat.key) ? 'text-amber-500' : cat.key === 'antisocial' ? 'text-red-500' : 'text-teal-600'} />
-          <span className="mt-1 flex min-h-11 items-center break-words text-xs leading-tight">{cat.label}</span><strong className={`text-sm ${counts[cat.key] > 0 ? 'text-red-600' : 'text-slate-500'}`}>{loading || reportError ? '—' : counts[cat.key]}</strong>
+      <div className="mb-2 grid grid-cols-2 sm:grid-cols-3 gap-3">
+        {stationReportCategories.map((cat) => <button type="button" key={cat.key} onClick={() => setSelectedCategory(cat.key)} aria-expanded={selectedCategory === cat.key} aria-label={`${cat.label}: ${counts[cat.key]} active reports`} className={`flex min-w-0 flex-col items-center justify-center gap-2 rounded-xl border px-3 py-4 text-center text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue ${selectedCategory === cat.key ? 'border-brand-blue bg-blue-50 text-brand-blue' : 'border-brand-line bg-white text-brand-slate hover:border-brand-blue hover:bg-blue-50'}`}>
+          <ReportCategoryImage category={cat.key} className="h-16 w-16 sm:h-20 sm:w-20" />
+          <span className="flex min-h-10 items-center break-words leading-tight">{cat.label}</span><strong className={`text-sm ${counts[cat.key] > 0 ? 'text-red-600' : 'text-slate-500'}`}>{loading || reportError ? '—' : counts[cat.key]}</strong>
         </button>)}
       </div>
       <div className="mb-3 grid grid-cols-1 min-[400px]:grid-cols-2 gap-2">

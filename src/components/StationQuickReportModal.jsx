@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { Info, MapPin, Check, Loader2 } from 'lucide-react'
-import StationReportIcon from './StationReportIcon'
 import ReportCategoryImage from './ReportCategoryImage'
 import { stationReportCategories } from '../data/mockData'
 import { getStationUpdates, postReport } from '../lib/stationUpdates'
@@ -52,7 +51,7 @@ export default function StationQuickReportModal({ station, onClose, onReportSubm
 
   return (
     <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-900/40">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-[420px] max-h-[calc(100dvh-2rem)] overflow-y-auto p-4 sm:p-6">
+      <div className="bg-slate-50 rounded-3xl shadow-2xl w-full max-w-[620px] max-h-[calc(100dvh-2rem)] overflow-y-auto p-4 sm:p-8">
         <div className="flex items-start gap-3 mb-4">
           <div className="w-10 h-10 rounded-xl bg-brand-secondary flex items-center justify-center shrink-0">
             <Info size={18} className="text-white" />
@@ -62,7 +61,7 @@ export default function StationQuickReportModal({ station, onClose, onReportSubm
             <p className="text-sm text-slate-400 flex items-center gap-1">
               {selected ? (
                 <>
-                  <StationReportIcon category={selected.key} size={14} className="text-blue-700 shrink-0" /> {selected.label} selected
+                  <ReportCategoryImage category={selected.key} className="h-5 w-5" /> {selected.label} selected
                 </>
               ) : (
                 'Select a category below'
@@ -76,7 +75,7 @@ export default function StationQuickReportModal({ station, onClose, onReportSubm
           {station.name}
         </div>
 
-        <div className="space-y-2.5 mb-5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
           {stationReportCategories.map((cat) => {
             const isSelected = selected?.key === cat.key
             return (
@@ -85,18 +84,13 @@ export default function StationQuickReportModal({ station, onClose, onReportSubm
                 disabled={submitting}
                 key={cat.key}
                 onClick={() => setSelected(cat)}
-                className={`w-full flex items-center justify-between gap-3 rounded-2xl border-2 px-4 py-3 text-left transition-colors ${isSelected ? 'border-blue-600 bg-blue-50' : 'border-blue-100 bg-white'}`}
+                aria-pressed={isSelected}
+                className={`relative flex min-w-0 flex-col items-center justify-center gap-2 rounded-xl border px-3 py-4 text-center text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue ${isSelected ? 'border-brand-blue bg-blue-50 text-brand-blue' : 'border-brand-line bg-white text-brand-slate hover:border-brand-blue hover:bg-blue-50'}`}
               >
-                <span className="flex items-center gap-3">
-                  <ReportCategoryImage category={cat.key} className="h-14 w-14" />
-                  <span>
-                    <span className={`block text-sm font-semibold ${isSelected ? 'text-blue-700' : 'text-slate-800'}`}>{cat.label}</span>
-                    <span className="block text-xs text-slate-400">{counts[cat.key] ?? 0} reported</span>
-                  </span>
-                </span>
-                <span className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${isSelected ? 'bg-blue-600' : 'border-2 border-blue-200'}`}>
-                  {isSelected && <Check size={14} className="text-white" strokeWidth={3} />}
-                </span>
+                <ReportCategoryImage category={cat.key} className="h-16 w-16 sm:h-20 sm:w-20" />
+                <span className="flex min-h-10 items-center break-words leading-tight">{cat.label}</span>
+                <span className="text-xs text-slate-400">{counts[cat.key] ?? 0} reported</span>
+                {isSelected && <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-brand-blue"><Check size={12} className="text-white" strokeWidth={3} /></span>}
               </button>
             )
           })}
