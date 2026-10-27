@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Info, MapPin, Check, Loader2 } from 'lucide-react'
 import StationReportIcon from './StationReportIcon'
+import ReportCategoryImage from './ReportCategoryImage'
 import { stationReportCategories } from '../data/mockData'
 import { getStationUpdates, postReport } from '../lib/stationUpdates'
 
@@ -87,7 +88,7 @@ export default function StationQuickReportModal({ station, onClose, onReportSubm
                 className={`w-full flex items-center justify-between gap-3 rounded-2xl border-2 px-4 py-3 text-left transition-colors ${isSelected ? 'border-blue-600 bg-blue-50' : 'border-blue-100 bg-white'}`}
               >
                 <span className="flex items-center gap-3">
-                  <span className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center text-blue-700 shrink-0"><StationReportIcon category={cat.key} /></span>
+                  <ReportCategoryImage category={cat.key} className="h-14 w-14" />
                   <span>
                     <span className={`block text-sm font-semibold ${isSelected ? 'text-blue-700' : 'text-slate-800'}`}>{cat.label}</span>
                     <span className="block text-xs text-slate-400">{counts[cat.key] ?? 0} reported</span>

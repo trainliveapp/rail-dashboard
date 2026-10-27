@@ -1,17 +1,15 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import {
-  X, Clock3, Ban, Construction, Users, Ticket, Accessibility, Sparkles,
-  ShieldAlert, ShieldCheck, Megaphone, CloudRain, CircleHelp,
+  X,
   TrainFront as TrainIcon, MapPin, ArrowRight, GripHorizontal,
 } from 'lucide-react'
 import { reportCategories } from '../data/mockData'
 import { postReport } from '../lib/stationUpdates'
 import { resolveReportStation } from '../lib/reportStations'
 import ReportStationSearch from './ReportStationSearch'
+import ReportCategoryImage from './ReportCategoryImage'
 import useDraggablePanel from '../lib/useDraggablePanel'
-
-const icons = { Clock3, Ban, Construction, Users, Ticket, Accessibility, Sparkles, ShieldAlert, ShieldCheck, Megaphone, CloudRain, CircleHelp }
 
 // Category -> badge styling shown on the report in JourneyResults. Most
 // categories are informational (blue), a few carry more weight and get the
@@ -102,7 +100,6 @@ export default function ReportIssueModal({ initialStation = null, onClose, onRep
 
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
           {reportCategories.map((cat) => {
-            const Icon = icons[cat.icon]
             const active = category === cat.key
             return (
               <button
@@ -115,7 +112,7 @@ export default function ReportIssueModal({ initialStation = null, onClose, onRep
                 aria-pressed={active}
                 className={`flex flex-col items-center justify-center text-center gap-2 rounded-xl border px-3 py-4 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue ${active ? 'border-brand-blue bg-blue-50 text-brand-blue' : 'border-brand-line bg-white text-brand-slate hover:border-brand-blue hover:bg-blue-50'}`}
               >
-                <Icon size={20} className="text-brand-blue" />
+                <ReportCategoryImage category={cat.key} className="h-16 w-16 sm:h-20 sm:w-20" />
                 {cat.label}
               </button>
             )
