@@ -1434,6 +1434,13 @@ import {
 import { supabase } from "../supabase";
 import { lineTextColors } from "./lineColors";
 import { getChatVisitorId } from "../lib/chatIdentity";
+import centralChatBackground from "../assets/centeral line.jpeg";
+import bakerlooChatBackground from "../assets/bakeralo.jpeg";
+
+const CHAT_LINE_BACKGROUNDS = {
+  central: centralChatBackground,
+  bakerloo: bakerlooChatBackground,
+};
 
 const CHAT_VISIBILITY_WINDOW_MS = 24 * 60 * 60 * 1000;
 const HEART_REACTION = "\u2764\ufe0f";
@@ -1910,7 +1917,14 @@ export default function MapChat() {
         </select>
       </div>
 
-      <div className="relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain bg-[#efeae2] px-3 py-4 [scrollbar-width:thin]">
+      <div
+        className="relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain bg-[#efeae2] bg-cover bg-center bg-no-repeat px-3 py-4 [scrollbar-width:thin]"
+        style={{
+          backgroundImage: CHAT_LINE_BACKGROUNDS[line]
+            ? `linear-gradient(rgba(239, 234, 226, 0.55), rgba(239, 234, 226, 0.55)), url("${CHAT_LINE_BACKGROUNDS[line]}")`
+            : "none",
+        }}
+      >
         {messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center px-8 text-center">
             <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm">

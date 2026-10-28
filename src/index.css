@@ -115,14 +115,13 @@ body {
 }
 
 @media (max-width: 639px) {
-  /* Stack ad copy and example updates so neither needs miniature text. */
+  /* Keep ad copy readable and hide example update boxes on mobile. */
   .ad-slot { height: auto; min-height: 300px; }
   .ad-content { height: auto; gap: 16px; padding-bottom: 52px; }
   .ad-copy { order: 2; max-width: 100%; padding-bottom: 0; }
   .ad-copy h2 { font-size: clamp(24px, 6vw, 32px); line-height: 1.15; }
   .ad-copy p { font-size: 14px; line-height: 1.5; }
-  .ad-updates { position: relative; inset: auto; order: 3; width: 100%; max-height: none; overflow: visible; }
-  .ad-updates p { font-size: 12px; line-height: 1.4; }
+  .ad-updates { display: none; }
 }
 
 .chatter-icon {

@@ -163,3 +163,5 @@ grant execute on function public.save_station_review(text, jsonb, text, uuid) to
 grant execute on function public.get_my_station_review(text, uuid) to anon, authenticated;
 notify pgrst, 'reload schema';
 commit;
+
+
