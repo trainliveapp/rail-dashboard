@@ -89,7 +89,7 @@ export default function AdSlot({ size = 'leaderboard', className = '' }) {
         <div className="relative aspect-[3.1] w-[clamp(150px,24vw,260px)] overflow-hidden">
           <img
             src={robotCameraLiveLogo}
-            alt="Robot Camera LIVE"
+            alt="Avviso Live"
             className="absolute left-0 top-0 w-full max-w-none -translate-x-[15%] -translate-y-[35%]"
           />
         </div>

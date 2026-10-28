@@ -3,7 +3,7 @@ import platformImage from '../assets/Cinematic Commuter Train Platform-1.png'
 import flavioImage from '../assets/Friendly Cybernetic Portrait with Smartphone-2.png'
 import phoneImage from '../assets/Avviso Transit Alerts iPhone Mockup.png'
 import trainImage from '../assets/Modern Red-and-White Commuter Train-4.png'
-import avvisoLogo from '../assets/avviso-logo-transparent.png'
+import BrandLogo from './BrandLogo'
 import { useState } from 'react'
 import './FeatureCards.css'
 
@@ -34,13 +34,13 @@ export default function FeatureCards() {
 
         <div className="flavio-copy">
           <div className="flavio-brand-row">
-            <img src={avvisoLogo} alt="Avviso Live" className="flavio-logo" loading="lazy" />
+            <BrandLogo className="flavio-logo" />
             <p className="flavio-handwritten flavio-brand-note">Built by commuters.<br />For commuters.</p>
           </div>
           <span className="flavio-coming-soon">Coming soon</span>
           <h2 id="flavio-heading"><span className="flavio-meet">Meet <strong>Flavio.</strong></span><span>Your personal</span><span>AI Travel Companion.</span></h2>
           <p className="flavio-description">Flavio learns from real passenger reports, predicts potential disruptions and helps you travel smarter, safer and more in control.</p>
-          <button type="button" className="flavio-support" onClick={() => setShowSupportMessage(true)}><Heart fill="currentColor" aria-hidden="true" /><span>Support Avviso</span><ArrowRight aria-hidden="true" /></button>
+          <button type="button" className="flavio-support" onClick={() => setShowSupportMessage(true)}><Heart fill="currentColor" aria-hidden="true" /><span>Support </span><ArrowRight aria-hidden="true" /></button>
           <p className="flavio-support-message" role="status">{showSupportMessage ? 'Support link coming soon.' : ''}</p>
           <p className="flavio-support-note">Your support helps keep Avviso free for everyone and makes new features like Flavio possible.</p>
         </div>

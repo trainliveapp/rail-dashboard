@@ -1,21 +1,19 @@
-import logo from '../assets/avviso-logo-transparent.png'
+import logo from '../../Avviso-1/PNG/Logo-PNG-transparent.png'
 
 export default function BrandLogo({ className = '', framed = false, iconOnly = false }) {
   if (iconOnly) {
     return (
       <span className={`relative inline-block overflow-hidden ${className}`}>
-        <img
-          src={logo}
-          alt="Avviso"
-          className="absolute left-0 top-0 h-[200%] max-w-none object-contain"
-        />
+        <svg role="img" aria-label="Avviso Live" viewBox="460 1050 850 900" className="h-full w-full">
+          <image href={logo} width="3000" height="3000" />
+        </svg>
       </span>
     )
   }
 
   return (
-    <span className={framed ? 'inline-flex rounded-xl bg-[#17233f] p-1.5' : ''}>
-      <img src={logo} alt="Avviso" className={`h-auto w-auto object-contain ${className}`} />
-    </span>
+      <svg role="img" aria-label="Avviso Live" viewBox="450 1040 2100 920" width="2100" height="920" className={`inline-block h-auto w-auto object-contain ${framed ? 'rounded-xl bg-[#17233f] p-1.5' : ''} ${className}`}>
+        <image href={logo} width="3000" height="3000" />
+      </svg>
   )
 }
