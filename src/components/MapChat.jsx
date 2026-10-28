@@ -1895,11 +1895,21 @@ export default function MapChat() {
         >
           Chat channel
         </label>
+        <div className="relative">
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 28 24"
+            className="pointer-events-none absolute left-3 top-1/2 h-6 w-7 -translate-y-1/2 text-white"
+            fill="none"
+          >
+            <circle cx="14" cy="12" r="9" stroke="currentColor" strokeWidth="3" />
+            <path d="M1 12h26" stroke="currentColor" strokeWidth="4" />
+          </svg>
         <select
           id="chat-line"
           value={line}
           onChange={(e) => setLine(e.target.value)}
-          className="h-11 w-full rounded-xl border-0 px-3.5 text-sm font-semibold capitalize text-white outline-none ring-0"
+          className="h-11 w-full rounded-xl border-0 pl-12 pr-3.5 text-sm font-semibold capitalize text-white outline-none ring-0"
           style={{ backgroundColor: CHAT_LINE_COLORS[line] || "#334155" }}
         >
           {TUBE_LINES.map((item) => (
@@ -1915,6 +1925,7 @@ export default function MapChat() {
             </option>
           ))}
         </select>
+        </div>
       </div>
 
       <div
