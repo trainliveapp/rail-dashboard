@@ -528,7 +528,6 @@ export default function MapPanel({
                   stationId={s.id}
                   stationName={s.name}
                   stationLines={s.lines}
-                  onReportIssue={(station) => setReportContext({ station })}
                   onGetDirections={onGetDirections}
                 />
               </Popup>
@@ -607,7 +606,7 @@ export default function MapPanel({
       )}
 
       <div className="map-controls absolute right-3 top-3 z-[1000] flex flex-col gap-1.5 sm:gap-2">
-        <button aria-label="Seen Something?" onClick={() => setReportContext({ station: null })} className="w-11 h-11 bg-brand-amber hover:bg-yellow-300 shadow-sm rounded-lg flex items-center justify-center text-brand-ink">
+        <button aria-label="Seen Something?" onClick={() => setReportContext({ station: null })} className="w-11 h-11 bg-yellow-400 hover:bg-yellow-300 shadow-sm rounded-lg flex items-center justify-center text-brand-ink">
           <Flag size={18} />
         </button>
         <button aria-label="Zoom in" onClick={() => mapRef.current?.zoomIn()} className="w-11 h-11 bg-white shadow-sm rounded-lg flex items-center justify-center text-slate-600 active:bg-slate-50">
@@ -633,7 +632,7 @@ export default function MapPanel({
             }
           }}
           className={`w-11 h-11 shadow-sm rounded-lg flex items-center justify-center active:bg-slate-50 ${
-            liveLocationEnabled ? 'bg-brand-amber text-brand-ink' : 'bg-white text-brand-ink'
+            liveLocationEnabled ? 'bg-yellow-400 text-brand-ink' : 'bg-white text-brand-ink'
           }`}
         >
           <LocateFixed size={15} />

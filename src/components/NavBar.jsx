@@ -34,7 +34,7 @@ export default function NavBar({ mapTheme = 'dark', onMapThemeChange = null }) {
               aria-pressed={mapTheme === 'light'}
               title="Light map"
               onClick={() => onMapThemeChange?.('light')}
-              className={`flex h-11 w-11 items-center justify-center rounded-md transition-colors ${mapTheme === 'light' ? 'bg-brand-primary text-white' : 'text-white/75 hover:bg-white/10 hover:text-white'}`}
+              className={`flex h-11 w-11 items-center justify-center rounded-md transition-colors ${mapTheme === 'light' ? 'bg-yellow-400 text-brand-ink' : 'text-white/75 hover:bg-white/10 hover:text-white'}`}
             >
               <Sun size={16} />
             </button>
@@ -44,7 +44,7 @@ export default function NavBar({ mapTheme = 'dark', onMapThemeChange = null }) {
               aria-pressed={mapTheme === 'dark'}
               title="Dark map"
               onClick={() => onMapThemeChange?.('dark')}
-              className={`flex h-11 w-11 items-center justify-center rounded-md transition-colors ${mapTheme === 'dark' ? 'bg-brand-primary text-white' : 'text-white/75 hover:bg-white/10 hover:text-white'}`}
+              className={`flex h-11 w-11 items-center justify-center rounded-md transition-colors ${mapTheme === 'dark' ? 'bg-yellow-400 text-brand-ink' : 'text-white/75 hover:bg-white/10 hover:text-white'}`}
             >
               <Moon size={16} />
             </button>

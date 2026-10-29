@@ -2,7 +2,7 @@
 import StationReportSummary from './StationReportSummary'
 import StationReviewDialog from './StationReviewDialog'
 
-export default function StationPopup({ stationId, stationName, stationLines, onReportIssue }) {
+export default function StationPopup({ stationId, stationName, stationLines }) {
   const [reviewView, setReviewView] = useState(null)
   const closeReviews = useCallback(() => setReviewView(null), [])
 
@@ -17,7 +17,6 @@ export default function StationPopup({ stationId, stationName, stationLines, onR
   >
     <StationReportSummary
       station={{ id: stationId, name: stationName, lines: stationLines }}
-      onReportIssue={onReportIssue}
       onRate={() => setReviewView('rating')}
       onViewReviews={() => setReviewView('reviews')}
       reviewView={reviewView}

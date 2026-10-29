@@ -1,12 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { ChevronDown, ChevronRight, MessageCircle, Siren, Star, TriangleAlert, X } from 'lucide-react'
+import { ChevronDown, ChevronRight, Loader2, MessageCircle, Siren, Star, X } from 'lucide-react'
 import ReportCategoryImage from './ReportCategoryImage'
 import StationReportCard from './StationReportCard'
 import { stationReportCategories, lines } from '../data/mockData'
-import { getStationUpdates, subscribeToStationUpdates, UPDATE_VISIBILITY_WINDOW_MS } from '../lib/stationUpdates'
+import { getStationUpdates, postReport, subscribeToStationUpdates, UPDATE_VISIBILITY_WINDOW_MS } from '../lib/stationUpdates'
 import { getStationScore, subscribeToStationReviews, ratingCategories } from '../lib/stationRatings'
-import { useAuth } from '../lib/AuthContext'
-import { getReportInteraction } from '../lib/reportInteractions'
 
 export function RatingStars({ value, size = 14 }) {
   return <span className="inline-flex shrink-0" aria-label={value == null ? 'Not rated' : `${Number(value).toFixed(1)} out of 5 stars`}>
@@ -17,8 +15,7 @@ export function RatingStars({ value, size = 14 }) {
   </span>
 }
 
-export default function StationReportSummary({ station, onReportIssue, onRate, onViewReviews, reviewView, reviewContent }) {
-  const { user } = useAuth()
+export default function StationReportSummary({ station, onRate, onViewReviews, reviewView, reviewContent }) {
   const [reports, setReports] = useState([])
   const [loading, setLoading] = useState(true)
   const [score, setScore] = useState(null)
@@ -26,6 +23,12 @@ export default function StationReportSummary({ station, onReportIssue, onRate, o
   const [reportError, setReportError] = useState(false)
   const [scoreError, setScoreError] = useState(false)
   const [revision, setRevision] = useState(0)
+  const [submittingCategory, setSubmittingCategory] = useState(null)
+  const [submitNotice, setSubmitNotice] = useState('')
+  const [submitError, setSubmitError] = useState('')
+  const submittingRef = useRef(false)
+  const currentStationRef = useRef(station.id)
+  currentStationRef.current = station.id
   const bodyRef = useRef(null)
   const reviewRef = useRef(null)
 
@@ -37,7 +40,36 @@ export default function StationReportSummary({ station, onReportIssue, onRate, o
 
   useEffect(() => {
     if (bodyRef.current) bodyRef.current.scrollTop = 0
+    setSubmitNotice('')
+    setSubmitError('')
   }, [station.id])
+
+  const reportIssue = async (category) => {
+    if (submittingRef.current) return
+    submittingRef.current = true
+    setSubmittingCategory(category.key)
+    setSubmitNotice('')
+    setSubmitError('')
+    const stationId = station.id
+    try {
+      const savedReport = await postReport({
+        stationName: station.name,
+        category: category.key,
+        label: category.label.toUpperCase(),
+        tone: category.tone,
+        message: `${category.label} reported at ${station.name}.`,
+        whereOn: 'station',
+      })
+      if (currentStationRef.current !== stationId) return
+      setReports((current) => [savedReport, ...current.filter((report) => report.id !== savedReport.id)])
+      setSubmitNotice(`${category.label} reported at ${station.name}. Thank you.`)
+    } catch (error) {
+      if (currentStationRef.current === stationId) setSubmitError(error.message || 'Could not save your report. Tap the issue to try again.')
+    } finally {
+      submittingRef.current = false
+      setSubmittingCategory(null)
+    }
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -72,7 +104,6 @@ export default function StationReportSummary({ station, onReportIssue, onRate, o
 
   const activeReports = reports.filter((r) => r.kind === 'report' && ['ACTIVE', 'CONFIRMED'].includes(r.status) && Date.now() - new Date(r.createdAt).getTime() < UPDATE_VISIBILITY_WINDOW_MS)
   const counts = Object.fromEntries(stationReportCategories.map((cat) => [cat.key, activeReports.filter((r) => r.category === cat.key).length]))
-  const hasOwnReport = activeReports.some((report) => getReportInteraction(report, user?.id).isOwn)
   const stationLines = (station.lines || []).map((name) => lines.find((line) => line.name === name) || { name, color: '#17428b' })
   const selectedReports = activeReports.filter((r) => selectedCategory === 'all' || r.category === selectedCategory)
   const scoreLabel = score == null ? 'Loading…' : score.overallScore == null ? 'Not rated yet' : Number(score.overallScore).toFixed(1)
@@ -93,14 +124,17 @@ export default function StationReportSummary({ station, onReportIssue, onRate, o
           <Star size={27} className="shrink-0 fill-amber-400 text-amber-400" /><span className="min-w-0 flex-1"><strong className={`block leading-tight ${score?.overallScore == null ? 'text-sm' : 'text-xl'}`}>{scoreError ? '—' : scoreLabel}{score?.overallScore != null && <span className="text-sm font-normal">/5</span>}</strong><span className="block text-[11px] text-slate-500">{scoreError ? 'Reviews unavailable' : 'Station reviews'}</span></span><ChevronRight size={16} />
         </button>
       </div>
-      <div className="mb-2 grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {stationReportCategories.map((cat) => <button type="button" key={cat.key} onClick={() => setSelectedCategory(cat.key)} aria-expanded={selectedCategory === cat.key} aria-label={`${cat.label}: ${counts[cat.key]} active reports`} className={`flex min-w-0 flex-col items-center justify-center gap-2 rounded-xl border px-3 py-4 text-center text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue ${selectedCategory === cat.key ? 'border-brand-blue bg-blue-50 text-brand-blue' : 'border-brand-line bg-white text-brand-slate hover:border-brand-blue hover:bg-blue-50'}`}>
+      <h4 className="mb-1 text-sm font-bold">Report an issue</h4>
+      <p className="!mt-0 !mb-3 text-xs text-slate-600">Tap an issue to report it at {station.name}.</p>
+      {submitNotice && <p role="status" className="!my-2 rounded-lg bg-emerald-50 p-3 text-xs text-emerald-800">{submitNotice}</p>}
+      {submitError && <p role="alert" className="!my-2 rounded-lg bg-amber-50 p-3 text-xs text-amber-800">{submitError}</p>}
+      <div className="mb-2 grid grid-cols-2 sm:grid-cols-3 gap-3" aria-busy={Boolean(submittingCategory)}>
+        {stationReportCategories.map((cat) => <button type="button" key={cat.key} onClick={() => reportIssue(cat)} disabled={Boolean(submittingCategory)} aria-label={`Report ${cat.label} at ${station.name}`} className="flex min-w-0 flex-col items-center justify-center gap-2 rounded-xl border border-brand-line bg-white px-3 py-4 text-center text-sm font-medium text-brand-slate transition-colors hover:border-brand-blue hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue disabled:cursor-wait disabled:opacity-60">
           <ReportCategoryImage category={cat.key} className="h-16 w-16 sm:h-20 sm:w-20" />
-          <span className="flex min-h-10 items-center break-words leading-tight">{cat.label}</span><strong className={`text-sm ${counts[cat.key] > 0 ? 'text-red-600' : 'text-slate-500'}`}>{loading || reportError ? '—' : counts[cat.key]}</strong>
+          <span className="flex min-h-10 items-center break-words leading-tight">{cat.label}</span>{submittingCategory === cat.key ? <span role="status" className="flex items-center gap-1 text-xs"><Loader2 size={14} className="animate-spin" /> Saving…</span> : <strong className={`text-sm ${counts[cat.key] > 0 ? 'text-red-600' : 'text-slate-500'}`}>{loading || reportError ? '—' : counts[cat.key]}</strong>}
         </button>)}
       </div>
-      <div className="mb-3 grid grid-cols-1 min-[400px]:grid-cols-2 gap-2">
-        <button type="button" onClick={() => onReportIssue(station)} className={`${actionClass} w-full bg-yellow-400 hover:bg-yellow-300 max-sm:gap-1`}><TriangleAlert size={20} className="max-sm:size-4" /><span className="min-w-0 flex-1 whitespace-nowrap text-center text-xs leading-snug sm:text-sm">{hasOwnReport ? 'Report new issue' : 'Seen Something?'}</span><ChevronRight size={16} className="max-sm:size-3" /></button>
+      <div className="mb-3 grid grid-cols-1 gap-2">
         <button type="button" onClick={() => setSelectedCategory((current) => current ? null : 'all')} aria-expanded={Boolean(selectedCategory)} aria-controls="station-live-reports" className={`${actionClass} border border-slate-300 hover:bg-slate-50`}><MessageCircle size={20} />{selectedCategory ? 'Hide reports' : 'View reports'}<ChevronDown size={16} className={`ml-auto transition-transform ${selectedCategory ? 'rotate-180' : ''}`} /></button>
       </div>
       {selectedCategory && <section id="station-live-reports" className="mb-3 rounded-lg border border-slate-200 bg-slate-50 p-3" aria-label="Live station reports">

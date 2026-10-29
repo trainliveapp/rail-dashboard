@@ -52,7 +52,6 @@ export default function ReportStationSearch({ value, onChange, id = 'report-stat
       <div className="rounded-2xl bg-blue-50 p-3">
       <div className="flex items-center gap-1 rounded-md border border-blue-200 bg-white py-1.5 pl-3 pr-1.5 focus-within:border-brand-blue focus-within:ring-1 focus-within:ring-brand-blue">
         <div className="min-w-0 flex-1">
-        <span className="block text-xs leading-4 text-slate-700">Enter station name</span>
         <input
           ref={inputRef}
           id={id}
@@ -71,7 +70,7 @@ export default function ReportStationSearch({ value, onChange, id = 'report-stat
             setActiveIndex(-1)
           }}
           onKeyDown={handleKeyDown}
-          placeholder="Search station name or code"
+          placeholder="Station Name"
           required
           autoComplete="off"
           className="block w-full min-w-0 bg-transparent text-base leading-6 text-blue-700 outline-none placeholder:text-blue-700"

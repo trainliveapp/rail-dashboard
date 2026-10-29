@@ -1,7 +1,7 @@
 ﻿import { ArrowRight, Bell, CalendarDays, ChartNoAxesColumnIncreasing, Heart, MessageSquare, Route, ShieldCheck, Users } from 'lucide-react'
 import platformImage from '../assets/Cinematic Commuter Train Platform-1.png'
 import flavioImage from '../assets/Friendly Cybernetic Portrait with Smartphone-2.png'
-import phoneImage from '../assets/Avviso Transit Alerts iPhone Mockup.png'
+import phoneImage from '../assets/Isolated Transit Alerts iPhone UI.png'
 import trainImage from '../assets/Modern Red-and-White Commuter Train-4.png'
 import BrandLogo from './BrandLogo'
 import { useState } from 'react'
