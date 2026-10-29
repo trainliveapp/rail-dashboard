@@ -1430,6 +1430,7 @@ import {
   Smile,
   Heart,
   Bookmark,
+  UserRound,
 } from "lucide-react";
 import { supabase } from "../supabase";
 import { lineTextColors } from "./lineColors";
@@ -1867,14 +1868,17 @@ export default function MapChat() {
   const panel = (
     <div
       ref={chatPanelRef}
-      className="trainlive-chat-panel fixed z-[2147483000] flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.28)]
+      className="trainlive-chat-panel fixed z-[2147483000] flex flex-col overflow-hidden rounded-2xl border border-white/20 bg-slate-950 bg-cover bg-center text-white shadow-[0_20px_60px_rgba(15,23,42,0.28)]
         left-3 right-3 bottom-3 h-[min(680px,calc(100dvh-24px))]
         sm:left-5 sm:right-auto sm:bottom-5 sm:w-[400px] sm:h-[min(680px,calc(100dvh-40px))]"
-      style={{ isolation: "isolate" }}
+      style={{
+        isolation: "isolate",
+        backgroundImage: `linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.35)), url("${CHAT_LINE_BACKGROUNDS[line] || bakerlooChatBackground}")`,
+      }}
     >
-      <div className="chat-panel-header relative z-30 flex h-[52px] shrink-0 items-center justify-between border-b border-yellow-500 bg-yellow-400 px-3 text-brand-ink shadow-sm">
+      <div className="chat-panel-header relative z-30 m-2 mb-0 flex h-[52px] shrink-0 items-center justify-between rounded-xl bg-yellow-400 px-4 text-brand-ink">
         <div className="flex min-w-0 items-center gap-3">
-          <span className="text-sm font-black text-brand-ink">chatter</span>
+          <span className="text-xl font-black text-brand-ink">chatter</span>
         </div>
         <button
           type="button"
@@ -1888,10 +1892,10 @@ export default function MapChat() {
         </button>
       </div>
 
-      <div className="chat-channel relative z-20 shrink-0 border-b border-slate-100 bg-slate-50 px-4 py-3">
+      <div className="chat-channel relative z-20 shrink-0 px-4 py-3">
         <label
           htmlFor="chat-line"
-          className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.08em] text-slate-400"
+          className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.08em] text-white/90"
         >
           Chat channel
         </label>
@@ -1909,7 +1913,7 @@ export default function MapChat() {
           id="chat-line"
           value={line}
           onChange={(e) => setLine(e.target.value)}
-          className="h-11 w-full rounded-xl border-0 pl-12 pr-3.5 text-sm font-semibold capitalize text-white outline-none ring-0"
+          className="h-11 w-full rounded-xl border border-white/30 pl-12 pr-3.5 text-base font-semibold capitalize text-white outline-none focus-visible:ring-2 focus-visible:ring-yellow-400"
           style={{ backgroundColor: CHAT_LINE_COLORS[line] || "#334155" }}
         >
           {TUBE_LINES.map((item) => (
@@ -1929,20 +1933,15 @@ export default function MapChat() {
       </div>
 
       <div
-        className="relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain bg-[#efeae2] bg-cover bg-center bg-no-repeat px-3 py-4 [scrollbar-width:thin]"
-        style={{
-          backgroundImage: CHAT_LINE_BACKGROUNDS[line]
-            ? `linear-gradient(rgba(239, 234, 226, 0.55), rgba(239, 234, 226, 0.55)), url("${CHAT_LINE_BACKGROUNDS[line]}")`
-            : "none",
-        }}
+        className="chat-messages relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3 [scrollbar-width:thin]"
       >
         {messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center px-8 text-center">
-            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-white/30 bg-white/15 text-white backdrop-blur-sm">
               <MessageCircle size={24} />
             </div>
-            <p className="text-sm font-bold text-slate-800">Start the conversation</p>
-            <p className="mt-1 max-w-[270px] text-xs leading-5 text-slate-500">
+            <p className="text-sm font-bold text-white">Start the conversation</p>
+            <p className="mt-1 max-w-[270px] text-xs leading-5 text-white/80">
               Share a delay, ask a question, or help another passenger.
             </p>
           </div>
@@ -1954,17 +1953,21 @@ export default function MapChat() {
             const saved = savedMessages.includes(message.id);
 
             return (
-              <div key={message.id || index} className="mb-2 flex w-full justify-start">
-                <div className="group relative min-w-0 w-full max-w-[94%]">
-                  <div className="relative rounded-2xl rounded-tl-[4px] bg-white px-2.5 py-1.5 text-slate-800 shadow-[0_1px_1px_rgba(0,0,0,0.08)]">
-                    <p className="mb-0.5 text-[11px] font-bold text-slate-700">
-                      {message.username || "TrainLive User"}
-                    </p>
+              <div key={message.id || index} className="mb-5 flex w-full items-start gap-3">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/40 bg-white/25 text-white backdrop-blur-sm" aria-hidden="true">
+                  <UserRound size={25} fill="currentColor" strokeWidth={1.5} />
+                </span>
+                <div className="group relative min-w-0 flex-1">
+                  <div className="chat-message relative text-white">
+                    <div className="mb-0.5 flex flex-wrap items-baseline gap-x-2">
+                      <p className="text-xs font-bold">{message.username || "TrainLive Guest"}</p>
+                      <span className="text-[11px] text-white/75">{formatMessageTime(message.created_at)}</span>
+                    </div>
 
                     <div className="relative">
                       <div>
                         {message.message && (
-                          <p className="break-words [overflow-wrap:anywhere] whitespace-pre-wrap pr-1 text-[13.5px] leading-[1.22rem] text-slate-700">
+                          <p className="break-words [overflow-wrap:anywhere] whitespace-pre-wrap pr-1 text-[15px] leading-6 text-white">
                             {message.message}
                           </p>
                         )}
@@ -1990,20 +1993,16 @@ export default function MapChat() {
                       </div>
                     </div>
 
-                    <div className="mt-0.5 flex items-center justify-end gap-1 text-[9px] text-slate-400">
-                      {formatMessageTime(message.created_at)}
-                    </div>
-
-                    <div className="mt-1 flex items-center justify-between gap-1 border-t border-slate-100 pt-0.5" role="group" aria-label="Message actions">
+                    <div className="chat-message-actions mt-1 flex max-w-[200px] items-center justify-between gap-1" role="group" aria-label="Message actions">
                       <button
                         type="button"
                         onClick={() => toggleReaction(message.id, liked ? reactionState.myReaction : HEART_REACTION)}
                         aria-label={liked ? "Unlike message" : "Like message"}
                         aria-pressed={liked}
-                        className={`flex min-h-8 shrink-0 items-center gap-1 rounded-lg px-1.5 transition hover:bg-rose-50 focus-visible:ring-2 focus-visible:ring-rose-300 ${liked ? 'text-red-500' : 'text-slate-600'}`}
+                        className={`flex h-9 shrink-0 items-center gap-1 rounded-lg transition hover:bg-white/15 focus-visible:ring-2 focus-visible:ring-rose-300 ${liked ? 'text-red-400' : 'text-white'}`}
                       >
-                        <Heart size={18} fill={liked ? 'currentColor' : 'white'} strokeWidth={1.8} />
-                        <span className="text-xs text-slate-500">{heartCount}</span>
+                        <Heart size={22} fill={liked ? 'currentColor' : 'none'} strokeWidth={1.8} />
+                        <span className="text-xs text-white/90">{heartCount}</span>
                       </button>
                       <button
                         type="button"
@@ -2084,10 +2083,10 @@ export default function MapChat() {
         </div>
       )}
 
-      <div className="chat-composer relative z-50 shrink-0 border-t border-slate-200 bg-[#f7f8fa] p-3">
+      <div className="chat-composer relative z-50 shrink-0 p-3">
         <>
           <div className="flex items-center gap-2">
-          <div className="chat-compose-field flex min-w-0 flex-1 items-center gap-0.5 rounded-full border border-slate-200 bg-white p-1 pl-1.5 shadow-sm focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-400/10">
+          <div className="chat-compose-field flex min-w-0 flex-1 items-center gap-0.5 rounded-full border border-white/50 bg-black/30 p-1 pl-1.5 backdrop-blur-sm focus-within:border-yellow-300 focus-within:ring-2 focus-within:ring-yellow-300/25">
             <div className="relative shrink-0">
               <button
                 type="button"
@@ -2147,7 +2146,7 @@ export default function MapChat() {
                   sendMessage();
                 }
               }}
-              placeholder="Type a message"
+              placeholder="Type a message..."
             />
 
           </div>

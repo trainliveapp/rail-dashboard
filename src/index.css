@@ -68,6 +68,45 @@ body {
 .train-search-panel { max-height: calc(var(--visible-height) - 6rem); }
 .trainlive-chat-panel { container: chat-panel / size; }
 
+.chat-messages {
+  scrollbar-color: rgb(255 255 255 / 40%) transparent;
+}
+.chat-message,
+.chat-channel label {
+  text-shadow: 0 1px 4px rgb(0 0 0 / 85%);
+}
+.chat-message-actions button {
+  color: white;
+}
+.chat-message-actions button[aria-label="Unlike message"] {
+  color: #fb7185;
+}
+.chat-message-actions button:hover {
+  background: rgb(255 255 255 / 15%);
+}
+.chat-message-actions svg {
+  width: 22px;
+  height: 22px;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 60%));
+}
+.chat-compose-field button {
+  width: 34px;
+  height: 40px;
+  color: white;
+}
+.chat-compose-field button:hover {
+  color: white;
+  background: rgb(255 255 255 / 15%);
+}
+.chat-compose-field input[aria-label="Chat message"] {
+  order: 1;
+  color: white;
+  caret-color: #ffdf3d;
+}
+.chat-compose-field input::placeholder { color: rgb(255 255 255 / 75%); }
+.chat-compose-field > button { order: 2; }
+.chat-composer > div:first-child { align-items: center; }
+
 /* A keyboard or landscape phone leaves less room for decorative spacing. */
 @container chat-panel (max-height: 460px) {
   .chat-panel-header { height: 48px; padding-inline: 12px; }
@@ -90,11 +129,10 @@ body {
   .chat-composer { padding-bottom: max(12px, env(safe-area-inset-bottom)); }
   .chat-composer > div:first-child { align-items: flex-end; }
   .chat-compose-field {
-    display: grid;
-    grid-template-columns: repeat(3, 44px) minmax(0, 1fr);
-    border-radius: 20px;
+    display: flex;
+    border-radius: 9999px;
   }
-  .chat-compose-field input { grid-column: 1 / -1; grid-row: 1; padding-inline: 12px; }
+  .chat-compose-field input { padding-inline: 4px; }
   .chatter-launcher { bottom: max(20px, env(safe-area-inset-bottom)); }
 
   .station-summary {
