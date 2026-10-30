@@ -40,7 +40,7 @@ const slides = [
   {
     image: fourthAdImage,
     title: <>Passengers helping <span className="text-[#ffd21a]">passengers.</span></>,
-    description: 'Get updates, tips and alternative travel options from the Avviso community.',
+    description: 'Get updates, tips and alternative travel options from the StationLive community.',
     updates: [
       { icon: ShieldAlert, color: 'bg-red-500', title: 'Delays at Waterloo', text: 'Trains are currently delayed. No staff around here yet.', time: '12 mins ago' },
       { icon: Users, color: 'bg-blue-600', title: 'Try the Jubilee line instead.', text: 'It’s moving now.', time: '10 mins ago' },

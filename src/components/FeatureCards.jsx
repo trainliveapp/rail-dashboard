@@ -42,7 +42,7 @@ export default function FeatureCards() {
           <p className="flavio-description">Flavio learns from real passenger reports, predicts potential disruptions and helps you travel smarter, safer and more in control.</p>
           <button type="button" className="flavio-support" onClick={() => setShowSupportMessage(true)}><Heart fill="currentColor" aria-hidden="true" /><span>Support </span><ArrowRight aria-hidden="true" /></button>
           <p className="flavio-support-message" role="status">{showSupportMessage ? 'Support link coming soon.' : ''}</p>
-          <p className="flavio-support-note">Your support helps keep Avviso free for everyone and makes new features like Flavio possible.</p>
+          <p className="flavio-support-note">Your support helps keep StationLive free for everyone and makes new features like Flavio possible.</p>
         </div>
 
         <div className="flavio-art">
@@ -61,7 +61,7 @@ export default function FeatureCards() {
       </div>
 
       <div className="flavio-footer">
-        <ul className="flavio-feature-list" aria-label="The Avviso community">
+        <ul className="flavio-feature-list" aria-label="The StationLive community">
           {features.map(({ icon: Icon, color, label }) => <li key={label}><Icon style={{ color }} aria-hidden="true" strokeWidth={2.7} /><span>{label}</span></li>)}
         </ul>
         <p className="flavio-handwritten flavio-footer-note">Built by commuters.<br />Powered by commuters.</p>
