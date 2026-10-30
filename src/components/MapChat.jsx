@@ -1437,10 +1437,30 @@ import { lineTextColors } from "./lineColors";
 import { getChatVisitorId } from "../lib/chatIdentity";
 import centralChatBackground from "../assets/centeral line.jpeg";
 import bakerlooChatBackground from "../assets/bakeralo.jpeg";
+import circleChatBackground from "../assets/circle-line.webp";
+import districtChatBackground from "../assets/district-line.webp";
+import hammersmithChatBackground from "../assets/hammersmith-and-city-line.webp";
+import jubileeChatBackground from "../assets/jubilee-line.webp";
+import metropolitanChatBackground from "../assets/metropolitan-line.webp";
+import northernChatBackground from "../assets/northern-line.webp";
+import piccadillyChatBackground from "../assets/piccadilly-line.webp";
+import victoriaChatBackground from "../assets/victoria-line.webp";
+import waterlooChatBackground from "../assets/waterloo-and-city-line.webp";
+import greatWesternChatBackground from "../assets/great-western-railway.webp";
 
 const CHAT_LINE_BACKGROUNDS = {
   central: centralChatBackground,
   bakerloo: bakerlooChatBackground,
+  circle: circleChatBackground,
+  district: districtChatBackground,
+  "hammersmith & city": hammersmithChatBackground,
+  jubilee: jubileeChatBackground,
+  metropolitan: metropolitanChatBackground,
+  northern: northernChatBackground,
+  piccadilly: piccadillyChatBackground,
+  victoria: victoriaChatBackground,
+  "waterloo & city": waterlooChatBackground,
+  "great western railway": greatWesternChatBackground,
 };
 
 const CHAT_VISIBILITY_WINDOW_MS = 24 * 60 * 60 * 1000;
@@ -1455,14 +1475,18 @@ const TUBE_LINES = [
   "victoria",
   "district",
   "circle",
+  "hammersmith & city",
   "metropolitan",
   "bakerloo",
   "elizabeth",
+  "waterloo & city",
   "great western railway",
 ];
 
 const CHAT_LINE_COLORS = {
   ...lineTextColors,
+  "hammersmith & city": lineTextColors.hammersmith,
+  "waterloo & city": lineTextColors.waterloo,
   "great western railway": "#4b1f4f",
 };
 

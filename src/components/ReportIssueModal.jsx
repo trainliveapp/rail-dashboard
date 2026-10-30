@@ -1,15 +1,11 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import {
-  X,
-  TrainFront as TrainIcon, MapPin, ArrowRight, GripHorizontal,
-} from 'lucide-react'
+import { X, ArrowRight } from 'lucide-react'
 import { reportCategories } from '../data/mockData'
 import { postReport } from '../lib/stationUpdates'
 import { resolveReportStation } from '../lib/reportStations'
 import ReportStationSearch from './ReportStationSearch'
 import ReportCategoryImage from './ReportCategoryImage'
-import useDraggablePanel from '../lib/useDraggablePanel'
 
 // Category -> badge styling shown on the report in JourneyResults. Most
 // categories are informational (blue), a few carry more weight and get the
@@ -27,11 +23,9 @@ const categoryTone = {
 
 export default function ReportIssueModal({ initialStation = null, onClose, onReportSubmitted }) {
   const [category, setCategory] = useState('')
-  const [where, setWhere] = useState(initialStation ? 'station' : 'train')
   const [stationQuery, setStationQuery] = useState(initialStation?.name || '')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
-  const { panelRef, style, dragging, handleProps } = useDraggablePanel()
 
   const matchedStation = resolveReportStation(stationQuery)
 
@@ -55,8 +49,8 @@ export default function ReportIssueModal({ initialStation = null, onClose, onRep
         category,
         label: cat.label.toUpperCase(),
         tone: categoryTone[category] || 'blue',
-        message: `${cat.label} reported ${where === 'train' ? 'on the train' : 'at the station'}.`,
-        whereOn: where,
+        message: `${cat.label} reported at ${matchedStation.name}.`,
+        whereOn: null,
       }
       const savedReport = await postReport(report)
       onReportSubmitted?.(savedReport)
@@ -77,15 +71,10 @@ export default function ReportIssueModal({ initialStation = null, onClose, onRep
       onTouchStart={(event) => event.stopPropagation()}
       onTouchMove={(event) => event.stopPropagation()}
     >
-      <form ref={panelRef} style={style} role="dialog" aria-modal="true" aria-labelledby="report-title" onSubmit={handleSubmit} className="viewport-panel flex min-w-0 flex-col bg-slate-50 rounded-3xl shadow-2xl w-full max-w-[620px] overflow-hidden p-4 sm:p-8">
+      <form role="dialog" aria-modal="true" aria-labelledby="report-title" onSubmit={handleSubmit} className="viewport-panel flex min-w-0 flex-col bg-slate-50 rounded-3xl shadow-2xl w-full max-w-[620px] overflow-hidden p-4 sm:p-8">
         <div className="flex shrink-0 items-start justify-between gap-3 mb-4">
           <div>
             <h2 id="report-title" className="text-xl font-bold text-slate-900">Seen Something?</h2>
-            <p className="text-slate-500 text-sm">Report Issue</p>
-            <button type="button" {...handleProps} aria-label="Move reporting box. Drag or use arrow keys. Double-click to centre."
-              className={`mt-2 flex touch-none select-none items-center gap-1.5 rounded-lg px-2 py-1 text-xs text-slate-500 hover:bg-slate-200 focus-visible:outline-2 focus-visible:outline-blue-600 ${dragging ? 'cursor-grabbing' : '!cursor-grab'}`}>
-              <GripHorizontal size={16} aria-hidden="true" /> Drag to move
-            </button>
           </div>
           <button type="button" onClick={onClose} aria-label="Close" className="w-11 h-11 rounded-full bg-white flex items-center justify-center text-slate-500 shrink-0">
             <X size={16} />
@@ -117,26 +106,6 @@ export default function ReportIssueModal({ initialStation = null, onClose, onRep
               </button>
             )
           })}
-        </div>
-
-        <h3 className="text-sm font-semibold text-slate-800 mb-2">Where Are You</h3>
-        <div className="grid grid-cols-2 gap-3 mb-6">
-          <button
-            type="button"
-            onClick={() => setWhere('train')}
-            aria-pressed={where === 'train'}
-            className={`flex items-center justify-center gap-2 rounded-full border px-4 py-3 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue ${where === 'train' ? 'border-brand-blue bg-blue-50 text-brand-blue' : 'border-brand-line bg-white text-brand-slate hover:border-brand-blue hover:bg-blue-50'}`}
-          >
-            <TrainIcon size={16} /> On Train
-          </button>
-          <button
-            type="button"
-            onClick={() => setWhere('station')}
-            aria-pressed={where === 'station'}
-            className={`flex items-center justify-center gap-2 rounded-full border px-4 py-3 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue ${where === 'station' ? 'border-brand-blue bg-blue-50 text-brand-blue' : 'border-brand-line bg-white text-brand-slate hover:border-brand-blue hover:bg-blue-50'}`}
-          >
-            <MapPin size={16} /> At Station
-          </button>
         </div>
 
         {error && (
