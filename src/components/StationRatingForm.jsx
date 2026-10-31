@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { ArrowLeft, ChevronRight, MessageCircle, Send, Star, Check } from 'lucide-react'
+import { ArrowLeft, ChevronRight, Send, Star, Check } from 'lucide-react'
 import { getMyStationReview, submitStationRating, ratingCategories } from '../lib/stationRatings'
 import { useAuth } from '../lib/AuthContext'
 import { REVIEW_MAX_LENGTH } from '../lib/reviewRules'
@@ -100,7 +100,7 @@ export default function StationRatingForm({ stationName, stationId, onSubmitted,
           <Check size={22} className="text-emerald-600" />
         </div>
         <p role="status" className="text-sm font-semibold text-slate-900">{existingReview ? 'Review updated' : 'Review submitted'}</p>
-        <button type="button" onClick={onSubmitted} className="mt-3 flex min-h-11 w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-slate-300 px-3 py-2.5 text-xs font-semibold text-slate-900 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-blue-600"><MessageCircle size={16} className="shrink-0" /><span className="flex-1">Read reviews</span><ChevronRight size={12} className="shrink-0" /></button>
+        <button type="button" onClick={onSubmitted} className="mt-3 flex min-h-11 w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-slate-300 px-3 py-2.5 text-xs font-semibold text-slate-900 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-blue-600"><span className="flex-1">Read reviews</span><ChevronRight size={12} className="shrink-0" /></button>
       </div>
     )
   }

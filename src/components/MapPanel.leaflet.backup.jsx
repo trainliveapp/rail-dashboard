@@ -6,10 +6,8 @@ import { Plus, Minus, LocateFixed, Flag, Sun, Moon, Compass, Route, CheckCircle2
 import { lines, housingPins, coffeePins, liveEventPin, stations } from '../data/mockData'
 import { tubeLineGeometry } from '../data/tubeLineGeometry'
 import { getStationScores } from '../lib/stationRatings'
-import { getStationUpdates, subscribeToStationUpdates } from '../lib/stationUpdates'
 import ReportIssueModal from './ReportIssueModal'
 import StationPopup from './StationPopup'
-import StationReportCard from './StationReportCard'
 
 const CENTER = [51.5246, -0.1339]
 const MAP_THEMES = {
@@ -69,7 +67,6 @@ const svg = (inner, size = 16) =>
 const ICONS = {
   metro: svg('<path d="M8 3.1V7a4 4 0 0 0 8 0V3.1"/><path d="m9 15-1-1"/><path d="m15 15 1-1"/><path d="M9 19c-2.8 0-5-2.2-5-5v-4a8 8 0 0 1 16 0v4c0 2.8-2.2 5-5 5Z"/><path d="m8 19-2 3"/><path d="m16 19 2 3"/>'),
   delay: svg('<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>'),
-  report: svg('<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z"/>'),
   crowding: svg('<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/>'),
   home: svg('<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>', 15),
   coffee: svg('<path d="M10 2v2"/><path d="M14 2v2"/><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"/><path d="M6 2v2"/>', 15),
@@ -84,18 +81,6 @@ function badgeIcon(type, color, size = 28) {
     className: '',
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
-  })
-}
-
-function reportMarkerIcon(count, color = '#dc2626') {
-  return L.divIcon({
-    html: `<div style="position:relative;width:34px;height:34px;">
-      <div style="width:34px;height:34px;border-radius:9999px;background:${color};display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.35);border:2px solid white;">${ICONS.report}</div>
-      <div style="position:absolute;top:-7px;right:-8px;min-width:18px;height:18px;padding:0 4px;border-radius:9999px;background:#0f172a;color:white;border:2px solid white;font:700 10px/14px system-ui;text-align:center;">${count}</div>
-    </div>`,
-    className: '',
-    iconSize: [34, 34],
-    iconAnchor: [17, 17],
   })
 }
 
@@ -267,7 +252,6 @@ export default function MapPanel({
   const [bearing, setBearing] = useState(0)
   const [directionMode, setDirectionMode] = useState(false)
   const [reportContext, setReportContext] = useState(null)
-  const [communityReports, setCommunityReports] = useState([])
   const [reportNotice, setReportNotice] = useState(null)
   useEffect(() => {
     getStationScores(stations.map((s) => s.id)).then(setStationScores)
@@ -279,70 +263,16 @@ export default function MapPanel({
   )
 
   useEffect(() => {
-    let cancelled = false
-    getStationUpdates(stations.map((s) => s.name), { all: true }).then((rows) => {
-      if (!cancelled) setCommunityReports(rows.filter((row) => row.kind === 'report' && row.status !== 'RESOLVED' && row.status !== 'EXPIRED'))
-    }).catch(() => {})
-    const unsubscribe = subscribeToStationUpdates(stations.map((s) => s.name), (row) => {
-      if (row.kind !== 'report') return
-      setCommunityReports((prev) => {
-        const remaining = prev.filter((item) => item.id !== row.id)
-        return ['ACTIVE', 'CONFIRMED'].includes(row.status) ? [row, ...remaining] : remaining
-      })
-    })
-    return () => {
-      cancelled = true
-      unsubscribe()
-    }
-  }, [])
-
-  useEffect(() => {
     if (!reportNotice) return undefined
     const timer = window.setTimeout(() => setReportNotice(null), 3200)
     return () => window.clearTimeout(timer)
   }, [reportNotice])
-
-  const groupedReports = useMemo(() => {
-    const grouped = new Map()
-    for (const report of communityReports) {
-      const station = stations.find((item) => item.name === report.stationName)
-      if (!station) continue
-      const key = station.id
-      const existing = grouped.get(key)
-      if (!existing) grouped.set(key, { ...report, station, reportCount: 1, categories: report.category ? [report.category] : [] })
-      else grouped.set(key, {
-        ...existing,
-        reportCount: existing.reportCount + 1,
-        confirms: Math.max(existing.confirms || 0, report.confirms || 0),
-        categories: report.category && !existing.categories.includes(report.category)
-          ? [...existing.categories, report.category]
-          : existing.categories,
-        ...(new Date(report.createdAt) > new Date(existing.createdAt) ? report : {}),
-      })
-    }
-    return [...grouped.values()]
-  }, [communityReports])
 
   const handleReportSubmitted = (report) => {
     setReportNotice({
       id: Date.now(),
       location: report.stationName || report.locationText || 'your location',
     })
-    if (!report.stationName) return
-    const savedReport = {
-      ...report,
-      id: report.id || `local-${Date.now()}`,
-      kind: 'report',
-      tone: report.tone || 'blue',
-      status: report.status || 'ACTIVE',
-      confirms: report.confirms || 0,
-      createdAt: report.createdAt || new Date().toISOString(),
-    }
-
-    setCommunityReports((prev) => [
-      savedReport,
-      ...prev.filter((item) => item.id !== savedReport.id),
-    ])
   }
 
   // A new live-tracked journey should resume auto-follow, even if the user
@@ -533,21 +463,6 @@ export default function MapPanel({
               </Popup>
             </Marker>
           ))}
-
-        {zoom >= STATION_VISIBLE_ZOOM && groupedReports.map((report) => (
-          <Marker key={`report-${report.station.id}`} position={[report.station.lat, report.station.lng]} icon={reportMarkerIcon(report.reportCount, report.tone === 'rose' ? '#ca8a04' : report.tone === 'amber' ? '#d97706' : '#2563eb')} zIndexOffset={500}>
-            <Popup minWidth={240}>
-              <div className="text-sm text-slate-800">
-                <p className="font-bold text-yellow-700 mb-1">{report.reportCount} community report{report.reportCount === 1 ? '' : 's'}</p>
-                <p className="font-semibold">{report.station.name}</p>
-                <p className="text-xs text-slate-500 mt-1">Issue reports from the last 24 hours. Confirm only issues you have seen.</p>
-                <div className="max-h-64 overflow-y-auto">
-                  {communityReports.filter((item) => item.stationName === report.station.name).map((item) => <StationReportCard key={item.id} report={item} />)}
-                </div>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
 
         {/* Disruption markers removed for now, scatterMarkers below is
             hardcoded demo data with made-up locations, not real incidents.

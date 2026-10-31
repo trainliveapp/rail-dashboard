@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { ChevronDown, ChevronRight, Loader2, MessageCircle, Siren, Star, X } from 'lucide-react'
+import { ChevronDown, ChevronRight, Loader2, Star, X } from 'lucide-react'
 import ReportCategoryImage from './ReportCategoryImage'
 import StationReportCard from './StationReportCard'
 import { stationReportCategories, lines } from '../data/mockData'
@@ -120,10 +120,7 @@ export default function StationReportSummary({ station, onRate, onViewReviews, r
       <div className="mt-1.5 flex flex-wrap gap-1">{stationLines.map((line) => <span key={line.name} className="rounded-full px-2 py-0.5 text-[10px] font-semibold text-white" style={{ backgroundColor: line.color }}>{line.name}</span>)}</div>
     </header>
     <div ref={bodyRef} className="station-summary-body relative min-h-0 max-h-[min(65dvh,560px)] overflow-y-auto overscroll-contain p-3">
-      <div className="mb-2 grid grid-cols-1 min-[360px]:grid-cols-2 gap-2">
-        <button type="button" onClick={() => setSelectedCategory('all')} className="flex items-center gap-2 rounded-lg bg-rose-50 px-2.5 py-2 text-left text-red-600">
-          <Siren size={25} className="shrink-0" /><span className="min-w-0 flex-1"><strong className="block text-xl leading-tight">{loading ? '…' : reportError ? '—' : activeReports.length}</strong><span className="block text-[11px]">{reportError ? 'Reports unavailable' : 'Active reports'}</span></span><ChevronRight size={16} />
-        </button>
+      <div className="mb-2 grid grid-cols-1 gap-2">
         <button type="button" onClick={onViewReviews} className="flex items-center gap-2 rounded-lg bg-slate-50 px-2.5 py-2 text-left">
           <Star size={27} className="shrink-0 fill-amber-400 text-amber-400" /><span className="min-w-0 flex-1"><strong className={`block leading-tight ${score?.overallScore == null ? 'text-sm' : 'text-xl'}`}>{scoreError ? '—' : scoreLabel}{score?.overallScore != null && <span className="text-sm font-normal">/5</span>}</strong><span className="block text-[11px] text-slate-500">{scoreError ? 'Reviews unavailable' : 'Station reviews'}</span></span><ChevronRight size={16} />
         </button>
@@ -141,7 +138,7 @@ export default function StationReportSummary({ station, onRate, onViewReviews, r
         </button>)}
       </div>
       <div className="mb-3 grid grid-cols-1 gap-2">
-        <button type="button" onClick={() => setSelectedCategory((current) => current ? null : 'all')} aria-expanded={Boolean(selectedCategory)} aria-controls="station-live-reports" className={`${actionClass} border border-slate-300 hover:bg-slate-50`}><MessageCircle size={20} />{selectedCategory ? 'Hide reports' : 'View reports'}<ChevronDown size={16} className={`ml-auto transition-transform ${selectedCategory ? 'rotate-180' : ''}`} /></button>
+        <button type="button" onClick={() => setSelectedCategory((current) => current ? null : 'all')} aria-expanded={Boolean(selectedCategory)} aria-controls="station-live-reports" className={`${actionClass} border border-slate-300 hover:bg-slate-50`}>{selectedCategory ? 'Hide reports' : 'View reports'}<ChevronDown size={16} className={`ml-auto transition-transform ${selectedCategory ? 'rotate-180' : ''}`} /></button>
       </div>
       {selectedCategory && <section id="station-live-reports" className="mb-3 rounded-lg border border-slate-200 bg-slate-50 p-3" aria-label="Live station reports">
         <div className="mb-2 flex items-center justify-between gap-2"><h4 className="text-xs font-bold">{selectedCategory === 'all' ? 'Live station' : stationReportCategories.find((cat) => cat.key === selectedCategory)?.label} reports</h4><button type="button" onClick={() => setSelectedCategory(null)} aria-label="Close reports" className="rounded p-1 hover:bg-slate-200"><X size={16} /></button></div>
@@ -155,7 +152,7 @@ export default function StationReportSummary({ station, onRate, onViewReviews, r
         <div className="border-b border-slate-200 pb-2"><div className={`${score?.overallScore == null ? 'text-base' : 'text-3xl'} font-bold leading-tight`}>{scoreLabel}{score?.overallScore != null && <span className="text-lg font-normal">/5</span>}</div><RatingStars value={score?.overallScore} size={22} /><p className="!my-1 text-xs leading-snug text-slate-500">{score == null ? 'Loading reviews…' : score.ratingCount ? `Based on ${score.ratingCount} passenger reviews` : 'Be the first to review this station'}</p></div>
         <div className="min-w-0 space-y-2">{ratingCategories.map((cat) => { const value = score?.categoryScores?.[cat.key]; return <div key={cat.key} className="flex items-center justify-between gap-2 text-xs"><span className="min-w-0 flex-1 break-words">{cat.label}</span><RatingStars value={value} size={14} /><span className="w-5 shrink-0 text-right tabular-nums">{value == null ? '—' : Number(value).toFixed(1)}</span></div> })}</div>
       </div>}
-      <div className="grid grid-cols-1 min-[400px]:grid-cols-2 gap-2"><button type="button" onClick={onViewReviews} className={`${reviewActionClass} border border-slate-300 hover:bg-slate-50`}><MessageCircle size={16} /><span className="flex-1 text-center">Read reviews</span><ChevronRight size={12} /></button><button type="button" onClick={onRate} className={`${reviewActionClass} bg-yellow-400 hover:bg-yellow-300`}><Star size={16} /><span className="flex-1 text-center">Write a review</span><ChevronRight size={12} /></button></div>
+      <div className="grid grid-cols-1 min-[400px]:grid-cols-2 gap-2"><button type="button" onClick={onViewReviews} className={`${reviewActionClass} border border-slate-300 hover:bg-slate-50`}><span className="flex-1 text-center">Read reviews</span><ChevronRight size={12} /></button><button type="button" onClick={onRate} className={`${reviewActionClass} bg-yellow-400 hover:bg-yellow-300`}><Star size={16} /><span className="flex-1 text-center">Write a review</span><ChevronRight size={12} /></button></div>
       </>}
       </div>
     </div>

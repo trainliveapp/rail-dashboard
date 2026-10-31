@@ -1439,7 +1439,7 @@ import centralChatBackground from "../assets/centeral line.jpeg";
 import bakerlooChatBackground from "../assets/bakeralo.jpeg";
 import circleChatBackground from "../assets/circle-line.webp";
 import districtChatBackground from "../assets/district-line.webp";
-import hammersmithChatBackground from "../assets/hammersmith-and-city-line.webp";
+import hammersmithChatBackground from "../assets/Hammersmith_and_City_Line_Apollo_Fox_Portrait.webp";
 import jubileeChatBackground from "../assets/jubilee-line.webp";
 import metropolitanChatBackground from "../assets/metropolitan-line.webp";
 import northernChatBackground from "../assets/northern-line.webp";
@@ -1447,11 +1447,13 @@ import piccadillyChatBackground from "../assets/piccadilly-line.webp";
 import victoriaChatBackground from "../assets/victoria-line.webp";
 import waterlooChatBackground from "../assets/waterloo-and-city-line.webp";
 import greatWesternChatBackground from "../assets/great-western-railway.webp";
+import elizabethChatBackground from "../assets/Elizabeth_Line_Heathrow_Terminal_5_Red_X_Barriers_Portrait.webp";
 import gwrLogo from "../assets/gwr-logo.svg";
 
 const CHAT_LINE_BACKGROUNDS = {
   central: centralChatBackground,
   bakerloo: bakerlooChatBackground,
+  elizabeth: elizabethChatBackground,
   circle: circleChatBackground,
   district: districtChatBackground,
   "hammersmith & city": hammersmithChatBackground,
