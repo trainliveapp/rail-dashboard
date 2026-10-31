@@ -1,5 +1,6 @@
 import { supabase, isSupabaseConfigured } from './supabaseClient'
 import { getReportInteraction, rememberReportInteraction } from './reportInteractions'
+import { getReportToken, readReportSubmission, reportCooldownRemaining, saveReportSubmission } from './reportCooldown'
 
 export const UPDATE_VISIBILITY_WINDOW_MS = 24 * 60 * 60 * 1000
 
@@ -108,34 +109,71 @@ export function subscribeToStationUpdates(stationNames, onInsert) {
 // picker if the person chose one, locationText is whatever they typed or
 // "near <lat>,<lng>" if they used their current position and it didn't
 // resolve to a known station, either can be null but not both.
-export async function postReport({ stationName, locationText, category, label, tone, message, whereOn }) {
+let reportMutationPending = false
+let reportMutationRevision = 0
+
+function saveSubmissionState(data) {
+  const state = data ? {
+    report: data.report ? mapRow(data.report) : null,
+    nextAllowedAt: new Date(data.next_allowed_at).getTime(),
+    undone: data.undone,
+  } : null
+  saveReportSubmission(state)
+  return state
+}
+
+export async function refreshReportSubmission() {
+  if (!isSupabaseConfigured) return
+  const revision = reportMutationRevision
+  const { data, error } = await supabase.rpc('get_station_report_submission', { p_guest_token: getReportToken() })
+  if (error) throw error
+  // A refresh started before a tap must not overwrite that tap's state.
+  if (!reportMutationPending && revision === reportMutationRevision) return saveSubmissionState(data)
+}
+
+export async function postReport(payload) {
+  if (!isSupabaseConfigured) throw new Error('Station reporting is currently unavailable.')
+  if (reportMutationPending) throw new Error('Your report is being saved. Please wait.')
+  if (reportCooldownRemaining(readReportSubmission()) > 0) throw new Error('Please wait 30 minutes between reports. You can still undo your last report.')
+  reportMutationPending = true
+  reportMutationRevision += 1
+  try { return await submitReport(payload) }
+  finally { reportMutationPending = false }
+}
+
+async function submitReport({ stationName, locationText, category, label, tone, message, whereOn }) {
   const { data: sessionData } = await supabase.auth.getSession()
   const user = sessionData.session?.user
   if (!stationName && !locationText) throw new Error('Add a location for this report.')
 
-  const { data, error } = await supabase.from('station_updates').insert({
-    station_name: stationName,
-    kind: 'report',
-    category,
-    label,
-    tone,
-    message,
-    where_on: whereOn,
-    location_text: locationText || null,
-    author_id: user?.id || null,
-    author_initial: user ? (user.email || '?')[0] : 'A',
-  }).select('*').single()
+  const { data, error } = await supabase.rpc('submit_station_report', {
+    p_guest_token: getReportToken(),
+    p_report: { station_name: stationName, category, label, tone, message, where_on: whereOn, location_text: locationText || null },
+  })
 
   if (error) {
-    if (isMissingStationUpdatesTable(error)) {
+    if (isMissingStationUpdatesTable(error) || error.code === 'PGRST202' || error.code === '42883') {
       throw new Error('Station reporting is not configured yet. Run the station reporting migration in Supabase.')
     }
     throw error
   }
-  const report = mapRow(data)
+  const { report } = saveSubmissionState(data)
   rememberReportInteraction(report.id, 'submitted', user?.id)
   window.dispatchEvent(new CustomEvent('station-report-saved', { detail: report }))
   return report
+}
+
+export async function undoReport() {
+  if (reportMutationPending) throw new Error('Please wait for your report to finish saving.')
+  reportMutationPending = true
+  reportMutationRevision += 1
+  try {
+    const { data, error } = await supabase.rpc('undo_station_report', { p_guest_token: getReportToken() })
+    if (error) throw error
+    const { report } = saveSubmissionState(data)
+    window.dispatchEvent(new CustomEvent('station-report-saved', { detail: report }))
+    return report
+  } finally { reportMutationPending = false }
 }
 
 // Used by a chat-style composer at a station, short freeform updates for

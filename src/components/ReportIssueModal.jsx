@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { X, ArrowRight } from 'lucide-react'
 import { reportCategories } from '../data/mockData'
-import { postReport } from '../lib/stationUpdates'
+import { postReport, undoReport } from '../lib/stationUpdates'
+import useReportCooldown from '../lib/useReportCooldown'
 import { resolveReportStation } from '../lib/reportStations'
 import ReportStationSearch from './ReportStationSearch'
 import ReportCategoryImage from './ReportCategoryImage'
@@ -26,12 +27,15 @@ export default function ReportIssueModal({ initialStation = null, onClose, onRep
   const [stationQuery, setStationQuery] = useState(initialStation?.name || '')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const cooldown = useReportCooldown()
 
   const matchedStation = resolveReportStation(stationQuery)
+  const canUndo = cooldown.canUndo(matchedStation?.name, category)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (submitting) return
+    if (cooldown.blocked && !canUndo) return
     if (!matchedStation) {
       setError('Please select a station from the search results.')
       return
@@ -52,9 +56,8 @@ export default function ReportIssueModal({ initialStation = null, onClose, onRep
         message: `${cat.label} reported at ${matchedStation.name}.`,
         whereOn: null,
       }
-      const savedReport = await postReport(report)
+      const savedReport = canUndo ? await undoReport() : await postReport(report)
       onReportSubmitted?.(savedReport)
-      onClose()
     } catch (err) {
       setError(err.message || 'Could not submit that report, try again.')
     } finally {
@@ -94,6 +97,7 @@ export default function ReportIssueModal({ initialStation = null, onClose, onRep
               <button
                 type="button"
                 key={cat.key}
+                disabled={submitting || (cooldown.blocked && !cooldown.canUndo(matchedStation?.name, cat.key))}
                 onClick={() => {
                   setCategory(cat.key)
                   setError('')
@@ -108,6 +112,8 @@ export default function ReportIssueModal({ initialStation = null, onClose, onRep
           })}
         </div>
 
+        <p role="status" className="mb-4 text-xs text-slate-600">{canUndo && 'Reported. Use Undo report if this was accidental. '}{cooldown.notice}</p>
+
         {error && (
           <div className="bg-amber-50 border border-amber-100 rounded-xl px-3 py-2.5 mb-4 text-xs text-amber-700">
             {error}
@@ -116,10 +122,10 @@ export default function ReportIssueModal({ initialStation = null, onClose, onRep
 
         <button
           type="submit"
-          disabled={submitting}
-          className="w-full bg-brand-blue hover:bg-brand-secondary-light focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue disabled:bg-slate-300 disabled:text-slate-500 transition-colors text-white font-medium py-3.5 rounded-full flex items-center justify-center gap-2"
+          disabled={submitting || (cooldown.blocked && !canUndo)}
+          className="w-full bg-blue-700 hover:bg-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 disabled:bg-slate-300 disabled:text-slate-500 transition-colors text-white font-medium py-3.5 rounded-full flex items-center justify-center gap-2"
         >
-          {submitting ? 'Submitting…' : 'Submit report'} {!submitting && <ArrowRight size={16} />}
+          {submitting ? 'Saving…' : canUndo ? 'Undo report' : cooldown.blocked ? 'Please wait' : 'Submit report'} {!submitting && <ArrowRight size={16} />}
         </button>
         </div>
       </form>

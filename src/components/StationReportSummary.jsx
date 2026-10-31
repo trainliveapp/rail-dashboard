@@ -3,7 +3,8 @@ import { ChevronDown, ChevronRight, Loader2, MessageCircle, Siren, Star, X } fro
 import ReportCategoryImage from './ReportCategoryImage'
 import StationReportCard from './StationReportCard'
 import { stationReportCategories, lines } from '../data/mockData'
-import { getStationUpdates, postReport, subscribeToStationUpdates, UPDATE_VISIBILITY_WINDOW_MS } from '../lib/stationUpdates'
+import { getStationUpdates, postReport, undoReport, subscribeToStationUpdates, UPDATE_VISIBILITY_WINDOW_MS } from '../lib/stationUpdates'
+import useReportCooldown from '../lib/useReportCooldown'
 import { getStationScore, subscribeToStationReviews, ratingCategories } from '../lib/stationRatings'
 
 export function RatingStars({ value, size = 14 }) {
@@ -26,6 +27,7 @@ export default function StationReportSummary({ station, onRate, onViewReviews, r
   const [submittingCategory, setSubmittingCategory] = useState(null)
   const [submitNotice, setSubmitNotice] = useState('')
   const [submitError, setSubmitError] = useState('')
+  const cooldown = useReportCooldown()
   const submittingRef = useRef(false)
   const currentStationRef = useRef(station.id)
   currentStationRef.current = station.id
@@ -46,13 +48,15 @@ export default function StationReportSummary({ station, onRate, onViewReviews, r
 
   const reportIssue = async (category) => {
     if (submittingRef.current) return
+    const undoing = cooldown.canUndo(station.name, category.key)
+    if (cooldown.blocked && !undoing) return
     submittingRef.current = true
     setSubmittingCategory(category.key)
     setSubmitNotice('')
     setSubmitError('')
     const stationId = station.id
     try {
-      const savedReport = await postReport({
+      const savedReport = undoing ? await undoReport() : await postReport({
         stationName: station.name,
         category: category.key,
         label: category.label.toUpperCase(),
@@ -62,7 +66,7 @@ export default function StationReportSummary({ station, onRate, onViewReviews, r
       })
       if (currentStationRef.current !== stationId) return
       setReports((current) => [savedReport, ...current.filter((report) => report.id !== savedReport.id)])
-      setSubmitNotice(`${category.label} reported at ${station.name}. Thank you.`)
+      setSubmitNotice(undoing ? 'Report removed. You can report again after the 30-minute wait.' : `${category.label} reported. Tap the same issue again to undo.`)
     } catch (error) {
       if (currentStationRef.current === stationId) setSubmitError(error.message || 'Could not save your report. Tap the issue to try again.')
     } finally {
@@ -126,11 +130,13 @@ export default function StationReportSummary({ station, onRate, onViewReviews, r
       </div>
       <h4 className="mb-1 text-sm font-bold">Report an issue</h4>
       <p className="!mt-0 !mb-3 text-xs text-slate-600">Tap an issue to report it at {station.name}.</p>
+      <p role="status" className="!mt-0 !mb-3 text-xs text-slate-600">{cooldown.notice}</p>
       {submitNotice && <p role="status" className="!my-2 rounded-lg bg-emerald-50 p-3 text-xs text-emerald-800">{submitNotice}</p>}
       {submitError && <p role="alert" className="!my-2 rounded-lg bg-amber-50 p-3 text-xs text-amber-800">{submitError}</p>}
       <div className="mb-2 grid grid-cols-2 sm:grid-cols-3 gap-3" aria-busy={Boolean(submittingCategory)}>
-        {stationReportCategories.map((cat) => <button type="button" key={cat.key} onClick={() => reportIssue(cat)} disabled={Boolean(submittingCategory)} aria-label={`Report ${cat.label} at ${station.name}`} className="flex min-w-0 flex-col items-center justify-center gap-2 rounded-xl border border-brand-line bg-white px-3 py-4 text-center text-sm font-medium text-brand-slate transition-colors hover:border-brand-blue hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue disabled:cursor-wait disabled:opacity-60">
+        {stationReportCategories.map((cat) => <button type="button" key={cat.key} onClick={() => reportIssue(cat)} disabled={Boolean(submittingCategory) || (cooldown.blocked && !cooldown.canUndo(station.name, cat.key))} aria-pressed={cooldown.canUndo(station.name, cat.key)} aria-label={`${cooldown.canUndo(station.name, cat.key) ? 'Undo' : 'Report'} ${cat.label} at ${station.name}`} className="flex min-w-0 flex-col items-center justify-center gap-2 rounded-xl border border-brand-line bg-white px-3 py-4 text-center text-sm font-medium text-brand-slate transition-colors hover:border-brand-blue hover:bg-blue-50 aria-pressed:border-emerald-500 aria-pressed:bg-emerald-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue disabled:cursor-not-allowed disabled:opacity-60">
           <ReportCategoryImage category={cat.key} className="h-16 w-16 sm:h-20 sm:w-20" />
+          {cooldown.canUndo(station.name, cat.key) && <span className="text-xs font-semibold text-emerald-700">Reported · Tap to undo</span>}
           <span className="flex min-h-10 items-center break-words leading-tight">{cat.label}</span>{submittingCategory === cat.key ? <span role="status" className="flex items-center gap-1 text-xs"><Loader2 size={14} className="animate-spin" /> Saving…</span> : <strong className={`text-sm ${counts[cat.key] > 0 ? 'text-red-600' : 'text-slate-500'}`}>{loading || reportError ? '—' : counts[cat.key]}</strong>}
         </button>)}
       </div>

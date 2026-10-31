@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { Info, MapPin, Check, Loader2 } from 'lucide-react'
 import ReportCategoryImage from './ReportCategoryImage'
 import { stationReportCategories } from '../data/mockData'
-import { getStationUpdates, postReport } from '../lib/stationUpdates'
+import { getStationUpdates, postReport, undoReport } from '../lib/stationUpdates'
+import useReportCooldown from '../lib/useReportCooldown'
 
 // The category-picker that opens after tapping "Report Issue" on a
 // station's summary card. Deliberately simpler than the full
@@ -13,6 +14,8 @@ export default function StationQuickReportModal({ station, onClose, onReportSubm
   const [counts, setCounts] = useState({})
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const cooldown = useReportCooldown()
+  const canUndo = cooldown.canUndo(station.name, selected?.key)
 
   useEffect(() => {
     let cancelled = false
@@ -29,10 +32,11 @@ export default function StationQuickReportModal({ station, onClose, onReportSubm
 
   const handleConfirm = async () => {
     if (!selected || submitting) return
+    if (cooldown.blocked && !canUndo) return
     setSubmitting(true)
     setError('')
     try {
-      const savedReport = await postReport({
+      const savedReport = canUndo ? await undoReport() : await postReport({
         stationName: station.name,
         category: selected.key,
         label: selected.label.toUpperCase(),
@@ -41,7 +45,7 @@ export default function StationQuickReportModal({ station, onClose, onReportSubm
         whereOn: null,
       })
       onReportSubmitted?.(savedReport)
-      onClose()
+      setCounts((current) => ({ ...current, [selected.key]: Math.max(0, (current[selected.key] || 0) + (canUndo ? -1 : 1)) }))
     } catch (err) {
       setError(err.message || 'Could not submit that report, try again.')
     } finally {
@@ -81,7 +85,7 @@ export default function StationQuickReportModal({ station, onClose, onReportSubm
             return (
               <button
                 type="button"
-                disabled={submitting}
+                disabled={submitting || (cooldown.blocked && !cooldown.canUndo(station.name, cat.key))}
                 key={cat.key}
                 onClick={() => setSelected(cat)}
                 aria-pressed={isSelected}
@@ -96,6 +100,8 @@ export default function StationQuickReportModal({ station, onClose, onReportSubm
           })}
         </div>
 
+        <p role="status" className="mb-4 text-xs text-slate-600">{canUndo && 'Reported. Use Undo report if this was accidental. '}{cooldown.notice}</p>
+
         {error && (
           <div className="bg-amber-50 border border-amber-100 rounded-xl px-3 py-2.5 mb-4 text-xs text-amber-700">{error}</div>
         )}
@@ -107,16 +113,16 @@ export default function StationQuickReportModal({ station, onClose, onReportSubm
             disabled={submitting}
             className="flex-1 border border-slate-200 text-slate-600 font-semibold py-3 rounded-full"
           >
-            Cancel
+            Close
           </button>
           <button
             type="button"
             onClick={handleConfirm}
-            disabled={!selected || submitting}
-            className="flex-1 bg-brand-primary hover:bg-brand-primary-dark disabled:bg-slate-300 transition-colors text-white font-semibold py-3 rounded-full flex items-center justify-center gap-2"
+            disabled={!selected || submitting || (cooldown.blocked && !canUndo)}
+            className="flex-1 bg-blue-700 hover:bg-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 disabled:bg-slate-300 transition-colors text-white font-semibold py-3 rounded-full flex items-center justify-center gap-2"
           >
             {submitting && <Loader2 size={15} className="animate-spin" />}
-            Confirm Report
+            {canUndo ? 'Undo report' : cooldown.blocked ? 'Please wait' : 'Confirm Report'}
           </button>
         </div>
       </div>
