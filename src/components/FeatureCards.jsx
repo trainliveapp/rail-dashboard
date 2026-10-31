@@ -1,4 +1,4 @@
-﻿import { ArrowRight, Bell, CalendarDays, ChartNoAxesColumnIncreasing, Heart, MessageSquare, Route, ShieldCheck, Users } from 'lucide-react'
+import { Bell, CalendarDays, ChartNoAxesColumnIncreasing, MessageSquare, Route, ShieldCheck, Users } from 'lucide-react'
 import { images } from '../data/optimizedImages'
 import SmoothImage from './SmoothImage'
 import BrandLogo from './BrandLogo'
@@ -38,7 +38,7 @@ export default function FeatureCards() {
           <span className="flavio-coming-soon">Coming soon</span>
           <h2 id="flavio-heading"><span className="flavio-meet">Meet <strong>Flavio.</strong></span><span>Your personal</span><span>AI Travel Companion.</span></h2>
           <p className="flavio-description">Flavio learns from real passenger reports, predicts potential disruptions and helps you travel smarter, safer and more in control.</p>
-          <button type="button" className="flavio-support" onClick={() => setShowSupportMessage(true)}><Heart fill="currentColor" aria-hidden="true" /><span>Support </span><ArrowRight aria-hidden="true" /></button>
+          <button type="button" aria-label="Coming soon" className="flavio-support" onClick={() => setShowSupportMessage(true)}><span className="col-span-3">Coming soon</span></button>
           <p className="flavio-support-message" role="status">{showSupportMessage ? 'Support link coming soon.' : ''}</p>
           <p className="flavio-support-note">Your support helps keep StationLive free for everyone and makes new features like Flavio possible.</p>
         </div>

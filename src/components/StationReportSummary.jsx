@@ -47,14 +47,13 @@ export default function StationReportSummary({ station, onRate, onViewReviews, r
   const reportIssue = async (category) => {
     if (submittingRef.current) return
     const undoing = cooldown.canUndo(station.name, category.key)
-    if (cooldown.blocked && !undoing) return
     submittingRef.current = true
     setSubmittingCategory(category.key)
     setSubmitNotice('')
     setSubmitError('')
     const stationId = station.id
     try {
-      const savedReport = undoing ? await undoReport() : await postReport({
+      const savedReport = undoing ? await undoReport(cooldown.reportId(station.name, category.key)) : await postReport({
         stationName: station.name,
         category: category.key,
         label: category.label.toUpperCase(),
@@ -64,7 +63,7 @@ export default function StationReportSummary({ station, onRate, onViewReviews, r
       })
       if (currentStationRef.current !== stationId) return
       setReports((current) => [savedReport, ...current.filter((report) => report.id !== savedReport.id)])
-      setSubmitNotice(undoing ? 'Report removed. You can report again after the 30-minute wait.' : `${category.label} reported. Tap the same issue again to undo.`)
+      setSubmitNotice(undoing ? 'Report deselected. You can select the correct issue now.' : `${category.label} reported. Tap the same issue again to deselect.`)
     } catch (error) {
       if (currentStationRef.current === stationId) setSubmitError(error.message || 'Could not save your report. Tap the issue to try again.')
     } finally {
@@ -126,9 +125,9 @@ export default function StationReportSummary({ station, onRate, onViewReviews, r
       {submitNotice && <p role="status" className="!my-2 rounded-lg bg-emerald-50 p-3 text-xs text-emerald-800">{submitNotice}</p>}
       {submitError && <p role="alert" className="!my-2 rounded-lg bg-amber-50 p-3 text-xs text-amber-800">{submitError}</p>}
       <div className="mb-2 grid grid-cols-2 sm:grid-cols-3 gap-3" aria-busy={Boolean(submittingCategory)}>
-        {stationReportCategories.map((cat) => <button type="button" key={cat.key} onClick={() => reportIssue(cat)} disabled={Boolean(submittingCategory) || (cooldown.blocked && !cooldown.canUndo(station.name, cat.key))} aria-pressed={cooldown.canUndo(station.name, cat.key)} aria-label={`${cooldown.canUndo(station.name, cat.key) ? 'Undo' : 'Report'} ${cat.label} at ${station.name}`} className="flex min-w-0 flex-col items-center justify-center gap-2 rounded-xl border border-brand-line bg-white px-3 py-4 text-center text-sm font-medium text-brand-slate transition-colors hover:border-brand-blue hover:bg-blue-50 aria-pressed:border-emerald-500 aria-pressed:bg-emerald-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue disabled:cursor-not-allowed disabled:opacity-60">
+        {stationReportCategories.map((cat) => <button type="button" key={cat.key} onClick={() => reportIssue(cat)} disabled={Boolean(submittingCategory)} aria-pressed={cooldown.canUndo(station.name, cat.key)} aria-label={`${cooldown.canUndo(station.name, cat.key) ? 'Deselect' : 'Report'} ${cat.label} at ${station.name}`} className="flex min-w-0 flex-col items-center justify-center gap-2 rounded-xl border border-brand-line bg-white px-3 py-4 text-center text-sm font-medium text-brand-slate transition-colors hover:border-brand-blue hover:bg-blue-50 aria-pressed:border-emerald-500 aria-pressed:bg-emerald-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue disabled:cursor-not-allowed disabled:opacity-60">
           <ReportCategoryImage category={cat.key} className="h-16 w-16 sm:h-20 sm:w-20" />
-          {cooldown.canUndo(station.name, cat.key) && <span className="text-xs font-semibold text-emerald-700">Reported · Tap to undo</span>}
+          {cooldown.canUndo(station.name, cat.key) && <span className="text-xs font-semibold text-emerald-700">Reported · Tap to deselect</span>}
           <span className="flex min-h-10 items-center break-words leading-tight">{cat.label}</span>{submittingCategory === cat.key ? <span role="status" className="flex items-center gap-1 text-xs"><Loader2 size={14} className="animate-spin" /> Saving…</span> : <strong className={`text-sm ${counts[cat.key] > 0 ? 'text-red-600' : 'text-slate-500'}`}>{loading || reportError ? '—' : counts[cat.key]}</strong>}
         </button>)}
       </div>

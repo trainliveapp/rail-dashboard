@@ -1,6 +1,6 @@
 import { supabase, isSupabaseConfigured } from './supabaseClient'
 import { getReportInteraction, rememberReportInteraction } from './reportInteractions'
-import { getReportToken, readReportSubmission, reportCooldownRemaining, saveReportSubmission } from './reportCooldown'
+import { getReportToken, readReportSubmission, saveReportSubmission } from './reportCooldown'
 
 export const UPDATE_VISIBILITY_WINDOW_MS = 24 * 60 * 60 * 1000
 
@@ -118,7 +118,8 @@ function saveSubmissionState(data) {
     nextAllowedAt: new Date(data.next_allowed_at).getTime(),
     undone: data.undone,
   } : null
-  saveReportSubmission(state)
+  const previous = readReportSubmission()
+  saveReportSubmission(state ? [state, ...previous.filter((entry) => entry.report?.stationName !== state.report?.stationName || entry.report?.locationText !== state.report?.locationText || entry.report?.category !== state.report?.category)] : previous)
   return state
 }
 
@@ -128,13 +129,20 @@ export async function refreshReportSubmission() {
   const { data, error } = await supabase.rpc('get_station_report_submission', { p_guest_token: getReportToken() })
   if (error) throw error
   // A refresh started before a tap must not overwrite that tap's state.
-  if (!reportMutationPending && revision === reportMutationRevision) return saveSubmissionState(data)
+  if (!reportMutationPending && revision === reportMutationRevision) {
+    const states = (Array.isArray(data) ? data : data ? [data] : []).map((entry) => ({
+      report: entry.report ? mapRow(entry.report) : null,
+      nextAllowedAt: new Date(entry.next_allowed_at).getTime(),
+      undone: entry.undone,
+    }))
+    saveReportSubmission(states)
+    return states
+  }
 }
 
 export async function postReport(payload) {
   if (!isSupabaseConfigured) throw new Error('Station reporting is currently unavailable.')
   if (reportMutationPending) throw new Error('Your report is being saved. Please wait.')
-  if (reportCooldownRemaining(readReportSubmission()) > 0) throw new Error('Please wait 30 minutes between reports. You can still undo your last report.')
   reportMutationPending = true
   reportMutationRevision += 1
   try { return await submitReport(payload) }
@@ -163,12 +171,13 @@ async function submitReport({ stationName, locationText, category, label, tone, 
   return report
 }
 
-export async function undoReport() {
+export async function undoReport(reportId) {
+  if (!reportId) throw new Error('Choose a reported issue to deselect.')
   if (reportMutationPending) throw new Error('Please wait for your report to finish saving.')
   reportMutationPending = true
   reportMutationRevision += 1
   try {
-    const { data, error } = await supabase.rpc('undo_station_report', { p_guest_token: getReportToken() })
+    const { data, error } = await supabase.rpc('undo_station_report', { p_guest_token: getReportToken(), p_report_id: reportId })
     if (error) throw error
     const { report } = saveSubmissionState(data)
     window.dispatchEvent(new CustomEvent('station-report-saved', { detail: report }))

@@ -32,11 +32,10 @@ export default function StationQuickReportModal({ station, onClose, onReportSubm
 
   const handleConfirm = async () => {
     if (!selected || submitting) return
-    if (cooldown.blocked && !canUndo) return
     setSubmitting(true)
     setError('')
     try {
-      const savedReport = canUndo ? await undoReport() : await postReport({
+      const savedReport = canUndo ? await undoReport(cooldown.reportId(station.name, selected.key)) : await postReport({
         stationName: station.name,
         category: selected.key,
         label: selected.label.toUpperCase(),
@@ -45,7 +44,9 @@ export default function StationQuickReportModal({ station, onClose, onReportSubm
         whereOn: null,
       })
       onReportSubmitted?.(savedReport)
-      setCounts((current) => ({ ...current, [selected.key]: Math.max(0, (current[selected.key] || 0) + (canUndo ? -1 : 1)) }))
+      await getStationUpdates([station.name], { all: true }).then((rows) => {
+        setCounts(Object.fromEntries(stationReportCategories.map((cat) => [cat.key, rows.filter((row) => row.kind === 'report' && row.category === cat.key && ['ACTIVE', 'CONFIRMED'].includes(row.status)).length])))
+      }).catch(() => { /* The selection was saved even if refreshing counts failed. */ })
     } catch (err) {
       setError(err.message || 'Could not submit that report, try again.')
     } finally {
@@ -85,7 +86,7 @@ export default function StationQuickReportModal({ station, onClose, onReportSubm
             return (
               <button
                 type="button"
-                disabled={submitting || (cooldown.blocked && !cooldown.canUndo(station.name, cat.key))}
+                disabled={submitting}
                 key={cat.key}
                 onClick={() => setSelected(cat)}
                 aria-pressed={isSelected}
@@ -94,6 +95,7 @@ export default function StationQuickReportModal({ station, onClose, onReportSubm
                 <ReportCategoryImage category={cat.key} className="h-16 w-16 sm:h-20 sm:w-20" />
                 <span className="flex min-h-10 items-center break-words leading-tight">{cat.label}</span>
                 <span className="text-xs text-slate-400">{counts[cat.key] ?? 0} reported</span>
+                {cooldown.canUndo(station.name, cat.key) && <span className="text-xs text-emerald-700">Reported</span>}
                 {isSelected && <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-brand-blue"><Check size={12} className="text-white" strokeWidth={3} /></span>}
               </button>
             )
@@ -118,11 +120,11 @@ export default function StationQuickReportModal({ station, onClose, onReportSubm
           <button
             type="button"
             onClick={handleConfirm}
-            disabled={!selected || submitting || (cooldown.blocked && !canUndo)}
+            disabled={!selected || submitting}
             className="flex-1 bg-blue-700 hover:bg-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 disabled:bg-slate-300 transition-colors text-white font-semibold py-3 rounded-full flex items-center justify-center gap-2"
           >
             {submitting && <Loader2 size={15} className="animate-spin" />}
-            {canUndo ? 'Undo report' : cooldown.blocked ? 'Please wait' : 'Confirm Report'}
+            {canUndo ? 'Undo report' : 'Confirm Report'}
           </button>
         </div>
       </div>

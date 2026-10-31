@@ -35,7 +35,6 @@ export default function ReportIssueModal({ initialStation = null, onClose, onRep
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (submitting) return
-    if (cooldown.blocked && !canUndo) return
     if (!matchedStation) {
       setError('Please select a station from the search results.')
       return
@@ -56,7 +55,7 @@ export default function ReportIssueModal({ initialStation = null, onClose, onRep
         message: `${cat.label} reported at ${matchedStation.name}.`,
         whereOn: null,
       }
-      const savedReport = canUndo ? await undoReport() : await postReport(report)
+      const savedReport = canUndo ? await undoReport(cooldown.reportId(matchedStation.name, category)) : await postReport(report)
       onReportSubmitted?.(savedReport)
     } catch (err) {
       setError(err.message || 'Could not submit that report, try again.')
@@ -97,7 +96,7 @@ export default function ReportIssueModal({ initialStation = null, onClose, onRep
               <button
                 type="button"
                 key={cat.key}
-                disabled={submitting || (cooldown.blocked && !cooldown.canUndo(matchedStation?.name, cat.key))}
+                disabled={submitting}
                 onClick={() => {
                   setCategory(cat.key)
                   setError('')
@@ -107,6 +106,7 @@ export default function ReportIssueModal({ initialStation = null, onClose, onRep
               >
                 <ReportCategoryImage category={cat.key} className="h-16 w-16 sm:h-20 sm:w-20" />
                 {cat.label}
+                {cooldown.canUndo(matchedStation?.name, cat.key) && <span className="text-xs text-emerald-700">Reported</span>}
               </button>
             )
           })}
@@ -122,10 +122,10 @@ export default function ReportIssueModal({ initialStation = null, onClose, onRep
 
         <button
           type="submit"
-          disabled={submitting || (cooldown.blocked && !canUndo)}
+          disabled={submitting}
           className="w-full bg-blue-700 hover:bg-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 disabled:bg-slate-300 disabled:text-slate-500 transition-colors text-white font-medium py-3.5 rounded-full flex items-center justify-center gap-2"
         >
-          {submitting ? 'Saving…' : canUndo ? 'Undo report' : cooldown.blocked ? 'Please wait' : 'Submit report'} {!submitting && <ArrowRight size={16} />}
+          {submitting ? 'Saving…' : canUndo ? 'Undo report' : 'Submit report'} {!submitting && <ArrowRight size={16} />}
         </button>
         </div>
       </form>

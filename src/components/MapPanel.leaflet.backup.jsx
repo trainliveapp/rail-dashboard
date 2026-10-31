@@ -272,6 +272,7 @@ export default function MapPanel({
     setReportNotice({
       id: Date.now(),
       location: report.stationName || report.locationText || 'your location',
+      message: report.status === 'RESOLVED' ? 'Report deselected' : 'Report submitted',
     })
   }
 
@@ -515,7 +516,7 @@ export default function MapPanel({
         <div className="pointer-events-none absolute top-3 left-3 right-16 z-[1050] flex justify-center report-banner-in">
           <div className="flex max-w-[360px] items-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-lg ring-1 ring-slate-200/80">
             <CheckCircle2 size={17} className="shrink-0 text-emerald-600" />
-            <span role="status" className="min-w-0 break-words">Report submitted</span>
+            <span role="status" className="min-w-0 break-words">{reportNotice.message}</span>
           </div>
         </div>
       )}

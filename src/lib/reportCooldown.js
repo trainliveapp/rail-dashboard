@@ -18,12 +18,13 @@ export function getReportToken() {
 export function readReportSubmission() {
   try { cached = JSON.parse(window.localStorage.getItem(storageKey) || 'null') }
   catch { /* Keep the in-memory state when storage is blocked. */ }
-  return cached
+  // Accept the single-report cache from older app versions.
+  return Array.isArray(cached) ? cached : cached ? [cached] : []
 }
 
 export function saveReportSubmission(state) {
-  cached = state
-  try { window.localStorage.setItem(storageKey, JSON.stringify(state)) } catch { /* Use memory. */ }
+  cached = Array.isArray(state) ? state : state ? [state] : []
+  try { window.localStorage.setItem(storageKey, JSON.stringify(cached)) } catch { /* Use memory. */ }
   window.dispatchEvent(new Event('report-submission-changed'))
 }
 
@@ -32,6 +33,12 @@ export function reportCooldownRemaining(state, now = Date.now()) {
 }
 
 export function canUndoReport(state, stationName, category, now = Date.now()) {
-  return reportCooldownRemaining(state, now) > 0 && !state.undone &&
-    state.report?.stationName === stationName && state.report?.category === category
+  const submission = getIconSubmission(state, stationName, category)
+  return reportCooldownRemaining(submission, now) > 0 && !submission.undone &&
+    ['ACTIVE', 'CONFIRMED'].includes(submission.report?.status || 'ACTIVE')
+}
+
+export function getIconSubmission(state, stationName, category) {
+  const entries = Array.isArray(state) ? state : state ? [state] : []
+  return entries.find((entry) => entry.report?.stationName === stationName && entry.report?.category === category)
 }
