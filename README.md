@@ -1,5 +1,17 @@
 # React + Vite
 
+## Website images
+
+Keep original artwork in `src/assets`. Add new artwork to the asset list in
+`scripts/optimize-images.mjs`, then run `npm run optimize:images`. This generates
+the WebP files in `src/assets/optimized` and their dimensions and responsive
+variants in `src/data/optimizedImages.js`. Commit the generated files together.
+
+Use `SmoothImage` for content images, with appropriate `sizes` and width/height.
+It lazy-loads and reveals decoded images; use `loading="eager"` for visible hero
+images. `ImageBackground` retains the current artwork until its replacement
+loads, and the advertisement carousel only preloads nearby slides.
+
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 
 Currently, two official plugins are available:

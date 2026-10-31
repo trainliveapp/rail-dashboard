@@ -162,7 +162,8 @@ import {
 } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient'
 import { getAppUrl } from '../lib/appUrl'
-import backgroundImage from '../assets/backgroundimg.png'
+import { images } from '../data/optimizedImages'
+import SmoothImage from '../components/SmoothImage'
 import BrandLogo from '../components/BrandLogo'
 
 function GoogleIcon() {
@@ -301,7 +302,7 @@ export default function SignupPage() {
 
       {/* ============ MOBILE / TABLET BANNER ============ */}
       <header className="relative h-[clamp(160px,28dvh,240px)] min-h-[160px] shrink-0 overflow-hidden bg-slate-800 sm:h-[clamp(190px,30dvh,260px)] lg:hidden">
-        <div className="absolute inset-0 bg-cover bg-[center_30%]" style={{ backgroundImage: `url(${backgroundImage})` }} />
+        <SmoothImage {...images.authBackground} sizes="(min-width: 1024px) 60vw, 100vw" loading="eager" fetchPriority="high" alt="" className="absolute inset-0 h-full w-full object-cover object-[center_30%]" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-black/20" />
         <div className="relative z-10 flex h-full flex-col justify-between p-4 pb-7 sm:p-6 sm:pb-9 md:p-8 md:pb-10">
           <BrandLogo className="h-7 max-w-[120px] sm:h-8 sm:max-w-[135px]" />
@@ -313,7 +314,7 @@ export default function SignupPage() {
 
       {/* ============ DESKTOP HERO ============ */}
       <section className="relative hidden h-full min-h-0 w-[50%] shrink-0 flex-col justify-between overflow-hidden bg-slate-800 px-[clamp(1.5rem,3.5vw,4.5rem)] py-[clamp(1.5rem,4vh,3rem)] text-white lg:flex xl:w-[55%] 2xl:w-[58%]">
-        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${backgroundImage})` }} />
+        <SmoothImage {...images.authBackground} sizes="(min-width: 1024px) 60vw, 100vw" loading="eager" alt="" className="absolute inset-0 h-full w-full object-cover object-center" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-black/15 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/55 to-transparent" />
 

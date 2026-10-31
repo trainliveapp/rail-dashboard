@@ -1,6 +1,14 @@
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
+.image-reveal { transition: opacity 300ms ease; }
+.image-background-reveal { animation: image-background-in 350ms ease both; }
+@keyframes image-background-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .image-reveal { transition: none; }
+  .image-background-reveal { animation: none; }
+}
+
 @theme {
   --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
   --font-board: var(--font-sans);

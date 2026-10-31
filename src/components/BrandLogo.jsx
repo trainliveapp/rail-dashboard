@@ -1,4 +1,6 @@
-import logo from '../../Avviso-1/PNG/Logo-PNG-transparent.png'
+import { images } from '../data/optimizedImages'
+
+const logo = images.brandLogo.src
 
 export default function BrandLogo({ className = '', framed = false, iconOnly = false }) {
   if (iconOnly) {

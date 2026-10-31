@@ -1,13 +1,17 @@
-import authBg from '../assets/auth-bg.png'
+import { images } from '../data/optimizedImages'
+import SmoothImage from './SmoothImage'
 import BrandLogo from './BrandLogo'
 
 export default function AuthLayout({ children, cardWidth = 'max-w-[560px]', backgroundImage, blurBackground = true }) {
-  const bgSrc = backgroundImage || authBg
+  const background = backgroundImage ? { src: backgroundImage } : images.authFallback
 
   return (
     <div className="relative min-h-dvh w-full flex items-center justify-center overflow-hidden pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-24 px-4 sm:py-24">
-      <img
-        src={bgSrc}
+      <SmoothImage
+        {...background}
+        sizes="100vw"
+        loading="eager"
+        fetchPriority="high"
         alt=""
         className={`absolute inset-0 w-full h-full object-cover ${blurBackground ? 'blur-sm scale-105' : ''}`}
       />

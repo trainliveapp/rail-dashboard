@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { ChevronDown, ChevronRight, Loader2, Star, X } from 'lucide-react'
+import { ChevronRight, Loader2, Star } from 'lucide-react'
 import ReportCategoryImage from './ReportCategoryImage'
-import StationReportCard from './StationReportCard'
 import { stationReportCategories, lines } from '../data/mockData'
 import { getStationUpdates, postReport, undoReport, subscribeToStationUpdates, UPDATE_VISIBILITY_WINDOW_MS } from '../lib/stationUpdates'
 import useReportCooldown from '../lib/useReportCooldown'
@@ -20,7 +19,6 @@ export default function StationReportSummary({ station, onRate, onViewReviews, r
   const [reports, setReports] = useState([])
   const [loading, setLoading] = useState(true)
   const [score, setScore] = useState(null)
-  const [selectedCategory, setSelectedCategory] = useState('all')
   const [reportError, setReportError] = useState(false)
   const [scoreError, setScoreError] = useState(false)
   const [revision, setRevision] = useState(0)
@@ -82,7 +80,6 @@ export default function StationReportSummary({ station, onRate, onViewReviews, r
     setLoading(true)
     setReports([])
     setScore(null)
-    setSelectedCategory('all')
     const refreshReports = async () => {
       const request = ++reportRequest
       try {
@@ -109,9 +106,7 @@ export default function StationReportSummary({ station, onRate, onViewReviews, r
   const activeReports = reports.filter((r) => r.kind === 'report' && ['ACTIVE', 'CONFIRMED'].includes(r.status) && Date.now() - new Date(r.createdAt).getTime() < UPDATE_VISIBILITY_WINDOW_MS)
   const counts = Object.fromEntries(stationReportCategories.map((cat) => [cat.key, activeReports.filter((r) => r.category === cat.key).length]))
   const stationLines = (station.lines || []).map((name) => lines.find((line) => line.name === name) || { name, color: '#17428b' })
-  const selectedReports = activeReports.filter((r) => selectedCategory === 'all' || r.category === selectedCategory)
   const scoreLabel = score == null ? 'Loading…' : score.overallScore == null ? 'Not rated yet' : Number(score.overallScore).toFixed(1)
-  const actionClass = 'flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-lg px-2 py-2.5 text-xs sm:text-sm font-bold transition-colors [&>svg]:shrink-0 focus-visible:outline-2 focus-visible:outline-blue-600'
   const reviewActionClass = 'flex min-h-11 min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-2.5 text-xs font-semibold transition-colors [&>svg]:shrink-0 focus-visible:outline-2 focus-visible:outline-blue-600'
 
   return <div className="station-summary w-[min(27.5rem,calc(100vw-3rem))] overflow-hidden rounded-xl bg-white text-slate-900 shadow-xl">
@@ -137,13 +132,6 @@ export default function StationReportSummary({ station, onRate, onViewReviews, r
           <span className="flex min-h-10 items-center break-words leading-tight">{cat.label}</span>{submittingCategory === cat.key ? <span role="status" className="flex items-center gap-1 text-xs"><Loader2 size={14} className="animate-spin" /> Saving…</span> : <strong className={`text-sm ${counts[cat.key] > 0 ? 'text-red-600' : 'text-slate-500'}`}>{loading || reportError ? '—' : counts[cat.key]}</strong>}
         </button>)}
       </div>
-      <div className="mb-3 grid grid-cols-1 gap-2">
-        <button type="button" onClick={() => setSelectedCategory((current) => current ? null : 'all')} aria-expanded={Boolean(selectedCategory)} aria-controls="station-live-reports" className={`${actionClass} border border-slate-300 hover:bg-slate-50`}>{selectedCategory ? 'Hide reports' : 'View reports'}<ChevronDown size={16} className={`ml-auto transition-transform ${selectedCategory ? 'rotate-180' : ''}`} /></button>
-      </div>
-      {selectedCategory && <section id="station-live-reports" className="mb-3 rounded-lg border border-slate-200 bg-slate-50 p-3" aria-label="Live station reports">
-        <div className="mb-2 flex items-center justify-between gap-2"><h4 className="text-xs font-bold">{selectedCategory === 'all' ? 'Live station' : stationReportCategories.find((cat) => cat.key === selectedCategory)?.label} reports</h4><button type="button" onClick={() => setSelectedCategory(null)} aria-label="Close reports" className="rounded p-1 hover:bg-slate-200"><X size={16} /></button></div>
-        {loading ? <p role="status" className="!my-1 text-xs text-slate-500">Loading reports…</p> : reportError ? <div role="alert" className="text-xs text-slate-600">Reports could not be loaded. <button type="button" onClick={() => setRevision((n) => n + 1)} className="font-bold text-blue-700">Try again</button></div> : selectedReports.length === 0 ? <p className="!my-1 text-xs text-slate-500">{selectedCategory === 'all' ? 'No active reports in the last 24 hours.' : 'No active reports for this category in the last 24 hours.'}</p> : <><p className="!my-1 text-[11px] text-slate-500">Last 24 hours · Confirm only issues you have seen.</p><div className="space-y-2">{selectedReports.map((report) => <StationReportCard key={report.id} report={report} />)}</div></>}
-      </section>}
       <div ref={reviewRef}>
       {reviewContent || <>
       <h4 className="mb-1 text-xs font-bold">Station reviews</h4>

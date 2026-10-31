@@ -1,8 +1,6 @@
 ﻿import { ArrowRight, Bell, CalendarDays, ChartNoAxesColumnIncreasing, Heart, MessageSquare, Route, ShieldCheck, Users } from 'lucide-react'
-import platformImage from '../assets/Cinematic Commuter Train Platform-1.png'
-import flavioImage from '../assets/Friendly Cybernetic Portrait with Smartphone-2.png'
-import phoneImage from '../assets/Kelly’s Personalized Travel Dashboard.png'
-import trainImage from '../assets/Modern Red-and-White Commuter Train-4.png'
+import { images } from '../data/optimizedImages'
+import SmoothImage from './SmoothImage'
 import BrandLogo from './BrandLogo'
 import { useState } from 'react'
 import './FeatureCards.css'
@@ -29,7 +27,7 @@ export default function FeatureCards() {
   return (
     <section className="flavio-banner" aria-labelledby="flavio-heading">
       <div className="flavio-hero">
-        <img src={platformImage} alt="" className="flavio-platform" loading="lazy" />
+        <SmoothImage {...images.featurePlatform} sizes="100vw" alt="" className="flavio-platform" />
         <div className="flavio-shade" aria-hidden="true" />
 
         <div className="flavio-copy">
@@ -46,8 +44,8 @@ export default function FeatureCards() {
         </div>
 
         <div className="flavio-art">
-          <img src={flavioImage} alt="Flavio, your friendly AI travel companion, holding a smartphone" className="flavio-portrait" loading="lazy" />
-          <img src={phoneImage} alt="Preview of Kelly’s personalized travel dashboard on iPhone" className="flavio-phone" loading="lazy" />
+          <SmoothImage {...images.featurePortrait} sizes="(max-width: 767px) 50vw, 400px" alt="Flavio, your friendly AI travel companion, holding a smartphone" className="flavio-portrait" />
+          <SmoothImage {...images.featurePhone} sizes="(max-width: 767px) 50vw, 400px" alt="Preview of Kelly’s personalized travel dashboard on iPhone" className="flavio-phone" />
         </div>
 
         <div className="flavio-benefits" aria-label="Coming soon with Flavio">
@@ -65,7 +63,7 @@ export default function FeatureCards() {
           {features.map(({ icon: Icon, color, label }) => <li key={label}><Icon style={{ color }} aria-hidden="true" strokeWidth={2.7} /><span>{label}</span></li>)}
         </ul>
         <p className="flavio-handwritten flavio-footer-note">Built by commuters.<br />Powered by commuters.</p>
-        <div className="flavio-train-wrap"><img src={trainImage} alt="Illustration of a red and white commuter train" className="flavio-train" loading="lazy" /></div>
+        <div className="flavio-train-wrap"><SmoothImage {...images.featureTrain} sizes="(max-width: 767px) 50vw, 400px" alt="Illustration of a red and white commuter train" className="flavio-train" /></div>
       </div>
     </section>
   )

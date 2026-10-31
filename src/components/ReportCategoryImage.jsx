@@ -1,25 +1,22 @@
-import delaysImage from '../assets/2303.png'
-import policeImage from '../assets/2290.png'
-import safetyImage from '../assets/2306.png'
-import revenueImage from '../assets/2293.png'
-import antisocialImage from '../assets/2312.png'
-import harassmentImage from '../assets/2302.png'
-import fareDodgersImage from '../assets/2313.png'
+import { images } from '../data/optimizedImages'
+import SmoothImage from './SmoothImage'
 
 const categoryImages = {
-  delays: delaysImage,
-  police: policeImage,
-  safety: safetyImage,
-  revenue: revenueImage,
-  antisocial: antisocialImage,
-  harassment_violence: harassmentImage,
-  fare_dodgers: fareDodgersImage,
+  delays: images.reportDelays,
+  police: images.reportPolice,
+  safety: images.reportSafety,
+  revenue: images.reportRevenue,
+  antisocial: images.reportAntisocial,
+  harassment_violence: images.reportHarassment,
+  fare_dodgers: images.reportFareDodgers,
 }
 
 export default function ReportCategoryImage({ category, className = '' }) {
   return (
-    <img
-      src={categoryImages[category]}
+    <SmoothImage
+      {...categoryImages[category]}
+      sizes="80px"
+      loading="eager"
       alt=""
       draggable={false}
       width={80}

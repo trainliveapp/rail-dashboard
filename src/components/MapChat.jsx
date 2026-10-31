@@ -1435,35 +1435,25 @@ import {
 import { supabase } from "../supabase";
 import { lineTextColors } from "./lineColors";
 import { getChatVisitorId } from "../lib/chatIdentity";
-import centralChatBackground from "../assets/centeral line.jpeg";
-import bakerlooChatBackground from "../assets/bakeralo.jpeg";
-import circleChatBackground from "../assets/circle-line.webp";
-import districtChatBackground from "../assets/district-line.webp";
-import hammersmithChatBackground from "../assets/Hammersmith_and_City_Line_Apollo_Fox_Portrait.webp";
-import jubileeChatBackground from "../assets/jubilee-line.webp";
-import metropolitanChatBackground from "../assets/metropolitan-line.webp";
-import northernChatBackground from "../assets/northern-line.webp";
-import piccadillyChatBackground from "../assets/piccadilly-line.webp";
-import victoriaChatBackground from "../assets/victoria-line.webp";
-import waterlooChatBackground from "../assets/waterloo-and-city-line.webp";
-import greatWesternChatBackground from "../assets/great-western-railway.webp";
-import elizabethChatBackground from "../assets/Elizabeth_Line_Heathrow_Terminal_5_Red_X_Barriers_Portrait.webp";
+import { images } from "../data/optimizedImages";
+import ImageBackground from "./ImageBackground";
+import SmoothImage from "./SmoothImage";
 import gwrLogo from "../assets/gwr-logo.svg";
 
 const CHAT_LINE_BACKGROUNDS = {
-  central: centralChatBackground,
-  bakerloo: bakerlooChatBackground,
-  elizabeth: elizabethChatBackground,
-  circle: circleChatBackground,
-  district: districtChatBackground,
-  "hammersmith & city": hammersmithChatBackground,
-  jubilee: jubileeChatBackground,
-  metropolitan: metropolitanChatBackground,
-  northern: northernChatBackground,
-  piccadilly: piccadillyChatBackground,
-  victoria: victoriaChatBackground,
-  "waterloo & city": waterlooChatBackground,
-  "great western railway": greatWesternChatBackground,
+  central: images.chatCentral,
+  bakerloo: images.chatBakerloo,
+  elizabeth: images.chatElizabeth,
+  circle: images.chatCircle,
+  district: images.chatDistrict,
+  "hammersmith & city": images.chatHammersmith,
+  jubilee: images.chatJubilee,
+  metropolitan: images.chatMetropolitan,
+  northern: images.chatNorthern,
+  piccadilly: images.chatPiccadilly,
+  victoria: images.chatVictoria,
+  "waterloo & city": images.chatWaterloo,
+  "great western railway": images.chatGreatWestern,
 };
 
 const CHAT_VISIBILITY_WINDOW_MS = 24 * 60 * 60 * 1000;
@@ -1900,9 +1890,9 @@ export default function MapChat() {
         sm:left-5 sm:right-auto sm:bottom-5 sm:w-[400px] sm:h-[min(680px,calc(100dvh-40px))]"
       style={{
         isolation: "isolate",
-        backgroundImage: `linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.35)), url("${CHAT_LINE_BACKGROUNDS[line] || bakerlooChatBackground}")`,
       }}
     >
+      <ImageBackground {...(CHAT_LINE_BACKGROUNDS[line] || images.chatBakerloo)} sizes="(max-width: 639px) calc(100vw - 24px), 400px" shaded />
       <div className="chat-panel-header relative z-30 m-2 mb-0 flex h-[52px] shrink-0 items-center justify-between rounded-xl bg-yellow-400 px-4 text-brand-ink">
         <div className="flex min-w-0 items-center gap-3">
           <span className="text-xl font-black text-brand-ink">chatter</span>
@@ -1944,8 +1934,8 @@ export default function MapChat() {
           id="chat-line"
           value={line}
           onChange={(e) => setLine(e.target.value)}
-          className={`h-11 w-full rounded-xl border border-white/30 pr-3.5 font-semibold capitalize text-white outline-none focus-visible:ring-2 focus-visible:ring-yellow-400 ${line === "great western railway" ? 'pl-16 text-sm sm:text-base' : 'pl-12 text-base'}`}
-          style={{ backgroundColor: CHAT_LINE_COLORS[line] || "#334155" }}
+          className={`h-11 w-full rounded-xl border-0 pr-3.5 font-semibold capitalize text-white outline-none focus-visible:outline-2 focus-visible:outline-offset-2 ${line === "great western railway" ? 'pl-16 text-sm sm:text-base' : 'pl-12 text-base'}`}
+          style={{ backgroundColor: CHAT_LINE_COLORS[line] || "#334155", outlineColor: CHAT_LINE_COLORS[line] || "#334155" }}
         >
           {TUBE_LINES.map((item) => (
             <option
@@ -1966,18 +1956,7 @@ export default function MapChat() {
       <div
         className="chat-messages relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3 [scrollbar-width:thin]"
       >
-        {messages.length === 0 ? (
-          <div className="flex h-full flex-col items-center justify-center px-8 text-center">
-            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-white/30 bg-white/15 text-white backdrop-blur-sm">
-              <MessageCircle size={24} />
-            </div>
-            <p className="text-sm font-bold text-white">Start the conversation</p>
-            <p className="mt-1 max-w-[270px] text-xs leading-5 text-white/80">
-              Share a delay, ask a question, or help another passenger.
-            </p>
-          </div>
-        ) : (
-          messages.map((message, index) => {
+        {messages.map((message, index) => {
             const reactionState = reactions[message.id] || { counts: {}, myReaction: null };
             const heartCount = (reactionState.counts[HEART_REACTION] || 0) + (reactionState.counts["\u2764"] || 0);
             const liked = reactionState.myReaction === HEART_REACTION || reactionState.myReaction === "\u2764";
@@ -2005,9 +1984,11 @@ export default function MapChat() {
 
                         {message.image_url && (
                           <div className="mt-1.5 overflow-hidden rounded-lg">
-                            <img
+                            <SmoothImage
                               src={message.image_url}
                               alt="Shared in chat"
+                              width={640}
+                              height={480}
                               className="max-h-64 w-full object-cover"
                               loading="lazy"
                             />
@@ -2065,8 +2046,7 @@ export default function MapChat() {
                 </div>
               </div>
             );
-          })
-        )}
+          })}
       </div>
 
       <div className="pointer-events-none absolute inset-x-0 bottom-[76px] z-40 h-56 overflow-hidden" aria-hidden="true">

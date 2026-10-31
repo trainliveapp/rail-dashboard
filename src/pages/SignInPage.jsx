@@ -129,7 +129,8 @@ import {
   ChevronDown,
   AlertCircle,
 } from 'lucide-react'
-import backgroundImage from '../assets/backgroundimg.png'
+import { images } from '../data/optimizedImages'
+import SmoothImage from '../components/SmoothImage'
 import { supabase } from '../lib/supabaseClient'
 import { getAppUrl } from '../lib/appUrl'
 import BrandLogo from '../components/BrandLogo'
@@ -317,17 +318,7 @@ export default function SignInPage() {
         "
       >
         {/* Background */}
-        <div
-          className="
-            absolute
-            inset-0
-            bg-cover
-            bg-[center_30%]
-          "
-          style={{
-            backgroundImage: `url(${backgroundImage})`,
-          }}
-        />
+        <SmoothImage {...images.authBackground} sizes="(min-width: 1024px) 60vw, 100vw" loading="eager" fetchPriority="high" alt="" className="absolute inset-0 h-full w-full object-cover object-[center_30%]" />
 
         {/* Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-black/20" />
@@ -404,17 +395,7 @@ export default function SignInPage() {
         "
       >
         {/* Background */}
-        <div
-          className="
-            absolute
-            inset-0
-            bg-cover
-            bg-center
-          "
-          style={{
-            backgroundImage: `url(${backgroundImage})`,
-          }}
-        />
+        <SmoothImage {...images.authBackground} sizes="(min-width: 1024px) 60vw, 100vw" loading="eager" alt="" className="absolute inset-0 h-full w-full object-cover object-center" />
 
         {/* Overlays */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-black/15 to-transparent" />
