@@ -257,15 +257,6 @@ export default function MapPanel({
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 767px)').matches)
 
   useEffect(() => {
-    if (!isMobile || !mobileStation) return undefined
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = previousOverflow
-    }
-  }, [isMobile, mobileStation])
-
-  useEffect(() => {
     getStationScores(stations.map((s) => s.id)).then(setStationScores)
   }, [])
   useEffect(() => {
