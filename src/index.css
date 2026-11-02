@@ -434,7 +434,7 @@ button:disabled,
 }
 .station-summary--mobile .station-summary-header {
   background: linear-gradient(90deg, #0b3b70, #0878ea);
-  padding: 20px 48px 7px 16px;
+  padding: 16px 48px 7px 16px;
 }
 .station-summary--mobile .station-summary-title {
   color: white;
@@ -499,10 +499,10 @@ button:disabled,
   left: 0;
   z-index: 1;
   display: flex;
-  height: 20px;
+  height: 16px;
   align-items: flex-start;
   justify-content: center;
-  padding-top: 6px;
+  padding-top: 5px;
   border-radius: 16px 16px 0 0;
   background: white;
   touch-action: none;
@@ -517,7 +517,7 @@ button:disabled,
 }
 .station-sheet-close {
   position: absolute;
-  top: 20px;
+  top: 16px;
   right: 8px;
   z-index: 2;
   display: flex;
