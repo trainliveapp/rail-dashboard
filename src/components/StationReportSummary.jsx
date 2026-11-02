@@ -15,7 +15,7 @@ export function RatingStars({ value, size = 14 }) {
   </span>
 }
 
-export default function StationReportSummary({ station, onRate, onViewReviews, reviewView, reviewContent }) {
+export default function StationReportSummary({ station, onRate, onViewReviews, reviewView, reviewContent, mobile = false }) {
   const [reports, setReports] = useState([])
   const [loading, setLoading] = useState(true)
   const [score, setScore] = useState(null)
@@ -108,14 +108,14 @@ export default function StationReportSummary({ station, onRate, onViewReviews, r
   const scoreLabel = score == null ? 'Loading…' : score.overallScore == null ? 'Not rated yet' : Number(score.overallScore).toFixed(1)
   const reviewActionClass = 'flex min-h-11 min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-2.5 text-xs font-semibold transition-colors [&>svg]:shrink-0 focus-visible:outline-2 focus-visible:outline-blue-600'
 
-  return <div className="station-summary w-[min(27.5rem,calc(100vw-3rem))] overflow-hidden rounded-xl bg-white text-slate-900 shadow-xl">
-    <header className="shrink-0 bg-gradient-to-r from-blue-900 to-blue-600 px-4 py-3 pr-14">
-      <h3 className="break-words text-lg font-bold leading-tight text-white">{station.name}</h3>
-      <div className="mt-1.5 flex flex-wrap gap-1">{stationLines.map((line) => <span key={line.name} className="rounded-full px-2 py-0.5 text-[10px] font-semibold text-white" style={{ backgroundColor: line.color }}>{line.name}</span>)}</div>
+  return <div className={`station-summary ${mobile ? 'station-summary--mobile' : 'w-[min(27.5rem,calc(100vw-3rem))]'} overflow-hidden rounded-xl bg-white text-slate-900 shadow-xl`}>
+    <header className={`station-summary-header shrink-0 bg-gradient-to-r from-blue-900 to-blue-600 ${mobile ? 'px-3 py-2 pr-12' : 'px-4 py-3 pr-14'}`}>
+      <h3 className="station-summary-title break-words text-lg font-bold leading-tight text-white">{station.name}</h3>
+      <div className="station-summary-lines mt-1.5 flex flex-wrap gap-1">{stationLines.map((line) => <span key={line.name} className="rounded-full px-2 py-0.5 text-[10px] font-semibold text-white" style={{ backgroundColor: line.color }}>{line.name}</span>)}</div>
     </header>
-    <div ref={bodyRef} className="station-summary-body relative min-h-0 max-h-[min(65dvh,560px)] overflow-y-auto overscroll-contain p-3">
+    <div ref={bodyRef} className={`station-summary-body relative min-h-0 overflow-y-auto overscroll-contain ${mobile ? 'p-2.5' : 'max-h-[min(65dvh,560px)] p-3'}`}>
       <div className="mb-2 grid grid-cols-1 gap-2">
-        <button type="button" onClick={onViewReviews} className="flex items-center gap-2 rounded-lg bg-slate-50 px-2.5 py-2 text-left">
+        <button type="button" onClick={onViewReviews} className="station-summary-review flex items-center gap-2 rounded-lg bg-slate-50 px-2.5 py-2 text-left">
           <Star size={27} className="shrink-0 fill-amber-400 text-amber-400" /><span className="min-w-0 flex-1"><strong className={`block leading-tight ${score?.overallScore == null ? 'text-sm' : 'text-xl'}`}>{scoreError ? '—' : scoreLabel}{score?.overallScore != null && <span className="text-sm font-normal">/5</span>}</strong><span className="block text-[11px] text-slate-500">{scoreError ? 'Reviews unavailable' : 'Station reviews'}</span></span><ChevronRight size={16} />
         </button>
       </div>
@@ -124,11 +124,11 @@ export default function StationReportSummary({ station, onRate, onViewReviews, r
       <p role="status" className="!mt-0 !mb-3 text-xs text-slate-600">{cooldown.notice}</p>
       {submitNotice && <p role="status" className="!my-2 rounded-lg bg-emerald-50 p-3 text-xs text-emerald-800">{submitNotice}</p>}
       {submitError && <p role="alert" className="!my-2 rounded-lg bg-amber-50 p-3 text-xs text-amber-800">{submitError}</p>}
-      <div className="mb-2 grid grid-cols-2 sm:grid-cols-3 gap-3" aria-busy={Boolean(submittingCategory)}>
+      <div className="mb-2 grid grid-cols-2 min-[430px]:grid-cols-3 gap-2" aria-busy={Boolean(submittingCategory)}>
         {stationReportCategories.map((cat) => <button type="button" key={cat.key} onClick={() => reportIssue(cat)} disabled={Boolean(submittingCategory)} aria-pressed={cooldown.canUndo(station.name, cat.key)} aria-label={`${cooldown.canUndo(station.name, cat.key) ? 'Deselect' : 'Report'} ${cat.label} at ${station.name}`} className="flex min-w-0 flex-col items-center justify-center gap-2 rounded-xl border border-brand-line bg-white px-3 py-4 text-center text-sm font-medium text-brand-slate transition-colors hover:border-brand-blue hover:bg-blue-50 aria-pressed:border-emerald-500 aria-pressed:bg-emerald-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue disabled:cursor-not-allowed disabled:opacity-60">
-          <ReportCategoryImage category={cat.key} className="h-16 w-16 sm:h-20 sm:w-20" />
+          <ReportCategoryImage category={cat.key} className="h-12 w-12 min-[430px]:h-14 min-[430px]:w-14" />
           {cooldown.canUndo(station.name, cat.key) && <span className="text-xs font-semibold text-emerald-700">Reported · Tap to deselect</span>}
-          <span className="flex min-h-10 items-center break-words leading-tight">{cat.label}</span>{submittingCategory === cat.key ? <span role="status" className="flex items-center gap-1 text-xs"><Loader2 size={14} className="animate-spin" /> Saving…</span> : <strong className={`text-sm ${counts[cat.key] > 0 ? 'text-red-600' : 'text-slate-500'}`}>{loading || reportError ? '—' : counts[cat.key]}</strong>}
+          <span className="flex min-h-9 items-center break-words leading-tight">{cat.label}</span>{submittingCategory === cat.key ? <span role="status" className="flex items-center gap-1 text-xs"><Loader2 size={14} className="animate-spin" /> Saving…</span> : <strong className={`text-sm ${counts[cat.key] > 0 ? 'text-red-600' : 'text-slate-500'}`}>{loading || reportError ? '—' : counts[cat.key]}</strong>}
         </button>)}
       </div>
       <div ref={reviewRef}>

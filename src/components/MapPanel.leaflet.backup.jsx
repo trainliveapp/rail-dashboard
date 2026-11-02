@@ -253,8 +253,26 @@ export default function MapPanel({
   const [directionMode, setDirectionMode] = useState(false)
   const [reportContext, setReportContext] = useState(null)
   const [reportNotice, setReportNotice] = useState(null)
+  const [mobileStation, setMobileStation] = useState(null)
+  const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 767px)').matches)
+
+  useEffect(() => {
+    if (!isMobile || !mobileStation) return undefined
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [isMobile, mobileStation])
+
   useEffect(() => {
     getStationScores(stations.map((s) => s.id)).then(setStationScores)
+  }, [])
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 767px)')
+    const update = () => setIsMobile(media.matches)
+    media.addEventListener?.('change', update)
+    return () => media.removeEventListener?.('change', update)
   }, [])
 
   const stationIcons = useMemo(
@@ -444,7 +462,7 @@ export default function MapPanel({
 
         {zoom >= STATION_VISIBLE_ZOOM &&
           stations.map((s) => (
-            <Marker key={s.id} position={[s.lat, s.lng]} icon={stationIcons[s.id]}>
+            <Marker key={s.id} position={[s.lat, s.lng]} icon={stationIcons[s.id]} eventHandlers={isMobile ? { click: () => setMobileStation(s) } : undefined}>
               <Tooltip
                 direction="top"
                 permanent
@@ -454,14 +472,14 @@ export default function MapPanel({
               >
                 {s.name}
               </Tooltip>
-              <Popup minWidth={260} maxWidth={440} className="station-popup">
+              {!isMobile && <Popup minWidth={260} maxWidth={440} className="station-popup">
                 <StationPopup
                   stationId={s.id}
                   stationName={s.name}
                   stationLines={s.lines}
                   onGetDirections={onGetDirections}
                 />
-              </Popup>
+              </Popup>}
             </Marker>
           ))}
 
@@ -606,6 +624,15 @@ export default function MapPanel({
           initialStation={reportContext.station}
           onClose={() => setReportContext(null)}
           onReportSubmitted={handleReportSubmitted}
+        />
+      )}
+      {isMobile && mobileStation && (
+        <StationPopup
+          stationId={mobileStation.id}
+          stationName={mobileStation.name}
+          stationLines={mobileStation.lines}
+          mobile
+          onClose={() => setMobileStation(null)}
         />
       )}
     </div>

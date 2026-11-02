@@ -149,6 +149,14 @@ body {
     max-height: min(560px, calc(65svh - 4rem));
   }
   .station-summary-body { flex: 1; }
+  .station-sheet {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    height: min(88dvh, 720px);
+  }
   /* Keep the toolbar from covering the station card on narrow maps. */
   .map-panel:has(.station-popup) .map-controls { visibility: hidden; }
   .map-panel .station-popup .leaflet-popup-close-button {
@@ -394,4 +402,143 @@ button:disabled,
 }
 .station-popup .leaflet-popup-close-button:hover {
   background: #1d4ed8;
+}
+
+.station-sheet {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1100;
+  height: min(88%, 720px);
+  transform: translateY(calc(62% + var(--station-sheet-drag, 0px)));
+  transition: transform 220ms ease;
+  pointer-events: auto;
+  touch-action: pan-y;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.station-sheet:has(.station-sheet-handle[aria-label="Expand station details"]) {
+  transform: translateY(calc(62% + var(--station-sheet-drag, 0px)));
+}
+.station-sheet:has(.station-sheet-handle[aria-label="Collapse station details"]) {
+  transform: translateY(var(--station-sheet-drag, 0px));
+}
+.station-sheet .station-summary {
+  height: 100%;
+  max-height: none;
+  border-radius: 22px 22px 0 0;
+  box-shadow: 0 -4px 18px rgb(15 23 42 / 20%);
+}
+.station-summary--mobile .station-summary-body {
+  touch-action: pan-y;
+}
+.station-summary--mobile {
+  background: #faf7fc;
+}
+.station-summary--mobile .station-summary-header {
+  background: #faf7fc;
+  padding: 8px 16px 2px;
+}
+.station-summary--mobile .station-summary-title {
+  color: #25212b;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+.station-summary--mobile .station-summary-lines {
+  margin-top: 1px;
+}
+.station-summary--mobile .station-summary-lines span {
+  padding: 0;
+  background: transparent !important;
+  color: #89838e;
+  font-size: 0.72rem;
+  font-weight: 500;
+}
+.station-summary--mobile .station-summary-lines span + span::before {
+  content: ' · ';
+}
+.station-summary--mobile .station-summary-body {
+  padding: 8px 16px max(16px, env(safe-area-inset-bottom));
+  background: #faf7fc;
+}
+.station-summary--mobile .station-summary-review {
+  border: 0;
+  border-radius: 9999px;
+  background: transparent;
+  padding: 7px 0;
+}
+.station-summary--mobile .station-summary-review svg:first-child {
+  width: 25px;
+  height: 25px;
+}
+.station-summary--mobile .station-summary-body > h4 {
+  margin-top: 10px;
+  color: #25212b;
+  font-size: 0.9rem;
+}
+.station-summary--mobile .station-summary-body > p {
+  color: #89838e;
+}
+.station-summary--mobile .station-summary-body [aria-busy="true"] {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.station-summary--mobile .station-summary-body [aria-busy="true"] > button {
+  min-height: 84px;
+  gap: 6px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 4px 0;
+  color: #89838e;
+  font-size: 0.68rem;
+}
+.station-summary--mobile .station-summary-body [aria-busy="true"] > button > img {
+  width: 42px;
+  height: 42px;
+  border-radius: 9999px;
+}
+.station-summary--mobile .station-summary-body [aria-busy="true"] > button > span:last-child {
+  min-height: 0;
+  justify-content: center;
+}
+.station-sheet-handle {
+  position: absolute;
+  top: -18px;
+  right: 0;
+  left: 0;
+  z-index: 1;
+  display: flex;
+  height: 38px;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 9px;
+  border-radius: 22px 22px 0 0;
+  background: #faf7fc;
+  touch-action: none;
+  cursor: grab;
+}
+.station-sheet-handle:active { cursor: grabbing; }
+.station-sheet-handle span {
+  width: 42px;
+  height: 4px;
+  border-radius: 9999px;
+  background: #c6c1ca;
+}
+.station-sheet-close {
+  position: absolute;
+  top: 7px;
+  right: 8px;
+  z-index: 2;
+  display: flex;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  color: #475569;
+}
+.station-sheet-close:hover { background: #f1f5f9; }
+@media (prefers-reduced-motion: reduce) {
+  .station-sheet { transition: none; }
 }
