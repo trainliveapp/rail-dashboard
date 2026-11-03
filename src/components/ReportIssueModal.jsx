@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { X, ArrowRight } from 'lucide-react'
-import { reportCategories, stations } from '../data/mockData'
+import { reportCategories } from '../data/mockData'
 import { postReport, undoReport } from '../lib/stationUpdates'
 import useReportCooldown from '../lib/useReportCooldown'
 import { resolveReportStation } from '../lib/reportStations'
@@ -27,13 +27,9 @@ export default function ReportIssueModal({ initialStation = null, onClose, onRep
   const [stationQuery, setStationQuery] = useState(initialStation?.name || '')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
-  const [scope, setScope] = useState('station_wide')
-  const [affectedLineIds, setAffectedLineIds] = useState([])
   const cooldown = useReportCooldown()
 
   const matchedStation = resolveReportStation(stationQuery)
-  const mappedStation = matchedStation && stations.find((station) => station.id === matchedStation.canonicalId)
-  const stationLines = mappedStation?.lines || []
   const canUndo = cooldown.canUndo(matchedStation?.name, category)
 
   const handleSubmit = async (e) => {
@@ -41,10 +37,6 @@ export default function ReportIssueModal({ initialStation = null, onClose, onRep
     if (submitting) return
     if (!matchedStation) {
       setError('Please select a station from the search results.')
-      return
-    }
-    if (scope === 'line_specific' && affectedLineIds.length === 0) {
-      setError('Select at least one affected line.')
       return
     }
     const cat = reportCategories.find((c) => c.key === category)
@@ -62,8 +54,6 @@ export default function ReportIssueModal({ initialStation = null, onClose, onRep
         tone: categoryTone[category] || 'blue',
         message: `${cat.label} reported at ${matchedStation.name}.`,
         whereOn: null,
-        scope,
-        affectedLineIds,
       }
       const savedReport = canUndo ? await undoReport(cooldown.reportId(matchedStation.name, category)) : await postReport(report)
       onReportSubmitted?.(savedReport)
@@ -96,27 +86,8 @@ export default function ReportIssueModal({ initialStation = null, onClose, onRep
         <div className="no-scrollbar min-h-0 overflow-y-auto overscroll-contain">
         <ReportStationSearch value={stationQuery} onChange={(value) => {
           setStationQuery(value)
-          setScope('station_wide')
-          setAffectedLineIds([])
           setError('')
         }} />
-
-        {matchedStation && (
-          <fieldset className="mb-5 rounded-xl border border-slate-200 bg-white p-3">
-            <legend className="px-1 text-xs font-semibold text-slate-700">Where does this affect?</legend>
-            <div className="mt-2 flex flex-wrap gap-3">
-              <label className="flex items-center gap-2 text-sm text-slate-700"><input type="radio" name="report-scope" checked={scope === 'station_wide'} onChange={() => { setScope('station_wide'); setAffectedLineIds([]) }} /> Whole station</label>
-              <label className="flex items-center gap-2 text-sm text-slate-700"><input type="radio" name="report-scope" checked={scope === 'line_specific'} onChange={() => setScope('line_specific')} /> Specific line(s)</label>
-            </div>
-            {scope === 'line_specific' && <div className="mt-3 flex flex-wrap gap-2">
-              {stationLines.map((line) => {
-                const lineId = line.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
-                const checked = affectedLineIds.includes(lineId)
-                return <label key={line} className="flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-xs text-slate-700"><input type="checkbox" checked={checked} onChange={() => setAffectedLineIds((current) => checked ? current.filter((id) => id !== lineId) : [...current, lineId])} />{line}</label>
-              })}
-            </div>}
-          </fieldset>
-        )}
 
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
           {reportCategories.map((cat) => {
