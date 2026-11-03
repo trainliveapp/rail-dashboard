@@ -1440,7 +1440,7 @@ import { images } from "../data/optimizedImages";
 import ImageBackground from "./ImageBackground";
 import SmoothImage from "./SmoothImage";
 import gwrLogo from "../assets/gwr-logo.svg";
-import { getLineReportSummary, subscribeToCanonicalReports } from "../lib/canonicalReports";
+import { getLineReportBreakdown, getLineReportSummary, subscribeToCanonicalReports } from "../lib/canonicalReports";
 
 const CHAT_LINE_BACKGROUNDS = {
   central: images.chatCentral,
@@ -1508,6 +1508,8 @@ export default function MapChat() {
   const [open, setOpen] = useState(false);
   const [line, setLine] = useState("central");
   const [reportCount, setReportCount] = useState(0);
+  const [reportBreakdown, setReportBreakdown] = useState([]);
+  const [breakdownOpen, setBreakdownOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
@@ -1535,6 +1537,8 @@ export default function MapChat() {
 
   useEffect(() => {
     if (!open) return undefined;
+    setBreakdownOpen(false);
+    setReportBreakdown([]);
     let cancelled = false;
     const refreshReportCount = () => {
       getLineReportSummary(canonicalLineId(line))
@@ -1981,11 +1985,21 @@ export default function MapChat() {
             </option>
           ))}
         </select>
-        <span className="pointer-events-none absolute right-8 top-1/2 flex -translate-y-1/2 items-center gap-1" aria-label={`${reportCount} active reports on this line`}>
+        <button type="button" className="absolute right-8 top-1/2 flex min-h-9 min-w-[52px] -translate-y-1/2 items-center justify-center gap-1 rounded-md px-1 hover:bg-black/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white" aria-label={`View ${reportCount} active reports on this line`} aria-expanded={breakdownOpen} onClick={async () => {
+          if (!breakdownOpen) {
+            try { setReportBreakdown(await getLineReportBreakdown(canonicalLineId(line))) } catch (error) { console.error("Could not load report breakdown:", error); setReportBreakdown([]) }
+          }
+          setBreakdownOpen((value) => !value)
+        }}>
           <TriangleAlert className="h-5 w-5 text-yellow-300" fill="currentColor" stroke="#111827" strokeWidth={2.5} aria-hidden="true" />
           <span className="text-sm font-bold text-white tabular-nums">{reportCount}</span>
-        </span>
+        </button>
         </div>
+        {breakdownOpen && <div role="dialog" aria-label={`${line} active report breakdown`} className="absolute right-4 top-[4.75rem] z-30 w-56 rounded-lg bg-white p-3 text-slate-800 shadow-xl">
+          <div className="mb-2 flex items-center justify-between gap-2"><strong className="text-xs">Relevant reports</strong><button type="button" aria-label="Close report breakdown" onClick={() => setBreakdownOpen(false)} className="text-lg leading-none">×</button></div>
+          <p className="mb-2 text-[11px] text-slate-500">Active reports relevant to this line; not confirmed disruptions.</p>
+          {reportBreakdown.length ? reportBreakdown.map((item) => <div key={`${item.category}-${item.scope}`} className="flex justify-between gap-3 text-xs"><span>{item.category} <em className="text-[10px] not-italic text-slate-500">({item.scope === 'station_wide' ? 'station-wide' : 'line-specific'})</em></span><strong>{item.reportCount}</strong></div>) : <p className="text-xs text-slate-500">No active reports.</p>}
+        </div>}
       </div>
 
       <div

@@ -20,6 +20,8 @@ create table if not exists public.lines (
 create table if not exists public.station_lines (
   station_id text not null references public.stations(id) on delete cascade,
   line_id text not null references public.lines(id) on delete cascade,
+  valid_from date not null default current_date,
+  valid_to date,
   primary key (station_id, line_id)
 );
 
@@ -33,11 +35,26 @@ create table if not exists public.reports (
   message text,
   where_on text,
   author_id uuid references auth.users(id) on delete set null,
+  user_id uuid references auth.users(id) on delete set null,
+  scope text not null default 'station_wide' check (scope in ('station_wide', 'line_specific')),
   status text not null default 'ACTIVE' check (status in ('ACTIVE', 'CONFIRMED', 'RESOLVED', 'EXPIRED')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  expires_at timestamptz not null default (now() + interval '7 days')
+  expires_at timestamptz not null default (now() + interval '24 hours')
 );
+
+alter table public.stations add column if not exists external_source_id text;
+alter table public.lines add column if not exists colour text;
+alter table public.station_lines add column if not exists valid_from date not null default current_date;
+alter table public.station_lines add column if not exists valid_to date;
+alter table public.reports add column if not exists user_id uuid references auth.users(id) on delete set null;
+alter table public.reports add column if not exists scope text not null default 'station_wide';
+alter table public.reports add column if not exists expires_at timestamptz not null default (now() + interval '24 hours');
+update public.reports set user_id = author_id where user_id is null and author_id is not null;
+update public.reports set expires_at = created_at + interval '24 hours'
+where expires_at > created_at + interval '24 hours';
+alter table public.reports drop constraint if exists reports_scope_check;
+alter table public.reports add constraint reports_scope_check check (scope in ('station_wide', 'line_specific'));
 
 create table if not exists public.report_lines (
   report_id uuid not null references public.reports(id) on delete cascade,
@@ -58,6 +75,15 @@ insert into public.lines (id, name) values
   ('northern', 'Northern'), ('piccadilly', 'Piccadilly'), ('tramlink', 'Tramlink'),
   ('victoria', 'Victoria'), ('waterloo-city', 'Waterloo & City')
 on conflict (id) do update set name = excluded.name;
+update public.lines set colour = case id
+  when 'bakerloo' then '#B36305' when 'central' then '#DC2626'
+  when 'circle' then '#FFD300' when 'district' then '#00782A'
+  when 'dlr' then '#00A4A7' when 'elizabeth' then '#7156A5'
+  when 'hammersmith-and-city' then '#F589A6' when 'jubilee' then '#A0A5A9'
+  when 'london-overground' then '#EE7C0E' when 'metropolitan' then '#C4007D'
+  when 'northern' then '#1A1A1A' when 'piccadilly' then '#4C6FCB'
+  when 'tramlink' then '#84B817' when 'victoria' then '#2563EB'
+  when 'waterloo-city' then '#95CDBA' else colour end;
 
 -- Existing rows are imported when their station can be resolved. This is
 -- intentionally non-destructive; unmapped legacy rows remain readable.
@@ -77,6 +103,12 @@ create policy "Public can read active canonical reports" on public.reports
 drop policy if exists "Public can read report line mappings" on public.report_lines;
 create policy "Public can read report line mappings" on public.report_lines
   for select using (exists (select 1 from public.reports r where r.id = report_id and r.status in ('ACTIVE', 'CONFIRMED') and r.expires_at > now()));
+drop policy if exists "Users can read their report history" on public.reports;
+create policy "Users can read their report history" on public.reports
+  for select to authenticated using (user_id = auth.uid());
+drop policy if exists "Users can read their report line history" on public.report_lines;
+create policy "Users can read their report line history" on public.report_lines
+  for select to authenticated using (exists (select 1 from public.reports r where r.id = report_id and r.user_id = auth.uid()));
 revoke insert, update, delete on public.reports from public, anon, authenticated;
 revoke insert, update, delete on public.report_lines from public, anon, authenticated;
 
@@ -97,6 +129,17 @@ returns void language sql security definer set search_path = public as $$
   where status in ('ACTIVE', 'CONFIRMED') and expires_at <= now();
 $$;
 grant execute on function public.expire_canonical_reports() to anon, authenticated;
+
+-- Retain report history for 90 days, then remove personal report records.
+-- Schedule this function with a Supabase cron job; active reports are never
+-- removed by this function before their expiry.
+create or replace function public.purge_old_canonical_reports()
+returns void language sql security definer set search_path = public as $$
+  delete from public.reports
+  where created_at < now() - interval '90 days'
+    and status in ('RESOLVED', 'EXPIRED');
+$$;
+revoke all on function public.purge_old_canonical_reports() from public, anon, authenticated;
 
 -- Safe read RPC used by the selector. It returns one distinct-report count
 -- per line and never accepts arbitrary station/line joins from the client.
@@ -134,6 +177,20 @@ language sql stable security definer set search_path = public as $$
     and r.expires_at > now();
 $$;
 grant execute on function public.get_line_report_summary(text) to anon, authenticated;
+
+create or replace function public.get_line_report_breakdown(p_line_id text)
+returns table (category text, scope text, report_count integer)
+language sql stable security definer set search_path = public as $$
+  select r.category, r.scope, count(distinct r.id)::integer
+  from public.report_lines rl
+  join public.reports r on r.id = rl.report_id
+  where rl.line_id = p_line_id
+    and r.status in ('ACTIVE', 'CONFIRMED')
+    and r.expires_at > now()
+  group by r.category, r.scope
+  order by count(distinct r.id) desc, r.category, r.scope;
+$$;
+grant execute on function public.get_line_report_breakdown(text) to anon, authenticated;
 
 do $$ begin
   alter publication supabase_realtime add table public.reports;
@@ -651,7 +708,7 @@ insert into public.station_lines (station_id, line_id) select 'baker-street', 'm
 insert into public.station_lines (station_id, line_id) select 'balham', 'northern' where exists (select 1 from public.lines where id = 'northern') on conflict do nothing;
 insert into public.station_lines (station_id, line_id) select 'bank', 'central' where exists (select 1 from public.lines where id = 'central') on conflict do nothing;
 insert into public.station_lines (station_id, line_id) select 'bank', 'northern' where exists (select 1 from public.lines where id = 'northern') on conflict do nothing;
-insert into public.station_lines (station_id, line_id) select 'bank', 'waterloo-and-city' where exists (select 1 from public.lines where id = 'waterloo-and-city') on conflict do nothing;
+insert into public.station_lines (station_id, line_id) select 'bank', 'waterloo-city' where exists (select 1 from public.lines where id = 'waterloo-city') on conflict do nothing;
 insert into public.station_lines (station_id, line_id) select 'bank-dlr', 'dlr' where exists (select 1 from public.lines where id = 'dlr') on conflict do nothing;
 insert into public.station_lines (station_id, line_id) select 'barbican', 'circle' where exists (select 1 from public.lines where id = 'circle') on conflict do nothing;
 insert into public.station_lines (station_id, line_id) select 'barbican', 'hammersmith-and-city' where exists (select 1 from public.lines where id = 'hammersmith-and-city') on conflict do nothing;
@@ -1187,7 +1244,7 @@ insert into public.station_lines (station_id, line_id) select 'warwick-avenue', 
 insert into public.station_lines (station_id, line_id) select 'waterloo', 'bakerloo' where exists (select 1 from public.lines where id = 'bakerloo') on conflict do nothing;
 insert into public.station_lines (station_id, line_id) select 'waterloo', 'jubilee' where exists (select 1 from public.lines where id = 'jubilee') on conflict do nothing;
 insert into public.station_lines (station_id, line_id) select 'waterloo', 'northern' where exists (select 1 from public.lines where id = 'northern') on conflict do nothing;
-insert into public.station_lines (station_id, line_id) select 'waterloo', 'waterloo-and-city' where exists (select 1 from public.lines where id = 'waterloo-and-city') on conflict do nothing;
+insert into public.station_lines (station_id, line_id) select 'waterloo', 'waterloo-city' where exists (select 1 from public.lines where id = 'waterloo-city') on conflict do nothing;
 insert into public.station_lines (station_id, line_id) select 'watford', 'metropolitan' where exists (select 1 from public.lines where id = 'metropolitan') on conflict do nothing;
 insert into public.station_lines (station_id, line_id) select 'watford-high-street', 'london-overground' where exists (select 1 from public.lines where id = 'london-overground') on conflict do nothing;
 insert into public.station_lines (station_id, line_id) select 'watford-high-street', 'metropolitan' where exists (select 1 from public.lines where id = 'metropolitan') on conflict do nothing;
@@ -1247,6 +1304,8 @@ insert into public.station_lines (station_id, line_id) select 'woodside-park', '
 insert into public.station_lines (station_id, line_id) select 'woolwich', 'elizabeth' where exists (select 1 from public.lines where id = 'elizabeth') on conflict do nothing;
 insert into public.station_lines (station_id, line_id) select 'woolwich-arsenal', 'dlr' where exists (select 1 from public.lines where id = 'dlr') on conflict do nothing;
 
+update public.stations set external_source_id = id where external_source_id is null;
+
 -- Replace the legacy writer after all canonical rows are present. The
 -- station_updates insert keeps the current feed and client response shape.
 create or replace function public.submit_station_report(p_guest_token uuid, p_report jsonb)
@@ -1260,19 +1319,43 @@ declare
   canonical public.reports;
   station_name text := nullif(btrim(p_report->>'station_name'), '');
   category_name text := nullif(btrim(p_report->>'category'), '');
+  scope_name text := coalesce(nullif(btrim(p_report->>'scope'), ''), 'station_wide');
   requested_line text := nullif(btrim(p_report->>'line_name'), '');
+  requested_line_ids text[] := coalesce(
+    array(select jsonb_array_elements_text(p_report->'affected_line_ids')),
+    array[]::text[]
+  );
 begin
   if station_name is null then raise exception 'Choose a canonical station.'; end if;
   select * into station_row from public.stations
     where normalized_name = lower(regexp_replace(station_name, '[^a-zA-Z0-9]+', '', 'g'));
   if not found then raise exception 'Choose a station from the search results.'; end if;
   if category_name is null then raise exception 'Select an issue to report.'; end if;
-  if requested_line is not null then
-    select l.* into line_row from public.lines l
-      join public.station_lines sl on sl.line_id = l.id and sl.station_id = station_row.id
-      where l.normalized_name = lower(regexp_replace(requested_line, '[^a-zA-Z0-9]+', '', 'g'));
-    if not found then raise exception 'That line is not mapped to this station.'; end if;
+  if scope_name not in ('station_wide', 'line_specific') then raise exception 'Choose a valid report scope.'; end if;
+  if requested_line is not null and cardinality(requested_line_ids) = 0 then
+    requested_line_ids := array[requested_line];
   end if;
+  if scope_name = 'line_specific' and cardinality(requested_line_ids) = 0 then
+    raise exception 'Choose at least one affected line.';
+  end if;
+  if scope_name = 'station_wide' then requested_line_ids := array[]::text[]; end if;
+  if requested_line is not null then
+    if not exists (
+      select 1 from public.lines l
+      join public.station_lines sl on sl.line_id = l.id and sl.station_id = station_row.id
+      where l.normalized_name = lower(regexp_replace(requested_line, '[^a-zA-Z0-9]+', '', 'g'))
+        and (sl.valid_to is null or sl.valid_to >= current_date)
+    ) then raise exception 'That line is not mapped to this station.'; end if;
+  end if;
+  if scope_name = 'line_specific' and exists (
+    select 1 from unnest(requested_line_ids) selected
+    where not exists (
+      select 1 from public.lines l
+      join public.station_lines sl on sl.line_id = l.id and sl.station_id = station_row.id
+      where (l.id = selected or l.normalized_name = lower(regexp_replace(selected, '[^a-zA-Z0-9]+', '', 'g')))
+        and (sl.valid_to is null or sl.valid_to >= current_date)
+    )
+  ) then raise exception 'One or more selected lines are not mapped to this station.'; end if;
 
   insert into public.station_report_icon_submissions (reporter_key, location_key, category)
   values (identity_key, 'station:' || station_row.id, category_name)
@@ -1292,15 +1375,20 @@ begin
     return jsonb_build_object('report', to_jsonb(saved), 'next_allowed_at', submission.next_allowed_at, 'undone', false);
   end if;
 
-  insert into public.reports (station_id, reporter_key, category, label, tone, message, where_on, author_id)
+  insert into public.reports (station_id, reporter_key, category, label, tone, message, where_on, author_id, user_id, scope, expires_at)
   values (station_row.id, identity_key, category_name, p_report->>'label', p_report->>'tone',
-    p_report->>'message', p_report->>'where_on', auth.uid())
+    p_report->>'message', p_report->>'where_on', auth.uid(), auth.uid(), scope_name, now() + interval '24 hours')
   returning * into canonical;
-  if line_row.id is null then
+  if scope_name = 'station_wide' then
     insert into public.report_lines (report_id, line_id)
-    select canonical.id, sl.line_id from public.station_lines sl where sl.station_id = station_row.id;
+    select canonical.id, sl.line_id from public.station_lines sl
+    where sl.station_id = station_row.id and (sl.valid_to is null or sl.valid_to >= current_date);
   else
-    insert into public.report_lines (report_id, line_id) values (canonical.id, line_row.id);
+    insert into public.report_lines (report_id, line_id)
+    select canonical.id, l.id
+    from unnest(requested_line_ids) selected
+    join public.lines l on l.id = selected
+      or l.normalized_name = lower(regexp_replace(selected, '[^a-zA-Z0-9]+', '', 'g'));
   end if;
   insert into public.station_updates (id, station_name, kind, category, label, tone, message, where_on, author_id, author_initial)
   values (canonical.id, station_row.name, 'report', category_name, p_report->>'label', p_report->>'tone',

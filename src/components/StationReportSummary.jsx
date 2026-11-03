@@ -60,6 +60,8 @@ export default function StationReportSummary({ station, onRate, onViewReviews, r
         tone: category.tone,
         message: `${category.label} reported at ${station.name}.`,
         whereOn: 'station',
+        scope: 'station_wide',
+        affectedLineIds: [],
       })
       if (currentStationRef.current !== stationId) return
       setReports((current) => [savedReport, ...current.filter((report) => report.id !== savedReport.id)])
@@ -120,7 +122,7 @@ export default function StationReportSummary({ station, onRate, onViewReviews, r
         </button>
       </div>
       <h4 className="mb-1 text-sm font-bold">Report an issue</h4>
-      <p className="!mt-0 !mb-3 text-xs text-slate-600">Tap an issue to report it at {station.name}.</p>
+      <p className="!mt-0 !mb-3 text-xs text-slate-600">Tap an issue to report it across the whole station. Use the detailed report form to choose specific lines.</p>
       <p role="status" className="!mt-0 !mb-3 text-xs text-slate-600">{cooldown.notice}</p>
       {submitNotice && <p role="status" className="!my-2 rounded-lg bg-emerald-50 p-3 text-xs text-emerald-800">{submitNotice}</p>}
       {submitError && <p role="alert" className="!my-2 rounded-lg bg-amber-50 p-3 text-xs text-amber-800">{submitError}</p>}

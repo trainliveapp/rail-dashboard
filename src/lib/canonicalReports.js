@@ -37,6 +37,13 @@ export async function getLineReportSummary(lineId) {
   return Number(data) || 0
 }
 
+export async function getLineReportBreakdown(lineId) {
+  if (!isSupabaseConfigured || !lineId) return []
+  const { data, error } = await supabase.rpc('get_line_report_breakdown', { p_line_id: lineId })
+  if (error) throw error
+  return (data || []).map((row) => ({ category: row.category, scope: row.scope, reportCount: Number(row.report_count) || 0 }))
+}
+
 export function subscribeToCanonicalReports(onRefresh) {
   if (!isSupabaseConfigured) return () => {}
   let disposed = false

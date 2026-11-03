@@ -151,14 +151,14 @@ export async function postReport(payload) {
   finally { reportMutationPending = false }
 }
 
-async function submitReport({ stationName, locationText, category, label, tone, message, whereOn }) {
+async function submitReport({ stationName, locationText, category, label, tone, message, whereOn, scope = 'station_wide', affectedLineIds = [] }) {
   const { data: sessionData } = await supabase.auth.getSession()
   const user = sessionData.session?.user
   if (!stationName && !locationText) throw new Error('Add a location for this report.')
 
   const { data, error } = await supabase.rpc('submit_station_report', {
     p_guest_token: getReportToken(),
-    p_report: { station_name: stationName, category, label, tone, message, where_on: whereOn, location_text: locationText || null },
+    p_report: { station_name: stationName, category, label, tone, message, where_on: whereOn, location_text: locationText || null, scope, affected_line_ids: affectedLineIds },
   })
 
   if (error) {

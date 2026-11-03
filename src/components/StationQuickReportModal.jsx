@@ -11,6 +11,8 @@ import useReportCooldown from '../lib/useReportCooldown'
 // no location search here, just pick what's happening and confirm.
 export default function StationQuickReportModal({ station, onClose, onReportSubmitted }) {
   const [selected, setSelected] = useState(null)
+  const [scope, setScope] = useState('station_wide')
+  const [affectedLines, setAffectedLines] = useState([])
   const [counts, setCounts] = useState({})
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -42,6 +44,8 @@ export default function StationQuickReportModal({ station, onClose, onReportSubm
         tone: selected.tone,
         message: `${selected.label} reported at ${station.name}.`,
         whereOn: null,
+        scope,
+        affectedLineIds: affectedLines,
       })
       onReportSubmitted?.(savedReport)
       await getStationUpdates([station.name], { all: true }).then((rows) => {
@@ -101,6 +105,32 @@ export default function StationQuickReportModal({ station, onClose, onReportSubm
             )
           })}
         </div>
+
+        <fieldset className="mb-5 rounded-xl border border-slate-200 bg-white p-3">
+          <legend className="px-1 text-xs font-semibold text-slate-700">Where does this affect?</legend>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              <input type="radio" name="report-scope" checked={scope === 'station_wide'} onChange={() => { setScope('station_wide'); setAffectedLines([]) }} />
+              Whole station
+            </label>
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              <input type="radio" name="report-scope" checked={scope === 'line_specific'} onChange={() => setScope('line_specific')} />
+              Specific line(s)
+            </label>
+          </div>
+          {scope === 'line_specific' && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {(station.lines || []).map((line) => {
+                const lineId = line.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+                const checked = affectedLines.includes(lineId)
+                return <label key={line} className="flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-xs text-slate-700">
+                  <input type="checkbox" checked={checked} onChange={() => setAffectedLines((current) => checked ? current.filter((id) => id !== lineId) : [...current, lineId])} />
+                  {line}
+                </label>
+              })}
+            </div>
+          )}
+        </fieldset>
 
         <p role="status" className="mb-4 text-xs text-slate-600">{canUndo && 'Reported. Use Undo report if this was accidental. '}{cooldown.notice}</p>
 
