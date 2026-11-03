@@ -93,7 +93,7 @@ select 'legacy-' || md5(lower(regexp_replace(trim(station_name), '[^a-zA-Z0-9]+'
 from public.station_updates
 where nullif(trim(station_name), '') is not null
 group by lower(regexp_replace(trim(station_name), '[^a-zA-Z0-9]+', '', 'g'))
-on conflict (id) do nothing;
+on conflict (normalized_name) do nothing;
 
 alter table public.reports enable row level security;
 alter table public.report_lines enable row level security;
@@ -169,26 +169,52 @@ grant execute on function public.get_station_report_summary(text) to anon, authe
 create or replace function public.get_line_report_summary(p_line_id text)
 returns integer
 language sql stable security definer set search_path = public as $$
-  select count(distinct rl.report_id)::integer
-  from public.report_lines rl
-  join public.reports r on r.id = rl.report_id
-  where rl.line_id = p_line_id
-    and r.status in ('ACTIVE', 'CONFIRMED')
-    and r.expires_at > now();
+  select count(distinct report_id)::integer
+  from (
+    select rl.report_id
+    from public.report_lines rl
+    join public.reports r on r.id = rl.report_id
+    where rl.line_id = p_line_id
+      and r.status in ('ACTIVE', 'CONFIRMED')
+      and r.expires_at > now()
+    union
+    select su.id
+    from public.station_updates su
+    join public.stations s on s.normalized_name =
+      lower(regexp_replace(trim(su.station_name), '[^a-zA-Z0-9]+', '', 'g'))
+    join public.station_lines sl on sl.station_id = s.id and sl.line_id = p_line_id
+    where su.kind = 'report'
+      and su.status in ('ACTIVE', 'CONFIRMED')
+      and su.created_at > now() - interval '24 hours'
+      and (sl.valid_to is null or sl.valid_to >= current_date)
+  ) relevant;
 $$;
 grant execute on function public.get_line_report_summary(text) to anon, authenticated;
 
 create or replace function public.get_line_report_breakdown(p_line_id text)
 returns table (category text, scope text, report_count integer)
 language sql stable security definer set search_path = public as $$
-  select r.category, r.scope, count(distinct r.id)::integer
-  from public.report_lines rl
-  join public.reports r on r.id = rl.report_id
-  where rl.line_id = p_line_id
-    and r.status in ('ACTIVE', 'CONFIRMED')
-    and r.expires_at > now()
-  group by r.category, r.scope
-  order by count(distinct r.id) desc, r.category, r.scope;
+  select category, scope, count(distinct report_id)::integer
+  from (
+    select r.id as report_id, r.category, r.scope
+    from public.report_lines rl
+    join public.reports r on r.id = rl.report_id
+    where rl.line_id = p_line_id
+      and r.status in ('ACTIVE', 'CONFIRMED')
+      and r.expires_at > now()
+    union
+    select su.id, su.category, 'station_wide'
+    from public.station_updates su
+    join public.stations s on s.normalized_name =
+      lower(regexp_replace(trim(su.station_name), '[^a-zA-Z0-9]+', '', 'g'))
+    join public.station_lines sl on sl.station_id = s.id and sl.line_id = p_line_id
+    where su.kind = 'report'
+      and su.status in ('ACTIVE', 'CONFIRMED')
+      and su.created_at > now() - interval '24 hours'
+      and (sl.valid_to is null or sl.valid_to >= current_date)
+  ) relevant
+  group by category, scope
+  order by count(distinct report_id) desc, category, scope;
 $$;
 grant execute on function public.get_line_report_breakdown(text) to anon, authenticated;
 

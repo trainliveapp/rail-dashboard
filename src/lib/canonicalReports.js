@@ -1,6 +1,6 @@
 import { supabase, isSupabaseConfigured } from './supabaseClient.js'
 
-export const REPORT_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000
+export const REPORT_EXPIRY_MS = 24 * 60 * 60 * 1000
 
 export function canonicalStationId(name) {
   return String(name || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
@@ -47,6 +47,10 @@ export async function getLineReportBreakdown(lineId) {
 export function subscribeToCanonicalReports(onRefresh) {
   if (!isSupabaseConfigured) return () => {}
   let disposed = false
+  const onLocalReport = () => {
+    if (!disposed) onRefresh()
+  }
+  window.addEventListener('station-report-saved', onLocalReport)
   const channel = supabase
     .channel(`canonical-reports-${crypto.randomUUID()}`)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'reports' }, onRefresh)
@@ -56,6 +60,7 @@ export function subscribeToCanonicalReports(onRefresh) {
     })
   return () => {
     disposed = true
+    window.removeEventListener('station-report-saved', onLocalReport)
     supabase.removeChannel(channel)
   }
 }
