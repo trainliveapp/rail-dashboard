@@ -1,15 +1,34 @@
 import { useEffect, useRef, useState } from 'react'
 import { ChevronDown, MapPin, X } from 'lucide-react'
 import { findReportStations, resolveReportStation } from '../lib/reportStations'
+import { getStationReportSummary, subscribeToCanonicalReports } from '../lib/canonicalReports'
 
 export default function ReportStationSearch({ value, onChange, id = 'report-station', label = 'Search Station', findStations = findReportStations, resolveStation = resolveReportStation }) {
   const [open, setOpen] = useState(false)
   const [browseAll, setBrowseAll] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
+  const [reportCount, setReportCount] = useState(null)
   const inputRef = useRef(null)
   const listRef = useRef(null)
   const matches = findStations(browseAll ? '' : value)
   const selected = resolveStation(value)
+
+  useEffect(() => {
+    let cancelled = false
+    const refresh = () => {
+      if (!selected?.canonicalId) {
+        setReportCount(null)
+        return
+      }
+      getStationReportSummary(selected.canonicalId)
+        .then((count) => { if (!cancelled) setReportCount(count) })
+        .catch(() => { if (!cancelled) setReportCount(null) })
+    }
+    refresh()
+    const unsubscribe = subscribeToCanonicalReports(refresh)
+    const timer = window.setInterval(refresh, 60_000)
+    return () => { cancelled = true; window.clearInterval(timer); unsubscribe() }
+  }, [selected?.canonicalId])
 
   useEffect(() => {
     if (open && activeIndex >= 0) {
@@ -87,7 +106,7 @@ export default function ReportStationSearch({ value, onChange, id = 'report-stat
               inputRef.current?.focus()
               setOpen(true)
             }}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded text-brand-blue hover:bg-blue-50"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded text-brand-blue hover:bg-blue-50"
           >
             <X size={20} strokeWidth={1.5} />
           </button>
@@ -104,10 +123,25 @@ export default function ReportStationSearch({ value, onChange, id = 'report-stat
             setActiveIndex(-1)
             setOpen(nextOpen)
           }}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded text-brand-blue hover:bg-blue-50"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded text-brand-blue hover:bg-blue-50"
         >
           <ChevronDown size={18} className={open ? 'rotate-180' : ''} />
         </button>
+        {selected && reportCount != null && (
+          <button
+            type="button"
+            title="Open station reports"
+            aria-label={`${reportCount} active reports at ${selected.name}`}
+            onClick={() => {
+              setBrowseAll(false)
+              setOpen(true)
+              inputRef.current?.focus()
+            }}
+            className="flex h-11 shrink-0 items-center gap-1 rounded px-2 text-xs font-semibold text-amber-700 hover:bg-amber-50"
+          >
+            <span aria-hidden="true">!</span>{reportCount}
+          </button>
+        )}
       </div>
       </div>
       <p id={`${id}-help`} className="sr-only">Type a name or three-letter code, or use the arrow to browse all stations.</p>

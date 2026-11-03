@@ -98,7 +98,7 @@ export default function StationReportSummary({ station, onRate, onViewReviews, r
     refreshScore()
     const unsubscribe = subscribeToStationUpdates([station.name], refreshReports)
     const unsubscribeReviews = subscribeToStationReviews(station.id, refreshScore)
-    const timer = setInterval(() => { refreshReports(); refreshScore() }, 30000)
+    const timer = setInterval(() => { refreshReports(); refreshScore() }, 60000)
     return () => { cancelled = true; clearInterval(timer); unsubscribe(); unsubscribeReviews() }
   }, [station.id, station.name, revision])
 
@@ -126,9 +126,9 @@ export default function StationReportSummary({ station, onRate, onViewReviews, r
       {submitError && <p role="alert" className="!my-2 rounded-lg bg-amber-50 p-3 text-xs text-amber-800">{submitError}</p>}
       <div className="station-report-grid mb-2 grid grid-cols-2 min-[430px]:grid-cols-3 gap-2" aria-busy={Boolean(submittingCategory)}>
         {stationReportCategories.map((cat) => <button type="button" key={cat.key} onClick={() => reportIssue(cat)} disabled={Boolean(submittingCategory)} aria-pressed={cooldown.canUndo(station.name, cat.key)} aria-label={`${cooldown.canUndo(station.name, cat.key) ? 'Deselect' : 'Report'} ${cat.label} at ${station.name}`} className="station-report-tile flex min-w-0 flex-col items-center justify-center gap-2 rounded-xl border border-brand-line bg-white px-3 py-4 text-center text-sm font-medium text-brand-slate transition-colors hover:border-brand-blue hover:bg-blue-50 aria-pressed:border-emerald-500 aria-pressed:bg-emerald-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue disabled:cursor-not-allowed disabled:opacity-60">
-          <ReportCategoryImage category={cat.key} className="h-12 w-12 min-[430px]:h-14 min-[430px]:w-14" />
+          <ReportCategoryImage category={cat.key} className="h-10 w-10 min-[430px]:h-12 min-[430px]:w-12" />
           {cooldown.canUndo(station.name, cat.key) && <span className="text-xs font-semibold text-emerald-700">Reported · Tap to deselect</span>}
-          <span className="flex min-h-9 items-center break-words leading-tight">{cat.label}</span>{submittingCategory === cat.key ? <span role="status" className="flex items-center gap-1 text-xs"><Loader2 size={14} className="animate-spin" /> Saving…</span> : <strong className={`text-sm ${counts[cat.key] > 0 ? 'text-red-600' : 'text-slate-500'}`}>{loading || reportError ? '—' : counts[cat.key]}</strong>}
+          <span className="flex min-h-9 items-center break-words leading-tight">{cat.label}</span>{submittingCategory === cat.key ? <span role="status" className="flex items-center gap-1 text-xs"><Loader2 size={14} className="animate-spin" /> Saving…</span> : <strong className={`text-xs ${counts[cat.key] > 0 ? 'text-red-600' : 'text-slate-500'}`}>{loading || reportError ? '—' : counts[cat.key]}</strong>}
         </button>)}
       </div>
       <div ref={reviewRef}>

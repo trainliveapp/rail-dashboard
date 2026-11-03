@@ -80,7 +80,7 @@ export async function getStationUpdates(stationNames, { all = false } = {}) {
 // journey is open arrives here immediately via Supabase Realtime, no
 // refresh or re-fetch needed. Call the returned function on unmount (or
 // whenever the station list changes) to close the subscription.
-export function subscribeToStationUpdates(stationNames, onInsert) {
+export function subscribeToStationUpdates(stationNames, onInsert, onReconnect) {
   if (!stationNames.length) return () => {}
   const stationSet = new Set(stationNames)
   const onLocalReport = (event) => { if (stationSet.has(event.detail.stationName)) onInsert(event.detail) }
@@ -97,7 +97,9 @@ export function subscribeToStationUpdates(stationNames, onInsert) {
         }
       }
     )
-    .subscribe()
+    .subscribe((status) => {
+      if (status === 'SUBSCRIBED') onReconnect?.()
+    })
 
   return () => {
     window.removeEventListener('station-report-saved', onLocalReport)

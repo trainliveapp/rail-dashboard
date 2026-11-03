@@ -149,11 +149,25 @@ export default function JourneyResults({ journey, selectedIndex, onSelectIndex, 
         const remaining = prev.filter((item) => item.id !== row.id)
         return row.kind === 'chat' || ['ACTIVE', 'CONFIRMED'].includes(row.status) ? [row, ...remaining] : remaining
       })
+    }, () => {
+      getStationUpdates(stationNames).then((rows) => {
+        if (!cancelled) setFeed(rows)
+      }).catch((err) => {
+        if (!cancelled) setFeedError(err.message || 'Could not refresh live updates for this route.')
+      })
     })
+    const expiryTimer = setInterval(() => {
+      getStationUpdates(stationNames).then((rows) => {
+        if (!cancelled) setFeed(rows)
+      }).catch((err) => {
+        if (!cancelled) setFeedError(err.message || 'Could not refresh live updates for this route.')
+      })
+    }, 60000)
 
     return () => {
       cancelled = true
       unsubscribe()
+      clearInterval(expiryTimer)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stationKey])

@@ -7,7 +7,7 @@ export const normalizeStationSearch = (value) => value
 
 // Keep local station names so reports still match the map and journey feeds.
 const byName = new Map(stations.map((station) => [
-  normalizeStationSearch(station.name), { name: station.name, code: '' },
+  normalizeStationSearch(station.name), { name: station.name, code: '', canonicalId: station.id },
 ]))
 for (const station of nationalRail.stations) {
   const key = normalizeStationSearch(station.name)
@@ -18,6 +18,7 @@ export const reportStations = [...byName.values()]
   .sort((a, b) => a.name.localeCompare(b.name, 'en-GB'))
   .map((station) => ({
     ...station,
+    canonicalId: station.canonicalId || normalizeStationSearch(station.name),
     searchName: normalizeStationSearch(station.name),
     searchCode: station.code.toLowerCase(),
   }))

@@ -1423,6 +1423,7 @@ import {
   MessageCircle,
   X,
   SendHorizontal,
+  TriangleAlert,
   Paperclip,
   Camera,
   Loader2,
@@ -1439,6 +1440,7 @@ import { images } from "../data/optimizedImages";
 import ImageBackground from "./ImageBackground";
 import SmoothImage from "./SmoothImage";
 import gwrLogo from "../assets/gwr-logo.svg";
+import { getLineReportSummary, subscribeToCanonicalReports } from "../lib/canonicalReports";
 
 const CHAT_LINE_BACKGROUNDS = {
   central: images.chatCentral,
@@ -1485,6 +1487,11 @@ const CHAT_LINE_COLORS = {
 
 const CHAT_EMOJIS = ["❤️", "😂", "😡", "😮", "👍", "🚀"];
 
+function canonicalLineId(value) {
+  return String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
+    .replace("hammersmith-city", "hammersmith-and-city");
+}
+
 function formatMessageTime(value) {
   if (!value) return "";
   try {
@@ -1500,6 +1507,7 @@ function formatMessageTime(value) {
 export default function MapChat() {
   const [open, setOpen] = useState(false);
   const [line, setLine] = useState("central");
+  const [reportCount, setReportCount] = useState(0);
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
@@ -1524,6 +1532,29 @@ export default function MapChat() {
   const messagesRef = useRef([]);
   const messageInputRef = useRef(null);
   const chatPanelRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    let cancelled = false;
+    const refreshReportCount = () => {
+      getLineReportSummary(canonicalLineId(line))
+        .then((count) => { if (!cancelled) setReportCount(count) })
+        .catch((error) => {
+          if (!cancelled) {
+            setReportCount(0);
+            console.error("Could not load line report count:", error);
+          }
+        });
+    };
+    refreshReportCount();
+    const unsubscribe = subscribeToCanonicalReports(refreshReportCount);
+    const timer = window.setInterval(refreshReportCount, 60_000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+      unsubscribe();
+    };
+  }, [open, line]);
   async function getCurrentUser() {
     const { data } = await supabase.auth.getSession();
     const user = data?.session?.user || null;
@@ -1934,7 +1965,7 @@ export default function MapChat() {
           id="chat-line"
           value={line}
           onChange={(e) => setLine(e.target.value)}
-          className={`h-11 w-full rounded-xl border-0 pr-3.5 font-semibold capitalize text-white outline-none focus-visible:outline-2 focus-visible:outline-offset-2 ${line === "great western railway" ? 'pl-16 text-sm sm:text-base' : 'pl-12 text-base'}`}
+          className={`h-9 w-full rounded-xl border-0 pr-20 font-semibold capitalize text-white outline-none focus-visible:outline-2 focus-visible:outline-offset-2 ${line === "great western railway" ? 'pl-16 text-sm sm:text-base' : 'pl-12 text-base'}`}
           style={{ backgroundColor: CHAT_LINE_COLORS[line] || "#334155", outlineColor: CHAT_LINE_COLORS[line] || "#334155" }}
         >
           {TUBE_LINES.map((item) => (
@@ -1950,6 +1981,10 @@ export default function MapChat() {
             </option>
           ))}
         </select>
+        <span className="pointer-events-none absolute right-8 top-1/2 flex -translate-y-1/2 items-center gap-1" aria-label={`${reportCount} active reports on this line`}>
+          <TriangleAlert className="h-5 w-5 text-yellow-300" fill="currentColor" stroke="#111827" strokeWidth={2.5} aria-hidden="true" />
+          <span className="text-sm font-bold text-white tabular-nums">{reportCount}</span>
+        </span>
         </div>
       </div>
 
