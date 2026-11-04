@@ -6,6 +6,7 @@ import JourneyPlannerPanel from '../components/JourneyPlannerPanel'
 import SidebarBottom from '../components/SidebarBottom'
 import MapPanel from '../components/MapPanel.leaflet.backup'
 import MapChat from '../components/MapChat'
+import FlavioComingSoonSheet from '../components/FlavioComingSoonSheet'
 import FeatureCards from '../components/FeatureCards'
 import DepartureBoards from '../components/DepartureBoards'
 import NextDeparturesPanel from '../components/NextDeparturesPanel'
@@ -209,6 +210,7 @@ export default function HomeDashboard() {
         <div className="absolute bottom-4 left-4 z-[1000]">
           <MapChat />
         </div>
+        <FlavioComingSoonSheet />
       </div>
 
       <div className="px-4 sm:px-6 lg:px-8 py-6 space-y-6 max-w-6xl mx-auto w-full">

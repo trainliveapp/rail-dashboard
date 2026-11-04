@@ -1,10 +1,29 @@
 import { useEffect, useRef, useState } from 'react'
-import { ChevronRight, Loader2, Star } from 'lucide-react'
+import { ChevronDown, ChevronRight, Loader2, Star } from 'lucide-react'
 import ReportCategoryImage from './ReportCategoryImage'
 import { stationReportCategories, lines } from '../data/mockData'
+import { lineColorFor } from './lineColors'
 import { getStationUpdates, postReport, undoReport, subscribeToStationUpdates, UPDATE_VISIBILITY_WINDOW_MS } from '../lib/stationUpdates'
 import useReportCooldown from '../lib/useReportCooldown'
 import { getStationScore, subscribeToStationReviews, ratingCategories } from '../lib/stationRatings'
+
+const lineIdFor = (line) => {
+  const rawName = typeof line === 'string' ? line : line?.id || line?.name
+  if (!rawName) return ''
+  const normalized = String(rawName).trim().toLowerCase().replace(/\s+line$/, '')
+  const aliases = {
+    'hammersmith & city': 'hammersmith-city',
+    'hammersmith and city': 'hammersmith-city',
+    'london overground': 'overground',
+    overground: 'overground',
+    tramlink: 'tram',
+    'waterloo & city': 'waterloo-city',
+    'waterloo and city': 'waterloo-city',
+  }
+  return aliases[normalized] || normalized.replace(/[^a-z0-9]+/g, '-')
+}
+
+const lineOrder = new Map(lines.map((line, index) => [lineIdFor(line.name), index]))
 
 export function RatingStars({ value, size = 14 }) {
   return <span className="inline-flex shrink-0" aria-label={value == null ? 'Not rated' : `${Number(value).toFixed(1)} out of 5 stars`}>
@@ -25,6 +44,7 @@ export default function StationReportSummary({ station, onRate, onViewReviews, r
   const [submittingCategory, setSubmittingCategory] = useState(null)
   const [submitNotice, setSubmitNotice] = useState('')
   const [submitError, setSubmitError] = useState('')
+  const [linesExpanded, setLinesExpanded] = useState(false)
   const cooldown = useReportCooldown()
   const submittingRef = useRef(false)
   const currentStationRef = useRef(station.id)
@@ -42,6 +62,7 @@ export default function StationReportSummary({ station, onRate, onViewReviews, r
     if (bodyRef.current) bodyRef.current.scrollTop = 0
     setSubmitNotice('')
     setSubmitError('')
+    setLinesExpanded(false)
   }, [station.id])
 
   const reportIssue = async (category) => {
@@ -106,14 +127,43 @@ export default function StationReportSummary({ station, onRate, onViewReviews, r
 
   const activeReports = reports.filter((r) => r.kind === 'report' && ['ACTIVE', 'CONFIRMED'].includes(r.status) && Date.now() - new Date(r.createdAt).getTime() < UPDATE_VISIBILITY_WINDOW_MS)
   const counts = Object.fromEntries(stationReportCategories.map((cat) => [cat.key, activeReports.filter((r) => r.category === cat.key).length]))
-  const stationLines = (station.lines || []).map((name) => lines.find((line) => line.name === name) || { name, color: '#17428b' })
+  const stationLines = [...new Map((station.lines || []).map((entry) => {
+    const source = typeof entry === 'string' ? lines.find((line) => line.name === entry) || { name: entry } : entry
+    const id = lineIdFor(source)
+    if (!id || !source?.name) return null
+    return [id, { id, name: source.name, color: source.color || lineColorFor(source.name) || '#777' }]
+  }).filter(Boolean)).values()]
+    .sort((a, b) => (lineOrder.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (lineOrder.get(b.id) ?? Number.MAX_SAFE_INTEGER) || a.name.localeCompare(b.name, 'en-GB'))
   const scoreLabel = score == null ? 'Loading…' : score.overallScore == null ? 'Not rated yet' : Number(score.overallScore).toFixed(1)
   const reviewActionClass = 'flex min-h-11 min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-2.5 text-xs font-semibold transition-colors [&>svg]:shrink-0 focus-visible:outline-2 focus-visible:outline-blue-600'
+  const lineNamesId = `station-line-names-${station.id}`
 
   return <div className={`station-summary ${mobile ? 'station-summary--mobile' : 'w-[min(27.5rem,calc(100vw-3rem))]'} overflow-hidden rounded-xl bg-white text-slate-900 shadow-xl`}>
     <header className={`station-summary-header shrink-0 bg-gradient-to-r from-blue-900 to-blue-600 ${mobile ? 'px-3 py-2 pr-12' : 'px-4 py-3 pr-14'}`}>
       <h3 className="station-summary-title break-words text-lg font-bold leading-tight text-white">{station.name}</h3>
-      <div className="station-summary-lines mt-1.5 flex flex-wrap gap-1">{stationLines.map((line) => <span key={line.name} className="rounded-full px-2 py-0.5 text-[10px] font-semibold text-white" style={{ backgroundColor: line.color }}>{line.name}</span>)}</div>
+      {stationLines.length > 0 && <div className="station-summary-lines">
+        {mobile ? <div className="station-summary-lines-row">
+          <div className="station-summary-line-dots" aria-hidden="true">
+            {stationLines.map((line) => <span key={line.id} className="station-summary-line-dot" style={{ backgroundColor: line.color }} />)}
+          </div>
+          <button
+            type="button"
+            className="station-summary-lines-toggle"
+            aria-expanded={linesExpanded}
+            aria-controls={lineNamesId}
+            aria-label={linesExpanded ? 'Hide station lines' : 'Show station lines'}
+            onClick={() => setLinesExpanded((value) => !value)}
+          >
+            <ChevronDown aria-hidden="true" />
+          </button>
+        </div> : <div className="flex flex-wrap gap-1">{stationLines.map((line) => <span key={line.id} className="rounded-full px-2 py-0.5 text-[10px] font-semibold text-white" style={{ backgroundColor: line.color }}>{line.name}</span>)}</div>}
+        {mobile && linesExpanded && <ul id={lineNamesId} className="station-summary-line-names">
+          {stationLines.map((line) => <li key={line.id}>
+            <span className="station-summary-line-dot" aria-hidden="true" style={{ backgroundColor: line.color }} />
+            <span>{line.name}</span>
+          </li>)}
+        </ul>}
+      </div>}
     </header>
     <div ref={bodyRef} className={`station-summary-body relative min-h-0 overflow-y-auto overscroll-contain ${mobile ? 'p-2.5' : 'max-h-[min(65dvh,560px)] p-3'}`}>
       <div className="mb-2 grid grid-cols-1 gap-2">
