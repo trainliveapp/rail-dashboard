@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { Bell, Bike, Map, ShoppingBag, Sparkles, X } from 'lucide-react'
+import { createPortal } from 'react-dom'
+import { Bell, Bike, Map, ShoppingBag, X } from 'lucide-react'
 import flavioAvatar from '../assets/flavio-avatar.webp'
+import FlavioLauncher from './FlavioLauncher'
 
 const FEATURES = [
   { icon: Map, title: 'Journey planning', text: 'routes and connections', tone: 'blue' },
@@ -9,7 +11,7 @@ const FEATURES = [
   { icon: ShoppingBag, title: 'Station discoveries', text: 'retail, food, facilities and services', tone: 'blue' },
 ]
 
-export default function FlavioComingSoonSheet() {
+export default function FlavioComingSoonSheet({ launcherTarget = null }) {
   const [open, setOpen] = useState(false)
   const launcherRef = useRef(null)
   const closeButtonRef = useRef(null)
@@ -24,7 +26,25 @@ export default function FlavioComingSoonSheet() {
 
     const previousOverflow = document.body.style.overflow
     const onKeyDown = (event) => {
-      if (event.key === 'Escape') close()
+      if (event.key === 'Escape') {
+        close()
+        return
+      }
+
+      if (event.key !== 'Tab') return
+      const dialog = document.querySelector('.flavio-sheet')
+      const focusable = dialog?.querySelectorAll('button:not([disabled])')
+      if (!focusable?.length) return
+
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
     }
 
     document.body.style.overflow = 'hidden'
@@ -39,17 +59,9 @@ export default function FlavioComingSoonSheet() {
 
   return (
     <>
-      {!open && (
-        <button
-          ref={launcherRef}
-          type="button"
-          className="flavio-launcher"
-          aria-label="Open Flavio AI Travel Companion"
-          onClick={() => setOpen(true)}
-        >
-          <img src={flavioAvatar} alt="" />
-          <span className="flavio-launcher__sparkle" aria-hidden="true"><Sparkles size={11} strokeWidth={3} /></span>
-        </button>
+      {!open && launcherTarget && createPortal(
+        <FlavioLauncher buttonRef={launcherRef} onOpen={() => setOpen(true)} />,
+        launcherTarget
       )}
 
       {open && (

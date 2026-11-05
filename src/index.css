@@ -141,8 +141,6 @@ body {
     border-radius: 9999px;
   }
   .chat-compose-field input { padding-inline: 4px; }
-  .chatter-launcher { bottom: max(20px, env(safe-area-inset-bottom)); }
-
   .station-summary {
     display: flex;
     flex-direction: column;
@@ -170,45 +168,50 @@ body {
   .ad-updates { display: none; }
 }
 
-.chatter-icon {
+.station-actions {
   display: flex;
-  width: 100%;
-  height: 100%;
   align-items: center;
   justify-content: center;
-  border-radius: 9999px;
-  background: transparent;
+  gap: clamp(20px, 6vw, 24px);
+  padding: 16px 12px 20px;
+  background: white;
 }
-
-.chatter-icon__core {
-  display: flex;
-  width: 78%;
-  height: 78%;
-  align-items: center;
-  justify-content: center;
+.station-action,
+.chatter-launcher,
+.flavio-launcher {
+  position: relative;
+  display: grid;
+  width: clamp(68px, 19.5vw, 76px);
+  height: clamp(68px, 19.5vw, 76px);
+  min-width: 44px;
+  min-height: 44px;
+  flex: 0 0 clamp(68px, 19.5vw, 76px);
+  place-items: center;
+  padding: 0;
+  border: 2px solid #1875e5;
   border-radius: 9999px;
-  background: #FFC400;
-  color: #fff;
-  font-size: 0.65rem;
+  cursor: pointer;
+  transition: transform 160ms ease;
+}
+.chatter-launcher {
+  z-index: 1;
+  color: #111827;
+  background: #ffe13b;
+  font-size: 14px;
   font-weight: 700;
-  line-height: 1;
-  white-space: nowrap;
-  box-shadow: 0 0 0 0 rgba(255, 196, 0, 0.95), 0 0 0.7rem rgba(255, 196, 0, 0.6);
-  animation: chatter-pulse 1.0s ease-out infinite;
+  line-height: 1.1;
+}
+.chatter-launcher:hover,
+.flavio-launcher:hover {
+  transform: translateY(-2px);
 }
 
 .flavio-launcher {
-  position: absolute;
-  right: max(12px, env(safe-area-inset-right));
-  bottom: max(58px, calc(env(safe-area-inset-bottom) + 52px));
   z-index: 1001;
-  width: 54px;
-  height: 54px;
   padding: 3px;
-  border: 2px solid white;
-  border-radius: 9999px;
   background: white;
   box-shadow: 0 4px 14px rgb(15 23 42 / 30%);
+  color: inherit;
 }
 .flavio-launcher img,
 .flavio-sheet__avatar {
@@ -234,7 +237,7 @@ body {
   color: white;
 }
 .flavio-overlay {
-  position: absolute;
+  position: fixed;
   inset: 0;
   z-index: 1200;
   pointer-events: none;
@@ -255,7 +258,7 @@ body {
   left: 0;
   z-index: 1;
   display: flex;
-  max-height: calc(100% - 12px);
+  max-height: calc(100% - max(12px, env(safe-area-inset-top)));
   flex-direction: column;
   overflow: hidden;
   border-radius: 20px 20px 0 0;
@@ -281,6 +284,9 @@ body {
   align-items: center;
   gap: 12px;
   padding: 0 16px 14px;
+}
+.flavio-sheet__header > div {
+  min-width: 0;
 }
 .flavio-sheet__avatar {
   width: 44px;
@@ -310,6 +316,7 @@ body {
 }
 .flavio-sheet__close:hover { background: #f1f5f9; }
 .flavio-sheet__body {
+  min-height: 0;
   overflow-y: auto;
   padding: 0 16px max(20px, env(safe-area-inset-bottom));
   overscroll-behavior: contain;
@@ -344,7 +351,7 @@ body {
 }
 .flavio-feature--green .flavio-feature__icon { background: #f0fdf4; color: #16a34a; }
 .flavio-feature h4 { color: #17233f; font-size: .78rem; line-height: 1.25; }
-.flavio-feature p { margin-top: 3px; color: #64748b; font-size: .7rem; line-height: 1.35; }
+.flavio-feature p { margin-top: 3px; color: #64748b; font-size: .74rem; line-height: 1.35; }
 .flavio-preview {
   display: flex;
   min-height: 48px;
@@ -359,9 +366,40 @@ body {
   color: #64748b;
   font-size: .86rem;
 }
+.flavio-preview span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
 .flavio-preview strong { color: #0878ea; font-size: .74rem; white-space: nowrap; }
 @media (min-width: 640px) {
-  .flavio-sheet { right: 16px; left: auto; width: min(440px, calc(100% - 32px)); max-height: calc(100% - 24px); border-radius: 20px; }
+  .flavio-sheet {
+    right: max(16px, env(safe-area-inset-right));
+    left: auto;
+    width: min(440px, calc(100% - 32px));
+    max-height: calc(100% - max(24px, env(safe-area-inset-top)));
+    border-radius: 20px;
+  }
+  @media (max-width: 359px) {
+    .station-actions {
+      gap: 20px;
+    }
+  }
+}
+@media (max-width: 359px) {
+  .flavio-features {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-height: 520px) {
+  .flavio-sheet__handle {
+    height: 12px;
+  }
+  .flavio-sheet__header {
+    padding-bottom: 8px;
+  }
+  .flavio-sheet__body {
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .flavio-launcher { transition: none; }

@@ -1504,7 +1504,7 @@ function formatMessageTime(value) {
   }
 }
 
-export default function MapChat() {
+export default function MapChat({ launcherTarget = null }) {
   const [open, setOpen] = useState(false);
   const [line, setLine] = useState("central");
   const [reportCount, setReportCount] = useState(0);
@@ -2253,21 +2253,6 @@ export default function MapChat() {
         .chatter-launcher {
           isolation: isolate;
         }
-        .chatter-pulse-ring {
-          position: absolute;
-          inset: 4px;
-          border-radius: 9999px;
-          border: 2px solid color-mix(in srgb, var(--color-yellow-400) 42%, transparent);
-          pointer-events: none;
-          animation: trainlive-chatter-pulse 2.2s ease-out infinite;
-        }
-        .chatter-pulse-ring--two {
-          animation-delay: 1.1s;
-        }
-        @keyframes trainlive-chatter-pulse {
-          0% { transform: scale(0.92); opacity: 0.8; }
-          70%, 100% { transform: scale(1.55); opacity: 0; }
-        }
         .trainlive-chat-panel {
           transform-origin: bottom left;
           animation: trainlive-chat-pop 0.22s ease-out;
@@ -2277,7 +2262,6 @@ export default function MapChat() {
           to   { opacity: 1; transform: translateY(0) scale(1); }
         }
         @media (prefers-reduced-motion: reduce) {
-          .chatter-pulse-ring { animation: none; opacity: 0; }
           .trainlive-chat-panel { animation: none; }
         }
       `}</style>
@@ -2287,13 +2271,11 @@ export default function MapChat() {
             type="button"
             onClick={() => setOpen(true)}
             aria-label="Open chatter"
-            className="chatter-launcher fixed bottom-5 left-5 z-[2147483000] flex h-16 w-16 items-center justify-center rounded-full text-[10px] font-black text-brand-ink transition hover:-translate-y-0.5"
+            className="chatter-launcher"
           >
-            <span className="chatter-pulse-ring chatter-pulse-ring--one" aria-hidden="true" />
-            <span className="chatter-pulse-ring chatter-pulse-ring--two" aria-hidden="true" />
-            <span className="relative z-10 flex h-14 w-14 items-center justify-center rounded-full bg-yellow-400 shadow-[0_8px_24px_color-mix(in_srgb,var(--color-yellow-400)_38%,transparent)]">chatter</span>
+            <span>Chatter</span>
           </button>,
-          document.body
+          launcherTarget || document.body
         )}
 
       {open && createPortal(panel, document.body)}

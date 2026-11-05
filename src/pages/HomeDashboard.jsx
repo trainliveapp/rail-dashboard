@@ -59,6 +59,7 @@ export default function HomeDashboard() {
   const [liveLocation, setLiveLocation] = useState(null)
   const [liveLocationEnabled, setLiveLocationEnabled] = useState(false)
   const [liveLocationError, setLiveLocationError] = useState('')
+  const [stationActionsNode, setStationActionsNode] = useState(null)
   const watchIdRef = useRef(null)
   const prevFixRef = useRef(null)
 
@@ -207,10 +208,11 @@ export default function HomeDashboard() {
             onExpand={() => planner.setExpanded(true)}
           />
         ))}
-        <div className="absolute bottom-4 left-4 z-[1000]">
-          <MapChat />
-        </div>
-        <FlavioComingSoonSheet />
+      </div>
+
+      <div ref={setStationActionsNode} className="station-actions" aria-label="Station Live features">
+        {stationActionsNode && <MapChat launcherTarget={stationActionsNode} />}
+        {stationActionsNode && <FlavioComingSoonSheet launcherTarget={stationActionsNode} />}
       </div>
 
       <div className="px-4 sm:px-6 lg:px-8 py-6 space-y-6 max-w-6xl mx-auto w-full">
