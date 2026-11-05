@@ -176,6 +176,15 @@ body {
   padding: 16px 12px 20px;
   background: white;
 }
+.desktop-station-actions {
+  position: absolute;
+  inset: 0;
+  z-index: 1100;
+  pointer-events: none;
+}
+.desktop-station-actions > * {
+  pointer-events: auto;
+}
 .station-action,
 .chatter-launcher,
 .flavio-launcher {
@@ -212,6 +221,22 @@ body {
   background: white;
   box-shadow: 0 4px 14px rgb(15 23 42 / 30%);
   color: inherit;
+}
+.desktop-station-actions .chatter-launcher {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  width: 64px;
+  height: 64px;
+  flex-basis: 64px;
+}
+.desktop-station-actions .flavio-launcher {
+  position: absolute;
+  right: max(12px, env(safe-area-inset-right));
+  bottom: max(58px, calc(env(safe-area-inset-bottom) + 52px));
+  width: 54px;
+  height: 54px;
+  flex-basis: 54px;
 }
 .flavio-launcher img,
 .flavio-sheet__avatar {
@@ -379,10 +404,20 @@ body {
     max-height: calc(100% - max(24px, env(safe-area-inset-top)));
     border-radius: 20px;
   }
-  @media (max-width: 359px) {
-    .station-actions {
-      gap: 20px;
-    }
+}
+@media (max-width: 359px) {
+  .station-actions {
+    gap: 20px;
+  }
+}
+@media (min-width: 768px) {
+  .station-actions {
+    display: none;
+  }
+}
+@media (max-width: 767px) {
+  .desktop-station-actions {
+    display: none;
   }
 }
 @media (max-width: 359px) {

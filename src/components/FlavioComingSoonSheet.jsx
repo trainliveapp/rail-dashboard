@@ -64,7 +64,7 @@ export default function FlavioComingSoonSheet({ launcherTarget = null }) {
         launcherTarget
       )}
 
-      {open && (
+      {open && createPortal(
         <div className="flavio-overlay" role="presentation">
           <button type="button" className="flavio-backdrop" aria-label="Close Flavio panel" onClick={close} />
           <section className="flavio-sheet" role="dialog" aria-modal="true" aria-labelledby="flavio-title">
@@ -99,7 +99,8 @@ export default function FlavioComingSoonSheet({ launcherTarget = null }) {
               </div>
             </div>
           </section>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   )

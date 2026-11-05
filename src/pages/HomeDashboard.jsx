@@ -60,6 +60,16 @@ export default function HomeDashboard() {
   const [liveLocationEnabled, setLiveLocationEnabled] = useState(false)
   const [liveLocationError, setLiveLocationError] = useState('')
   const [stationActionsNode, setStationActionsNode] = useState(null)
+  const [desktopActionsNode, setDesktopActionsNode] = useState(null)
+  const [isMobileLayout, setIsMobileLayout] = useState(() => window.matchMedia('(max-width: 767px)').matches)
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 767px)')
+    const updateLayout = () => setIsMobileLayout(mediaQuery.matches)
+    updateLayout()
+    mediaQuery.addEventListener('change', updateLayout)
+    return () => mediaQuery.removeEventListener('change', updateLayout)
+  }, [])
   const watchIdRef = useRef(null)
   const prevFixRef = useRef(null)
 
@@ -208,11 +218,16 @@ export default function HomeDashboard() {
             onExpand={() => planner.setExpanded(true)}
           />
         ))}
+        <div ref={setDesktopActionsNode} className="desktop-station-actions" aria-label="Station Live features" />
       </div>
 
       <div ref={setStationActionsNode} className="station-actions" aria-label="Station Live features">
-        {stationActionsNode && <MapChat launcherTarget={stationActionsNode} />}
-        {stationActionsNode && <FlavioComingSoonSheet launcherTarget={stationActionsNode} />}
+        {(stationActionsNode || desktopActionsNode) && (
+          <MapChat launcherTarget={isMobileLayout ? stationActionsNode : desktopActionsNode} />
+        )}
+        {(stationActionsNode || desktopActionsNode) && (
+          <FlavioComingSoonSheet launcherTarget={isMobileLayout ? stationActionsNode : desktopActionsNode} />
+        )}
       </div>
 
       <div className="px-4 sm:px-6 lg:px-8 py-6 space-y-6 max-w-6xl mx-auto w-full">
