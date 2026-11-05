@@ -171,9 +171,8 @@ export default function StationReportSummary({ station, onRate, onViewReviews, r
           <Star size={27} className="shrink-0 fill-amber-400 text-amber-400" /><span className="min-w-0 flex-1"><strong className={`block leading-tight ${score?.overallScore == null ? 'text-sm' : 'text-xl'}`}>{scoreError ? '—' : scoreLabel}{score?.overallScore != null && <span className="text-sm font-normal">/5</span>}</strong><span className="block text-[11px] text-slate-500">{scoreError ? 'Reviews unavailable' : 'Station reviews'}</span></span><ChevronRight size={16} />
         </button>
       </div>
-      <h4 className="mb-1 text-sm font-bold">Report an issue</h4>
-      <p className="!mt-0 !mb-3 text-xs text-slate-600">Tap an issue to report it across the whole station. Use the detailed report form to choose specific lines.</p>
-      <p role="status" className="!mt-0 !mb-3 text-xs text-slate-600">{cooldown.notice}</p>
+      <h4 className="mb-1 text-sm font-bold">Seen Something?</h4>
+      <p className="!mt-0 !mb-3 text-xs text-slate-600">Tap an issue to report it across the whole station; tap again to deselect. Each issue counts once per person within 30 minutes. Use the detailed report form to choose specific lines.</p>
       {submitNotice && <p role="status" className="!my-2 rounded-lg bg-emerald-50 p-3 text-xs text-emerald-800">{submitNotice}</p>}
       {submitError && <p role="alert" className="!my-2 rounded-lg bg-amber-50 p-3 text-xs text-amber-800">{submitError}</p>}
       <div className="station-report-grid mb-2 grid grid-cols-2 min-[430px]:grid-cols-3 gap-2" aria-busy={Boolean(submittingCategory)}>
