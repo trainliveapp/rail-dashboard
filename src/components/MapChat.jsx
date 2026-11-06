@@ -1434,13 +1434,12 @@ import {
   UserRound,
 } from "lucide-react";
 import { supabase } from "../supabase";
-import { lineTextColors } from "./lineColors";
 import { getChatVisitorId } from "../lib/chatIdentity";
 import { images } from "../data/optimizedImages";
 import ImageBackground from "./ImageBackground";
 import SmoothImage from "./SmoothImage";
-import gwrLogo from "../assets/gwr-logo.svg";
-import { getLineReportBreakdown, getLineReportSummary, subscribeToCanonicalReports } from "../lib/canonicalReports";
+import { getChannelReportBreakdown, getChannelReportSummary, subscribeToCanonicalReports } from "../lib/canonicalReports";
+import { MAIN_CHAT_CHANNELS, NATIONAL_RAIL_CHANNELS, getChatChannel } from "../data/chatChannels";
 
 const CHAT_LINE_BACKGROUNDS = {
   central: images.chatCentral,
@@ -1462,35 +1461,7 @@ const CHAT_VISIBILITY_WINDOW_MS = 24 * 60 * 60 * 1000;
 const HEART_REACTION = "\u2764\ufe0f";
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
-const TUBE_LINES = [
-  "central",
-  "jubilee",
-  "northern",
-  "piccadilly",
-  "victoria",
-  "district",
-  "circle",
-  "hammersmith & city",
-  "metropolitan",
-  "bakerloo",
-  "elizabeth",
-  "waterloo & city",
-  "great western railway",
-];
-
-const CHAT_LINE_COLORS = {
-  ...lineTextColors,
-  "hammersmith & city": lineTextColors.hammersmith,
-  "waterloo & city": lineTextColors.waterloo,
-  "great western railway": "#0A493E",
-};
-
 const CHAT_EMOJIS = ["❤️", "😂", "😡", "😮", "👍", "🚀"];
-
-function canonicalLineId(value) {
-  return String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
-    .replace("hammersmith-city", "hammersmith-and-city");
-}
 
 function formatMessageTime(value) {
   if (!value) return "";
@@ -1506,7 +1477,18 @@ function formatMessageTime(value) {
 
 export default function MapChat({ launcherTarget = null }) {
   const [open, setOpen] = useState(false);
-  const [line, setLine] = useState("central");
+  const [channelId, setChannelId] = useState(() => {
+    try {
+      const savedChannelId = localStorage.getItem("trainlive-chat-channel");
+      return savedChannelId && getChatChannel(savedChannelId).id === savedChannelId
+        ? savedChannelId
+        : "underground_central";
+    } catch {
+      return "underground_central";
+    }
+  });
+  const [channelMenuOpen, setChannelMenuOpen] = useState(false);
+  const [channelView, setChannelView] = useState("main");
   const [reportCount, setReportCount] = useState(0);
   const [reportBreakdown, setReportBreakdown] = useState([]);
   const [breakdownOpen, setBreakdownOpen] = useState(false);
@@ -1534,6 +1516,17 @@ export default function MapChat({ launcherTarget = null }) {
   const messagesRef = useRef([]);
   const messageInputRef = useRef(null);
   const chatPanelRef = useRef(null);
+  const mainChannelListRef = useRef(null);
+  const mainChannelScrollTopRef = useRef(0);
+  const selectedChannel = getChatChannel(channelId);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("trainlive-chat-channel", channelId);
+    } catch {
+      console.warn("Could not save selected chat channel.");
+    }
+  }, [channelId]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -1541,7 +1534,7 @@ export default function MapChat({ launcherTarget = null }) {
     setReportBreakdown([]);
     let cancelled = false;
     const refreshReportCount = () => {
-      getLineReportSummary(canonicalLineId(line))
+      getChannelReportSummary(channelId)
         .then((count) => { if (!cancelled) setReportCount(count) })
         .catch((error) => {
           if (!cancelled) {
@@ -1558,7 +1551,7 @@ export default function MapChat({ launcherTarget = null }) {
       window.clearInterval(timer);
       unsubscribe();
     };
-  }, [open, line]);
+  }, [open, channelId]);
   async function getCurrentUser() {
     const { data } = await supabase.auth.getSession();
     const user = data?.session?.user || null;
@@ -1633,7 +1626,7 @@ export default function MapChat({ launcherTarget = null }) {
     const { data, error } = await supabase
       .from("chat_messages")
       .select("*")
-      .eq("line", line)
+      .eq("channel_id", channelId)
       .gte(
         "created_at",
         new Date(Date.now() - CHAT_VISIBILITY_WINDOW_MS).toISOString()
@@ -1708,7 +1701,7 @@ export default function MapChat({ launcherTarget = null }) {
 
   async function shareMessage(message) {
     const shareData = {
-      title: `TrainLive ? ${line} line`,
+      title: `TrainLive ? ${selectedChannel.displayName}`,
       text: [message.username || "TrainLive User", message.message, message.image_url, message.video_url].filter(Boolean).join("\n"),
       url: window.location.href,
     };
@@ -1796,26 +1789,26 @@ export default function MapChat({ launcherTarget = null }) {
     let cancelled = false;
 
     const messagesChannel = supabase
-      .channel(`chat-messages-${line}`)
+      .channel(`chat-messages-${channelId}`)
       .on(
         "postgres_changes",
         {
           event: "*",
           schema: "public",
           table: "chat_messages",
-          filter: `line=eq.${line}`,
+          filter: `channel_id=eq.${channelId}`,
         },
         async (payload) => {
           if (cancelled) return;
           const changedMessage = payload.new || payload.old;
-          if (!changedMessage || changedMessage.line !== line) return;
+          if (!changedMessage || changedMessage.channel_id !== channelId) return;
           await loadMessages();
         }
       )
       .subscribe();
 
     const reactionsChannel = supabase
-      .channel(`chat-reactions-${line}`)
+      .channel(`chat-reactions-${channelId}`)
       .on(
         "postgres_changes",
         {
@@ -1838,7 +1831,7 @@ export default function MapChat({ launcherTarget = null }) {
       supabase.removeChannel(messagesChannel);
       supabase.removeChannel(reactionsChannel);
     };
-  }, [open, line]);
+  }, [open, channelId]);
 
   async function sendMessage() {
     if (sending) return;
@@ -1885,7 +1878,8 @@ export default function MapChat({ launcherTarget = null }) {
       const payload = {
         username: user ? "TrainLive User" : "TrainLive Guest",
         message: text.trim(),
-        line,
+        line: channelId,
+        channel_id: channelId,
         image_url: imageUrl,
         ...(videoUrl ? { video_url: videoUrl } : {}),
       };
@@ -1927,7 +1921,7 @@ export default function MapChat({ launcherTarget = null }) {
         isolation: "isolate",
       }}
     >
-      <ImageBackground {...(CHAT_LINE_BACKGROUNDS[line] || images.chatBakerloo)} sizes="(max-width: 639px) calc(100vw - 24px), 400px" shaded />
+      <ImageBackground {...(CHAT_LINE_BACKGROUNDS[selectedChannel.backgroundKey] || images.chatBakerloo)} sizes="(max-width: 639px) calc(100vw - 24px), 400px" shaded />
       <div className="chat-panel-header relative z-30 m-2 mb-0 flex h-[52px] shrink-0 items-center justify-between rounded-xl bg-yellow-400 px-4 text-brand-ink">
         <div className="flex min-w-0 items-center gap-3">
           <span className="text-xl font-black text-brand-ink">chatter</span>
@@ -1946,58 +1940,109 @@ export default function MapChat({ launcherTarget = null }) {
 
       <div className="chat-channel relative z-20 shrink-0 px-4 py-3">
         <label
-          htmlFor="chat-line"
+          htmlFor="chat-channel"
           className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.08em] text-white/90"
         >
           Chat channel
         </label>
         <div className="relative">
-          {line === "great western railway" ? (
-            <img src={gwrLogo} alt="" aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 h-7 w-11 -translate-y-1/2 object-contain brightness-0 invert" />
-          ) : (
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 28 24"
-            className="pointer-events-none absolute left-3 top-1/2 h-6 w-7 -translate-y-1/2 text-white"
-            fill="none"
+          <button
+            id="chat-channel"
+            type="button"
+            aria-haspopup="listbox"
+            aria-expanded={channelMenuOpen}
+            onClick={() => {
+              setChannelMenuOpen((isOpen) => {
+                if (isOpen) return false;
+                setChannelView("main");
+                return true;
+              });
+            }}
+            className="flex min-h-11 w-full items-center justify-between rounded-xl px-3 pr-24 text-left text-base font-semibold text-white outline-none focus-visible:outline-2 focus-visible:outline-offset-2"
+            style={{ backgroundColor: selectedChannel.themeColour, outlineColor: selectedChannel.themeColour }}
           >
-            <circle cx="14" cy="12" r="9" stroke="currentColor" strokeWidth="3" />
-            <path d="M1 12h26" stroke="currentColor" strokeWidth="4" />
-          </svg>
-          )}
-        <select
-          id="chat-line"
-          value={line}
-          onChange={(e) => setLine(e.target.value)}
-          className={`h-9 w-full rounded-xl border-0 pr-20 font-semibold capitalize text-white outline-none focus-visible:outline-2 focus-visible:outline-offset-2 ${line === "great western railway" ? 'pl-16 text-sm sm:text-base' : 'pl-12 text-base'}`}
-          style={{ backgroundColor: CHAT_LINE_COLORS[line] || "#334155", outlineColor: CHAT_LINE_COLORS[line] || "#334155" }}
-        >
-          {TUBE_LINES.map((item) => (
-            <option
-              key={item}
-              value={item}
-              style={{
-                backgroundColor: CHAT_LINE_COLORS[item] || "#334155",
-                color: "#fff",
-              }}
+            <span className="min-w-0 truncate">{selectedChannel.displayName}</span>
+            <span aria-hidden="true" className="absolute right-3 text-lg leading-none">⌄</span>
+          </button>
+          {channelMenuOpen && (
+            <div
+              role="listbox"
+              aria-label="Chatter channels"
+              className="absolute left-0 right-0 top-[calc(100%+8px)] z-40 overflow-hidden rounded-xl border border-white/10 bg-slate-800 text-white shadow-2xl"
             >
-              {item} line
-            </option>
-          ))}
-        </select>
-        <button type="button" className="absolute right-8 top-1/2 flex min-h-9 min-w-[52px] -translate-y-1/2 items-center justify-center gap-1 rounded-md px-1 hover:bg-black/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white" aria-label={`View ${reportCount} active reports on this line`} aria-expanded={breakdownOpen} onClick={async () => {
+              {channelView === "main" ? (
+                <div ref={mainChannelListRef} className="max-h-[min(80dvh,680px)] overflow-y-auto overscroll-contain py-1">
+                  {MAIN_CHAT_CHANNELS.map((channel) => (
+                    <button
+                      key={channel.id}
+                      type="button"
+                      role="option"
+                      aria-selected={channel.id === channelId}
+                      onClick={() => {
+                        if (channel.id === "national_rail") {
+                          mainChannelScrollTopRef.current = mainChannelListRef.current?.scrollTop || 0;
+                          setChannelView("nationalRail");
+                          return;
+                        }
+                        setChannelId(channel.id);
+                        setChannelMenuOpen(false);
+                      }}
+                      className="flex min-h-11 w-full items-center justify-between gap-3 border-b border-white/10 px-3 text-left text-sm transition last:border-b-0 hover:bg-white/10 focus-visible:bg-white/10 focus-visible:outline-none"
+                    >
+                      <span className="truncate">{channel.displayName}{channel.id === "national_rail" ? "  ›" : ""}</span>
+                      {channel.id !== "national_rail" && <span aria-hidden="true" className={`h-4 w-4 shrink-0 rounded-full border-2 ${channel.id === channelId ? "border-white bg-white shadow-[inset_0_0_0_3px_#1e293b]" : "border-white/70"}`} />}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="max-h-[min(80dvh,680px)] overflow-y-auto overscroll-contain py-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setChannelView("main");
+                      window.requestAnimationFrame(() => {
+                        if (mainChannelListRef.current) mainChannelListRef.current.scrollTop = mainChannelScrollTopRef.current;
+                      });
+                    }}
+                    aria-label="Back to main Chatter channels"
+                    className="flex min-h-11 w-full items-center border-b border-white/10 px-3 text-left text-sm font-semibold hover:bg-white/10 focus-visible:bg-white/10 focus-visible:outline-none"
+                  >
+                    <span aria-hidden="true" className="mr-2 text-lg leading-none">‹</span> National Rail
+                  </button>
+                  {NATIONAL_RAIL_CHANNELS.map((channel) => (
+                    <button
+                      key={channel.id}
+                      type="button"
+                      role="option"
+                      aria-selected={channel.id === channelId}
+                      onClick={() => {
+                        setChannelId(channel.id);
+                        setChannelMenuOpen(false);
+                        setChannelView("main");
+                      }}
+                      className="flex min-h-11 w-full items-center justify-between gap-3 border-b border-white/10 px-3 text-left text-sm transition last:border-b-0 hover:bg-white/10 focus-visible:bg-white/10 focus-visible:outline-none"
+                    >
+                      <span className="truncate">{channel.displayName}</span>
+                      <span aria-hidden="true" className={`h-4 w-4 shrink-0 rounded-full border-2 ${channel.id === channelId ? "border-white bg-white shadow-[inset_0_0_0_3px_#1e293b]" : "border-white/70"}`} />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+        <button type="button" className="absolute right-10 top-[3.45rem] z-10 flex min-h-9 min-w-[52px] -translate-y-1/2 items-center justify-center gap-1 rounded-md px-1 hover:bg-black/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white" aria-label={`View ${reportCount} active reports for ${selectedChannel.displayName}`} aria-expanded={breakdownOpen} onClick={async () => {
           if (!breakdownOpen) {
-            try { setReportBreakdown(await getLineReportBreakdown(canonicalLineId(line))) } catch (error) { console.error("Could not load report breakdown:", error); setReportBreakdown([]) }
+            try { setReportBreakdown(await getChannelReportBreakdown(channelId)) } catch (error) { console.error("Could not load report breakdown:", error); setReportBreakdown([]) }
           }
           setBreakdownOpen((value) => !value)
         }}>
           <TriangleAlert className="h-5 w-5 text-yellow-300" fill="currentColor" stroke="#111827" strokeWidth={2.5} aria-hidden="true" />
           <span className="text-sm font-bold text-white tabular-nums">{reportCount}</span>
         </button>
-        </div>
-        {breakdownOpen && <div role="dialog" aria-label={`${line} active report breakdown`} className="absolute right-4 top-[4.75rem] z-30 w-56 rounded-lg bg-white p-3 text-slate-800 shadow-xl">
+        {breakdownOpen && <div role="dialog" aria-label={`${selectedChannel.displayName} active report breakdown`} className="absolute right-4 top-[5.25rem] z-30 w-[min(224px,calc(100vw-48px))] rounded-lg bg-white p-3 text-slate-800 shadow-xl">
           <div className="mb-2 flex items-center justify-between gap-2"><strong className="text-xs">Relevant reports</strong><button type="button" aria-label="Close report breakdown" onClick={() => setBreakdownOpen(false)} className="text-lg leading-none">×</button></div>
-          <p className="mb-2 text-[11px] text-slate-500">Active reports relevant to this line; not confirmed disruptions.</p>
+          <p className="mb-2 text-[11px] text-slate-500">Active reports relevant to this channel; not confirmed disruptions.</p>
           {reportBreakdown.length ? reportBreakdown.map((item) => <div key={`${item.category}-${item.scope}`} className="flex justify-between gap-3 text-xs"><span>{item.category} <em className="text-[10px] not-italic text-slate-500">({item.scope === 'station_wide' ? 'station-wide' : 'line-specific'})</em></span><strong>{item.reportCount}</strong></div>) : <p className="text-xs text-slate-500">No active reports.</p>}
         </div>}
       </div>

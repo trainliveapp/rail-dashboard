@@ -44,6 +44,20 @@ export async function getLineReportBreakdown(lineId) {
   return (data || []).map((row) => ({ category: row.category, scope: row.scope, reportCount: Number(row.report_count) || 0 }))
 }
 
+export async function getChannelReportSummary(channelId) {
+  if (!isSupabaseConfigured || !channelId) return 0
+  const { data, error } = await supabase.rpc('get_channel_report_summary', { p_channel_id: channelId })
+  if (error) throw error
+  return Number(data) || 0
+}
+
+export async function getChannelReportBreakdown(channelId) {
+  if (!isSupabaseConfigured || !channelId) return []
+  const { data, error } = await supabase.rpc('get_channel_report_breakdown', { p_channel_id: channelId })
+  if (error) throw error
+  return (data || []).map((row) => ({ category: row.category, scope: row.scope, reportCount: Number(row.report_count) || 0 }))
+}
+
 export function subscribeToCanonicalReports(onRefresh) {
   if (!isSupabaseConfigured) return () => {}
   let disposed = false
