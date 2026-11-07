@@ -1437,6 +1437,9 @@ import { supabase } from "../supabase";
 import { getChatVisitorId } from "../lib/chatIdentity";
 import { images } from "../data/optimizedImages";
 import ImageBackground from "./ImageBackground";
+import jubileeFullResolution from "../assets/jubilee-line.webp";
+import northernFullResolution from "../assets/northern-line.webp";
+import circleCleanPortrait from "../assets/circle-line-clean-portrait.webp";
 import SmoothImage from "./SmoothImage";
 import { getChannelReportBreakdown, getChannelReportSummary, subscribeToCanonicalReports } from "../lib/canonicalReports";
 import {
@@ -1451,12 +1454,12 @@ const CHAT_LINE_BACKGROUNDS = {
   central: images.chatCentral,
   bakerloo: images.chatBakerloo,
   elizabeth: images.chatElizabeth,
-  circle: images.chatCircle,
+  circle: { src: circleCleanPortrait, width: 853, height: 1844 },
   district: images.chatDistrict,
   "hammersmith & city": images.chatHammersmith,
-  jubilee: images.chatJubilee,
+  jubilee: { src: jubileeFullResolution, width: 1080, height: 1920 },
   metropolitan: images.chatMetropolitan,
-  northern: images.chatNorthern,
+  northern: { src: northernFullResolution, width: 1080, height: 1920 },
   piccadilly: images.chatPiccadilly,
   victoria: images.chatVictoria,
   "waterloo & city": images.chatWaterloo,
@@ -1464,7 +1467,7 @@ const CHAT_LINE_BACKGROUNDS = {
 };
 
 // Fill the panel with the sharp photo region instead of its blurred padding.
-const PICCADILLY_BACKGROUND_STYLE = { transform: "scale(3.2)", transformOrigin: "center" };
+const PORTRAIT_PHOTO_BACKGROUND_STYLE = { transform: "scale(3.2)", transformOrigin: "center" };
 
 const CHAT_VISIBILITY_WINDOW_MS = 24 * 60 * 60 * 1000;
 const HEART_REACTION = "\u2764\ufe0f";
@@ -2032,7 +2035,7 @@ export default function MapChat({ launcherTarget = null }) {
         } : {}),
       }}
     >
-      <ImageBackground {...(CHAT_LINE_BACKGROUNDS[selectedChannel.backgroundKey] || images.chatBakerloo)} sizes="(max-width: 639px) calc(100vw - 24px), 400px" imageStyle={selectedChannel.backgroundKey === "piccadilly" ? PICCADILLY_BACKGROUND_STYLE : undefined} shaded />
+      <ImageBackground {...(CHAT_LINE_BACKGROUNDS[selectedChannel.backgroundKey] || images.chatBakerloo)} sizes="(max-width: 639px) calc(100vw - 24px), 400px" imageStyle={["piccadilly", "jubilee", "northern"].includes(selectedChannel.backgroundKey) ? PORTRAIT_PHOTO_BACKGROUND_STYLE : undefined} shaded />
       <div className="chat-panel-header relative z-30 m-2 mb-0 flex h-[52px] shrink-0 items-center justify-between rounded-xl bg-yellow-400 px-4 text-brand-ink">
         <div className="flex min-w-0 items-center gap-3">
           <span className="text-xl font-black text-brand-ink">chatter</span>
@@ -2072,7 +2075,7 @@ export default function MapChat({ launcherTarget = null }) {
               });
             }}
             className="flex min-h-11 w-full items-center justify-between rounded-xl px-3 pr-24 text-left text-base font-semibold text-white outline-none focus-visible:outline-2 focus-visible:outline-offset-2"
-            style={{ backgroundColor: selectedChannel.themeColour, outlineColor: selectedChannel.themeColour }}
+            style={{ backgroundColor: selectedChannel.themeColour, outlineColor: selectedChannel.themeColour, color: channelId === "underground_circle" ? "#111827" : "#ffffff" }}
           >
             <span className="min-w-0 truncate">{selectedChannel.displayName}</span>
             <span aria-hidden="true" className="absolute right-3 text-lg leading-none">⌄</span>
@@ -2189,7 +2192,7 @@ export default function MapChat({ launcherTarget = null }) {
           setBreakdownOpen((value) => !value)
         }}>
           <TriangleAlert className="h-5 w-5 text-yellow-300" fill="currentColor" stroke="#111827" strokeWidth={2.5} aria-hidden="true" />
-          <span className="text-sm font-bold text-white tabular-nums">{reportCount}</span>
+          <span className="text-sm font-bold tabular-nums" style={{ color: channelId === "underground_circle" ? "#111827" : "#ffffff" }}>{reportCount}</span>
         </button>
         {breakdownOpen && <div role="dialog" aria-label={`${selectedChannel.displayName} active report breakdown`} className="absolute right-4 top-[3.875rem] z-30 w-[min(224px,calc(100vw-48px))] rounded-lg bg-white p-3 text-slate-800 shadow-xl">
           <div className="mb-2 flex items-center justify-between gap-2"><strong className="text-xs">Relevant reports</strong><button type="button" aria-label="Close report breakdown" onClick={() => setBreakdownOpen(false)} className="text-lg leading-none">×</button></div>
