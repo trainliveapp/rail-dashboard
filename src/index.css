@@ -805,8 +805,6 @@ button:disabled,
   .station-sheet { transition: none; }
 }
 
-/* Let the browser scroll single-finger gestures. The existing Leaflet-rotate
-   touch handler cancels two-finger gestures for map pan/pinch/rotation. */
 .map-panel .leaflet-container.cooperative-map {
-  touch-action: auto;
+  touch-action: none;
 }

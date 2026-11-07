@@ -248,7 +248,6 @@ export default function MapPanel({
   const [stationScores, setStationScores] = useState({})
   const [followSuspended, setFollowSuspended] = useState(false)
   const [zoom, setZoom] = useState(16)
-  const [gestureHint, setGestureHint] = useState(false)
   const [reportContext, setReportContext] = useState(null)
   const [reportNotice, setReportNotice] = useState(null)
   const [mobileStation, setMobileStation] = useState(null)
@@ -363,7 +362,7 @@ export default function MapPanel({
       >
         <MapBridge mapRef={mapRef} />
         <ZoomTracker onZoomChange={setZoom} />
-        <CooperativeGestures onHint={setGestureHint} onInteraction={suspendFollow} />
+        <CooperativeGestures onInteraction={suspendFollow} />
         
         <TileLayer
           key={mapTheme}
@@ -533,11 +532,6 @@ export default function MapPanel({
           {liveLocationPending ? <LoaderCircle size={22} className="animate-spin motion-reduce:animate-none" /> : <LocateFixed size={22} />}
         </button>
       </div>
-      {gestureHint && (
-        <div role="status" className="pointer-events-none absolute left-3 right-[76px] top-3 z-[1000] flex justify-center">
-          <p className="rounded-lg bg-white px-3 py-2 text-xs text-slate-700 shadow-sm">Use two fingers to move map</p>
-        </div>
-      )}
       {(liveLocationPending || liveLocationError) && (
         <div id="map-location-status" role="status" aria-live="polite" className="absolute left-3 right-[76px] top-[68px] z-[1000] rounded-lg bg-white p-3 text-xs text-slate-700 shadow-sm">
           {liveLocationPending ? 'Finding your location…' : <>

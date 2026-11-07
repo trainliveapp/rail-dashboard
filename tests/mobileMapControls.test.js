@@ -8,7 +8,6 @@ function fixture() {
   let enabled = true
   const hint = []
   let interacted = 0
-  let timer
   const container = {
     classList: { add() {}, remove() {} },
     addEventListener(type, handler, options) { assert.equal(options.passive, true); assert.equal(options.capture, true); listeners.set(type, handler) },
@@ -16,40 +15,28 @@ function fixture() {
   }
   const pinch = { enabled: () => true }
   const map = { getContainer: () => container, dragging: { enabled: () => enabled, disable() { enabled = false }, enable() { enabled = true } }, touchZoom: pinch, touchRotate: pinch }
-  const cleanup = attachCooperativeMapGestures(map, { onHint: value => hint.push(value), onInteraction: () => interacted++, setTimer(fn, delay) { assert.equal(delay, 2000); timer = fn; return 1 }, clearTimer() {} })
+  const cleanup = attachCooperativeMapGestures(map, { onInteraction: () => interacted++ })
   const emit = (type, points, popup = false) => listeners.get(type)({ target: { closest: () => popup }, touches: points.map(([clientX, clientY]) => ({ clientX, clientY })) })
-  return { map, emit, cleanup, hint, listeners, enabled: () => enabled, interacted: () => interacted, expire: () => timer() }
+  return { map, emit, cleanup, hint, listeners, enabled: () => enabled, interacted: () => interacted }
 }
 
-test('one-finger tap remains a tap; drag hint requires movement and expires', () => {
+test('one-finger gestures keep Leaflet dragging enabled', () => {
   const f = fixture()
   f.emit('touchstart', [[0, 0]])
-  assert.equal(f.enabled(), false)
-  f.emit('touchmove', [[3, 4]])
+  assert.equal(f.enabled(), true)
   assert.deepEqual(f.hint, [])
-  f.emit('touchmove', [[0, 20]])
-  f.emit('touchmove', [[0, 40]])
-  assert.deepEqual(f.hint, [true])
-  f.expire()
-  assert.deepEqual(f.hint, [true, false])
-  f.emit('touchend', [])
   assert.equal(f.enabled(), true)
   f.cleanup()
   assert.equal(f.listeners.size, 0)
 })
 
-test('two-finger gestures retain pinch/rotation and stop automatic follow; lifting one finger cannot drag', () => {
+test('two-finger gestures retain pinch/rotation and stop automatic follow', () => {
   const f = fixture()
   f.emit('touchstart', [[0, 0]])
   f.emit('touchstart', [[0, 0], [30, 30]])
   assert.equal(f.interacted(), 1)
   assert.equal(f.map.touchZoom.enabled(), true)
   assert.equal(f.map.touchRotate.enabled(), true)
-  f.emit('touchend', [[0, 0]])
-  assert.equal(f.enabled(), false)
-  f.emit('touchmove', [[0, 50]])
-  assert.deepEqual(f.hint, [false])
-  f.emit('touchcancel', [])
   assert.equal(f.enabled(), true)
   f.cleanup()
 })
