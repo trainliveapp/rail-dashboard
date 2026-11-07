@@ -1463,6 +1463,9 @@ const CHAT_LINE_BACKGROUNDS = {
   "great western railway": images.chatGreatWestern,
 };
 
+// Fill the panel with the sharp photo region instead of its blurred padding.
+const PICCADILLY_BACKGROUND_STYLE = { transform: "scale(3.2)", transformOrigin: "center" };
+
 const CHAT_VISIBILITY_WINDOW_MS = 24 * 60 * 60 * 1000;
 const HEART_REACTION = "\u2764\ufe0f";
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
@@ -2029,7 +2032,7 @@ export default function MapChat({ launcherTarget = null }) {
         } : {}),
       }}
     >
-      <ImageBackground {...(CHAT_LINE_BACKGROUNDS[selectedChannel.backgroundKey] || images.chatBakerloo)} sizes="(max-width: 639px) calc(100vw - 24px), 400px" shaded />
+      <ImageBackground {...(CHAT_LINE_BACKGROUNDS[selectedChannel.backgroundKey] || images.chatBakerloo)} sizes="(max-width: 639px) calc(100vw - 24px), 400px" imageStyle={selectedChannel.backgroundKey === "piccadilly" ? PICCADILLY_BACKGROUND_STYLE : undefined} shaded />
       <div className="chat-panel-header relative z-30 m-2 mb-0 flex h-[52px] shrink-0 items-center justify-between rounded-xl bg-yellow-400 px-4 text-brand-ink">
         <div className="flex min-w-0 items-center gap-3">
           <span className="text-xl font-black text-brand-ink">chatter</span>

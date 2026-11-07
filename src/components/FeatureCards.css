@@ -3,7 +3,7 @@
   isolation: isolate;
   width: 100%;
   overflow: hidden;
-  background: #071019;
+  background: #fff;
   color: #fff;
   font-family: var(--font-sans);
 }

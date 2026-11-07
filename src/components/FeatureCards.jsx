@@ -1,16 +1,7 @@
-import { Bell, CalendarDays, ChartNoAxesColumnIncreasing, MessageSquare, Route, ShieldCheck, Users } from 'lucide-react'
+import { ArrowUpRight, CalendarDays, ChartNoAxesColumnIncreasing, MessageSquare, Route, ShieldCheck, Users } from 'lucide-react'
 import { images } from '../data/optimizedImages'
 import SmoothImage from './SmoothImage'
-import BrandLogo from './BrandLogo'
-import { useState } from 'react'
 import './FeatureCards.css'
-
-const benefits = [
-  { icon: CalendarDays, color: '#ff002b', title: 'Remembers your journeys', text: 'Learns your routes, times and preferences.' },
-  { icon: ChartNoAxesColumnIncreasing, color: '#008cff', title: 'Predicts potential problems', text: 'Uses past data, live reports and weather to warn you early.' },
-  { icon: Bell, color: '#ff9c00', title: 'Reminds you about events', text: 'Concerts, matches, festivals and other local events.' },
-  { icon: ShieldCheck, color: '#00bd8b', title: 'Helps you travel more safely', text: 'Alerts you to recurring issues and suggests better options.' },
-]
 
 const features = [
   { icon: Users, color: '#f50029', label: 'Real passenger reports' },
@@ -22,40 +13,16 @@ const features = [
 ]
 
 export default function FeatureCards() {
-  const [showSupportMessage, setShowSupportMessage] = useState(false)
-
   return (
-    <section className="flavio-banner" aria-labelledby="flavio-heading">
-      <div className="flavio-hero">
-        <SmoothImage {...images.featurePlatform} sizes="100vw" alt="" className="flavio-platform" />
-        <div className="flavio-shade" aria-hidden="true" />
-
-        <div className="flavio-copy">
-          <div className="flavio-brand-row">
-            <BrandLogo className="flavio-logo" />
-            <p className="flavio-handwritten flavio-brand-note">Built by commuters.<br />For commuters.</p>
+    <section className="flavio-banner" aria-label="StationLive community">
+      <div className="flex min-h-60 w-full items-center justify-center bg-white px-4 py-8 sm:min-h-80 sm:px-6">
+        <aside aria-label="Advertise with StationLive" className="flex w-full max-w-4xl items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white px-5 py-5 text-[#07336b] sm:px-8 sm:py-6">
+          <div className="min-w-0">
+            <p className="text-[clamp(1.5rem,5vw,2.5rem)] font-extrabold leading-tight">Reach travellers</p>
+            <p className="mt-1 text-[clamp(1rem,3.5vw,1.75rem)] font-semibold leading-snug">Advertise with StationLive</p>
           </div>
-          <span className="flavio-coming-soon">Coming soon</span>
-          <h2 id="flavio-heading"><span className="flavio-meet">Meet <strong>Flavio.</strong></span><span>Your personal</span><span>AI Travel Companion.</span></h2>
-          <p className="flavio-description">Flavio learns from real passenger reports, predicts potential disruptions and helps you travel smarter, safer and more in control.</p>
-          <button type="button" aria-label="Coming soon" className="flavio-support" onClick={() => setShowSupportMessage(true)}><span className="col-span-3">Coming soon</span></button>
-          <p className="flavio-support-message" role="status">{showSupportMessage ? 'Support link coming soon.' : ''}</p>
-          <p className="flavio-support-note">Your support helps keep StationLive free for everyone and makes new features like Flavio possible.</p>
-        </div>
-
-        <div className="flavio-art">
-          <SmoothImage {...images.featurePortrait} sizes="(max-width: 767px) 50vw, 400px" alt="Flavio, your friendly AI travel companion, holding a smartphone" className="flavio-portrait" />
-          <SmoothImage {...images.featurePhone} sizes="(max-width: 767px) 50vw, 400px" alt="Preview of Kelly’s personalized travel dashboard on iPhone" className="flavio-phone" />
-        </div>
-
-        <div className="flavio-benefits" aria-label="Coming soon with Flavio">
-          {benefits.map(({ icon: Icon, color, title, text }) => (
-            <article key={title} className="flavio-benefit">
-              <span className="flavio-benefit-icon" style={{ backgroundColor: color }}><Icon aria-hidden="true" strokeWidth={2.7} /></span>
-              <div><h3>{title}</h3><p>{text}</p></div>
-            </article>
-          ))}
-        </div>
+          <ArrowUpRight aria-hidden="true" className="h-8 w-8 shrink-0 sm:h-12 sm:w-12" strokeWidth={2.2} />
+        </aside>
       </div>
 
       <div className="flavio-footer">
