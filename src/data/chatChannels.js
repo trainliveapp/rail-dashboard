@@ -24,38 +24,39 @@ export const MAIN_CHAT_CHANNELS = [
   { id: "london_overground", displayName: "London Overground", type: "london", group: "london", aliases: ["overground"], themeColour: "#EE7C0E", reportLineId: "london-overground" },
   { id: "dlr", displayName: "DLR", type: "london", group: "london", aliases: ["docklands light railway"], themeColour: "#00A4A7", reportLineId: "dlr" },
   { id: "london_trams", displayName: "London Trams", type: "london", group: "london", aliases: ["trams", "tramlink"], themeColour: "#84B817", reportLineId: "tramlink" },
-];
+].map((channel, displayOrder) => ({ ...channel, displayOrder }));
 
 export const NATIONAL_RAIL_CHANNELS = [
-  "Avanti West Coast",
-  "c2c",
-  "Caledonian Sleeper",
-  "Chiltern Railways",
-  "CrossCountry",
-  "East Midlands Railway",
-  "Gatwick Express",
-  "Grand Central",
-  "Great Northern",
-  "Great Western Railway",
-  "Greater Anglia",
-  "Heathrow Express",
-  "Hull Trains",
-  "LNER",
-  "London Northwestern Railway",
-  "Lumo",
-  "Merseyrail",
-  "Northern",
-  "ScotRail",
-  "South Western Railway",
-  "Southeastern",
-  "Southern",
-  "Stansted Express",
-  "Thameslink",
-  "TransPennine Express",
-  "Transport for Wales",
-  "West Midlands Railway",
-].map((displayName) => ({
-  id: `national_rail_${displayName.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "")}`,
+  ["avanti_west_coast", "Avanti West Coast"],
+  ["c2c", "c2c"],
+  ["caledonian_sleeper", "Caledonian Sleeper"],
+  ["chiltern_railways", "Chiltern Railways"],
+  ["crosscountry", "CrossCountry"],
+  ["east_midlands_railway", "East Midlands Railway"],
+  ["gatwick_express", "Gatwick Express"],
+  ["grand_central", "Grand Central"],
+  ["great_northern", "Great Northern"],
+  ["great_western_railway", "Great Western Railway"],
+  ["greater_anglia", "Greater Anglia"],
+  ["heathrow_express", "Heathrow Express"],
+  ["hull_trains", "Hull Trains"],
+  ["lner", "LNER"],
+  ["london_northwestern_railway", "London Northwestern Railway"],
+  ["lumo", "Lumo"],
+  ["merseyrail", "Merseyrail"],
+  ["northern", "Northern"],
+  ["scotrail", "ScotRail"],
+  ["south_western_railway", "South Western Railway"],
+  ["southeastern", "Southeastern"],
+  ["southern", "Southern"],
+  ["stansted_express", "Stansted Express"],
+  ["thameslink", "Thameslink"],
+  ["transpennine_express", "TransPennine Express"],
+  ["transport_for_wales", "Transport for Wales"],
+  ["west_midlands_railway", "West Midlands Railway"],
+].map(([key, displayName], displayOrder) => ({
+  displayOrder,
+  id: `national_rail_${key}`,
   type: "national",
   displayName,
   group: "nationalRail",
@@ -72,7 +73,7 @@ export const NATIONAL_RAIL_CHANNELS = [
 export const CHAT_CHANNELS = [...MAIN_CHAT_CHANNELS, ...NATIONAL_RAIL_CHANNELS];
 
 export function getChatChannel(channelId) {
-  return CHAT_CHANNELS.find((channel) => channel.id === channelId) || MAIN_CHAT_CHANNELS[4];
+  return CHAT_CHANNELS.find((channel) => channel.id === channelId) || MAIN_CHAT_CHANNELS.find((channel) => channel.id === "underground_central");
 }
 
 export function channelIdFromLegacyLine(value) {

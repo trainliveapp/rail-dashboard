@@ -1444,6 +1444,7 @@ import {
   NATIONAL_RAIL_CHANNELS,
   getChatChannel,
   searchChatChannels,
+  normalizeChannelSearch,
 } from "../data/chatChannels";
 
 const CHAT_LINE_BACKGROUNDS = {
@@ -1495,6 +1496,7 @@ export default function MapChat({ launcherTarget = null }) {
   const [channelMenuOpen, setChannelMenuOpen] = useState(false);
   const [channelView, setChannelView] = useState("main");
   const [channelQuery, setChannelQuery] = useState("");
+  const [channelListHeight, setChannelListHeight] = useState(0);
   const [reportCount, setReportCount] = useState(0);
   const [reportBreakdown, setReportBreakdown] = useState([]);
   const [breakdownOpen, setBreakdownOpen] = useState(false);
@@ -1524,14 +1526,48 @@ export default function MapChat({ launcherTarget = null }) {
   const chatPanelRef = useRef(null);
   const mainChannelListRef = useRef(null);
   const channelMenuRef = useRef(null);
-  const channelSearchInputRef = useRef(null);
+  const channelTriggerRef = useRef(null);
+  const channelSearchRef = useRef(null);
+  const messageGenerationRef = useRef(0);
   const mainChannelScrollTopRef = useRef(0);
   const selectedChannel = getChatChannel(channelId);
-  const visibleChannels = channelQuery.trim()
+  const searchingChannels = Boolean(normalizeChannelSearch(channelQuery));
+  const visibleChannels = searchingChannels
     ? searchChatChannels(channelQuery)
-    : channelView === "nationalRail"
-      ? NATIONAL_RAIL_CHANNELS
-      : MAIN_CHAT_CHANNELS;
+    : channelView === "nationalRail" ? NATIONAL_RAIL_CHANNELS : MAIN_CHAT_CHANNELS;
+
+  useEffect(() => {
+    if (!channelMenuOpen) return;
+    const list = mainChannelListRef.current;
+    if (list) list.scrollTop = !searchingChannels && channelView === "main" ? mainChannelScrollTopRef.current : 0;
+  }, [channelMenuOpen, channelView, channelQuery, searchingChannels]);
+
+  useEffect(() => {
+    if (channelMenuOpen) channelSearchRef.current?.focus({ preventScroll: true });
+  }, [channelMenuOpen]);
+
+  useEffect(() => {
+    if (!channelMenuOpen) return undefined;
+    const resizeList = () => {
+      const panelBottom = chatPanelRef.current?.getBoundingClientRect().bottom;
+      const menuTop = channelMenuRef.current?.getBoundingClientRect().top;
+      if (panelBottom != null && menuTop != null) {
+        const viewportBottom = window.visualViewport
+          ? window.visualViewport.offsetTop + window.visualViewport.height
+          : window.innerHeight;
+        setChannelListHeight(Math.max(0, Math.min(panelBottom, viewportBottom) - menuTop - 12));
+      }
+    };
+    resizeList();
+    window.addEventListener("resize", resizeList);
+    window.visualViewport?.addEventListener("resize", resizeList);
+    window.visualViewport?.addEventListener("scroll", resizeList);
+    return () => {
+      window.removeEventListener("resize", resizeList);
+      window.visualViewport?.removeEventListener("resize", resizeList);
+      window.visualViewport?.removeEventListener("scroll", resizeList);
+    };
+  }, [channelMenuOpen]);
 
   useEffect(() => {
     try {
@@ -1543,24 +1579,25 @@ export default function MapChat({ launcherTarget = null }) {
 
   useEffect(() => {
     if (!channelMenuOpen) return undefined;
-    channelSearchInputRef.current?.focus();
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
 
     const handleMenuDismiss = (event) => {
       if (event.key === "Escape") {
         setChannelMenuOpen(false);
-        setChannelQuery("");
+        channelTriggerRef.current?.focus();
         return;
       }
 
-      if (event.type === "pointerdown" && !channelMenuRef.current?.contains(event.target)) {
+      if (event.type === "pointerdown" && !channelMenuRef.current?.contains(event.target) && !channelTriggerRef.current?.contains(event.target)) {
         setChannelMenuOpen(false);
-        setChannelQuery("");
       }
     };
 
     window.addEventListener("keydown", handleMenuDismiss);
     window.addEventListener("pointerdown", handleMenuDismiss);
     return () => {
+      document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleMenuDismiss);
       window.removeEventListener("pointerdown", handleMenuDismiss);
     };
@@ -1661,6 +1698,7 @@ export default function MapChat({ launcherTarget = null }) {
   };
 
   async function loadMessages() {
+    const generation = messageGenerationRef.current;
     const { data, error } = await supabase
       .from("chat_messages")
       .select("*")
@@ -1676,6 +1714,7 @@ export default function MapChat({ launcherTarget = null }) {
       return [];
     }
 
+    if (generation !== messageGenerationRef.current) return [];
     const nextMessages = data || [];
     setMessages(nextMessages);
     messagesRef.current = nextMessages;
@@ -1684,6 +1723,7 @@ export default function MapChat({ launcherTarget = null }) {
   }
 
   async function loadReactions(messageIds) {
+    const generation = messageGenerationRef.current;
     if (!messageIds.length) {
       setReactions({});
       return;
@@ -1716,7 +1756,7 @@ export default function MapChat({ launcherTarget = null }) {
       }
     }
 
-    setReactions(next);
+    if (generation === messageGenerationRef.current) setReactions(next);
   }
 
   function toggleSavedMessage(messageId) {
@@ -1875,6 +1915,7 @@ export default function MapChat({ launcherTarget = null }) {
     if (sending) return;
     if (!text.trim() && !selectedImage) return;
 
+    const generation = messageGenerationRef.current;
     setSending(true);
     setImageError("");
 
@@ -1930,7 +1971,7 @@ export default function MapChat({ launcherTarget = null }) {
 
       if (error) throw error;
 
-      if (data) {
+      if (data && generation === messageGenerationRef.current) {
         setMessages((prev) => {
           if (prev.some((message) => message.id === data.id)) return prev;
           const next = [...prev, data];
@@ -1979,12 +2020,13 @@ export default function MapChat({ launcherTarget = null }) {
       <div className="chat-channel relative z-20 shrink-0 px-4 py-3">
         <label
           htmlFor="chat-channel"
-          className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.08em] text-white/90"
+          className="sr-only"
         >
           Chat channel
         </label>
         <div className="relative">
           <button
+            ref={channelTriggerRef}
             id="chat-channel"
             type="button"
             aria-haspopup="dialog"
@@ -2008,50 +2050,76 @@ export default function MapChat({ launcherTarget = null }) {
               ref={channelMenuRef}
               role="dialog"
               aria-label="Chatter channels"
-              className="absolute left-0 right-0 top-[calc(100%+8px)] z-40 overflow-hidden rounded-xl border border-white/10 bg-[#29292e] text-white shadow-2xl"
+              style={{ maxHeight: `min(80dvh, 760px, ${channelListHeight}px)`, paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+              className="absolute left-0 right-0 top-[calc(100%+8px)] z-40 flex flex-col overflow-hidden rounded-xl border border-white/10 bg-[#29292e] text-white shadow-2xl"
             >
-              <div className="sticky top-0 z-10 border-b border-white/10 bg-[#29292e] p-2">
-                <label htmlFor="chat-channel-search" className="sr-only">Search Chatter channels</label>
+              <div className="sticky top-0 z-10 shrink-0 border-b border-white/10 bg-[#29292e] p-2">
+                <label htmlFor="chat-channel-search" className="sr-only">Search all Chatter channels</label>
                 <input
-                  ref={channelSearchInputRef}
+                  ref={channelSearchRef}
                   id="chat-channel-search"
                   type="search"
                   value={channelQuery}
-                  onChange={(event) => setChannelQuery(event.target.value)}
+                  onChange={(event) => {
+                    setChannelQuery(event.target.value);
+                    if (!normalizeChannelSearch(event.target.value)) setChannelView("main");
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "ArrowDown") {
+                      event.preventDefault();
+                      mainChannelListRef.current?.querySelector("button")?.focus();
+                    }
+                  }}
                   placeholder="Search channels"
                   autoComplete="off"
-                  className="min-h-12 w-full rounded-lg border border-white/15 bg-white/10 px-3 text-base text-white outline-none placeholder:text-white/60 focus:border-white/50 focus:ring-2 focus:ring-white/20"
+                  className="min-h-12 w-full min-w-0 rounded-lg border border-white/15 bg-white/10 px-3 text-base text-white outline-none placeholder:text-white/60 focus:border-white/50 focus:ring-2 focus:ring-white/20"
                 />
-                <p className="sr-only" aria-live="polite">
+                <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
                   {visibleChannels.length} channel{visibleChannels.length === 1 ? "" : "s"} found
                 </p>
               </div>
-              {!channelQuery.trim() && channelView === "nationalRail" && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setChannelView("main");
-                    window.requestAnimationFrame(() => {
-                      if (mainChannelListRef.current) mainChannelListRef.current.scrollTop = mainChannelScrollTopRef.current;
-                    });
-                  }}
-                  aria-label="Back to London Chatter channels"
-                  className="flex min-h-14 w-full items-center border-b border-white/10 px-3 text-left text-sm font-semibold hover:bg-white/10 focus-visible:bg-white/10 focus-visible:outline-none"
-                >
-                  <span aria-hidden="true" className="mr-2 text-lg leading-none">‹</span> Back to London channels
-                </button>
-              )}
-              <div ref={mainChannelListRef} className="max-h-[min(80dvh,760px)] overflow-y-auto overscroll-contain py-1">
+              <div ref={mainChannelListRef} className="min-h-0 overflow-x-hidden overflow-y-auto overscroll-contain py-1"
+                onKeyDown={(event) => {
+                  const buttons = [...event.currentTarget.querySelectorAll("button")];
+                  const index = buttons.indexOf(document.activeElement);
+                  let next;
+                  if (event.key === "ArrowDown") next = (index + 1) % buttons.length;
+                  if (event.key === "ArrowUp") next = (index - 1 + buttons.length) % buttons.length;
+                  if (event.key === "Home") next = 0;
+                  if (event.key === "End") next = buttons.length - 1;
+                  if (next !== undefined) { event.preventDefault(); buttons[next]?.focus(); }
+                }}>
+                {!searchingChannels && channelView === "nationalRail" && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setChannelView("main");
+                      channelSearchRef.current?.focus({ preventScroll: true });
+                    }}
+                    className="flex min-h-14 w-full items-center border-b border-white/10 px-3 text-left text-sm font-semibold hover:bg-white/10 focus-visible:bg-white/10 focus-visible:outline-none"
+                  >
+                    <span aria-hidden="true" className="mr-2 text-lg">‹</span> Back to London channels
+                  </button>
+                )}
+                <div role="radiogroup" aria-label={searchingChannels ? "Channel search results" : channelView === "main" ? "London channels" : "National Rail operators"}>
                 {visibleChannels.map((channel) => (
                     <button
                       key={channel.id}
                       type="button"
-                      role="option"
-                      aria-selected={channel.id === channelId}
+                      role="radio"
+                      aria-checked={channel.id === channelId}
                       onClick={() => {
-                        setChannelId(channel.id);
+                        if (channel.id !== channelId) {
+                          messageGenerationRef.current += 1;
+                          setMessages([]);
+                          messagesRef.current = [];
+                          setReactions({});
+                          setReportCount(0);
+                          setChannelId(channel.id);
+                        }
+                        channelTriggerRef.current?.focus();
                         setChannelMenuOpen(false);
-                        setChannelQuery("");
+
                         setChannelView("main");
                       }}
                       className="flex min-h-14 w-full items-center justify-between gap-3 border-b border-white/10 px-3 text-left text-sm transition last:border-b-0 hover:bg-white/10 focus-visible:bg-white/10 focus-visible:outline-none"
@@ -2060,27 +2128,28 @@ export default function MapChat({ launcherTarget = null }) {
                       <span aria-hidden="true" className={`h-4 w-4 shrink-0 rounded-full border-2 ${channel.id === channelId ? "border-white bg-white shadow-[inset_0_0_0_3px_#29292e]" : "border-white/70"}`} />
                     </button>
                 ))}
-                {!channelQuery.trim() && channelView === "main" && (
+
+                </div>
+                {!searchingChannels && channelView === "main" && (
                   <button
                     type="button"
                     onClick={() => {
                       mainChannelScrollTopRef.current = mainChannelListRef.current?.scrollTop || 0;
                       setChannelView("nationalRail");
+                      window.requestAnimationFrame(() => mainChannelListRef.current?.querySelector("button")?.focus({ preventScroll: true }));
                     }}
-                    className="flex min-h-14 w-full items-center justify-between gap-3 border-b border-white/10 px-3 text-left text-sm font-semibold hover:bg-white/10 focus-visible:bg-white/10 focus-visible:outline-none"
+                    className="flex min-h-14 w-full items-center justify-between gap-3 border-t border-white/10 px-3 text-left text-sm font-semibold hover:bg-white/10 focus-visible:bg-white/10 focus-visible:outline-none"
                   >
                     <span>Browse National Rail operators</span>
-                    <span aria-hidden="true" className="text-lg leading-none">›</span>
+                    <span aria-hidden="true" className="text-lg">›</span>
                   </button>
                 )}
-                {!visibleChannels.length && (
-                  <p className="px-3 py-5 text-sm text-white/70">No channels found.</p>
-                )}
+                {!visibleChannels.length && <p className="px-3 py-5 text-sm text-white/70">No channels found.</p>}
               </div>
             </div>
           )}
         </div>
-        <button type="button" className="absolute right-10 top-[3.45rem] z-10 flex min-h-9 min-w-[52px] -translate-y-1/2 items-center justify-center gap-1 rounded-md px-1 hover:bg-black/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white" aria-label={`View ${reportCount} active reports for ${selectedChannel.displayName}`} aria-expanded={breakdownOpen} onClick={async () => {
+        <button type="button" className="absolute right-10 top-[2.125rem] z-10 flex min-h-9 min-w-[52px] -translate-y-1/2 items-center justify-center gap-1 rounded-md px-1 hover:bg-black/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white" aria-label={`View ${reportCount} active reports for ${selectedChannel.displayName}`} aria-expanded={breakdownOpen} onClick={async () => {
           if (!breakdownOpen) {
             try { setReportBreakdown(await getChannelReportBreakdown(channelId)) } catch (error) { console.error("Could not load report breakdown:", error); setReportBreakdown([]) }
           }
@@ -2089,7 +2158,7 @@ export default function MapChat({ launcherTarget = null }) {
           <TriangleAlert className="h-5 w-5 text-yellow-300" fill="currentColor" stroke="#111827" strokeWidth={2.5} aria-hidden="true" />
           <span className="text-sm font-bold text-white tabular-nums">{reportCount}</span>
         </button>
-        {breakdownOpen && <div role="dialog" aria-label={`${selectedChannel.displayName} active report breakdown`} className="absolute right-4 top-[5.25rem] z-30 w-[min(224px,calc(100vw-48px))] rounded-lg bg-white p-3 text-slate-800 shadow-xl">
+        {breakdownOpen && <div role="dialog" aria-label={`${selectedChannel.displayName} active report breakdown`} className="absolute right-4 top-[3.875rem] z-30 w-[min(224px,calc(100vw-48px))] rounded-lg bg-white p-3 text-slate-800 shadow-xl">
           <div className="mb-2 flex items-center justify-between gap-2"><strong className="text-xs">Relevant reports</strong><button type="button" aria-label="Close report breakdown" onClick={() => setBreakdownOpen(false)} className="text-lg leading-none">×</button></div>
           <p className="mb-2 text-[11px] text-slate-500">Active reports relevant to this channel; not confirmed disruptions.</p>
           {reportBreakdown.length ? reportBreakdown.map((item) => <div key={`${item.category}-${item.scope}`} className="flex justify-between gap-3 text-xs"><span>{item.category} <em className="text-[10px] not-italic text-slate-500">({item.scope === 'station_wide' ? 'station-wide' : 'line-specific'})</em></span><strong>{item.reportCount}</strong></div>) : <p className="text-xs text-slate-500">No active reports.</p>}
