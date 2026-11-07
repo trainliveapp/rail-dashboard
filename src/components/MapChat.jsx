@@ -1497,6 +1497,7 @@ export default function MapChat({ launcherTarget = null }) {
   const [channelView, setChannelView] = useState("main");
   const [channelQuery, setChannelQuery] = useState("");
   const [channelListHeight, setChannelListHeight] = useState(0);
+  const [channelViewport, setChannelViewport] = useState(null);
   const [reportCount, setReportCount] = useState(0);
   const [reportBreakdown, setReportBreakdown] = useState([]);
   const [breakdownOpen, setBreakdownOpen] = useState(false);
@@ -1526,6 +1527,7 @@ export default function MapChat({ launcherTarget = null }) {
   const chatPanelRef = useRef(null);
   const mainChannelListRef = useRef(null);
   const channelMenuRef = useRef(null);
+  const chatComposerRef = useRef(null);
   const channelTriggerRef = useRef(null);
   const channelSearchRef = useRef(null);
   const messageGenerationRef = useRef(0);
@@ -1547,22 +1549,45 @@ export default function MapChat({ launcherTarget = null }) {
   }, [channelMenuOpen]);
 
   useEffect(() => {
-    if (!channelMenuOpen) return undefined;
+    if (!channelMenuOpen) {
+      setChannelViewport(null);
+      return undefined;
+    }
     const resizeList = () => {
-      const panelBottom = chatPanelRef.current?.getBoundingClientRect().bottom;
-      const menuTop = channelMenuRef.current?.getBoundingClientRect().top;
-      if (panelBottom != null && menuTop != null) {
-        const viewportBottom = window.visualViewport
-          ? window.visualViewport.offsetTop + window.visualViewport.height
-          : window.innerHeight;
-        setChannelListHeight(Math.max(0, Math.min(panelBottom, viewportBottom) - menuTop - 12));
+      const viewport = window.visualViewport;
+      const viewportTop = viewport?.offsetTop || 0;
+      if (viewport) {
+        setChannelViewport({
+          maxHeight: Math.max(0, viewport.height - 24),
+          bottom: Math.max(12, window.innerHeight - viewportTop - viewport.height + 12),
+        });
+      }
+      // Layout offsets stay accurate during the panel's scale-in animation.
+      // Allow the dropdown to overlay the composer down to the panel edge.
+      const panel = chatPanelRef.current;
+      const offsetWithinPanel = (element) => {
+        let top = 0;
+        while (element && element !== panel) {
+          top += element.offsetTop;
+          element = element.offsetParent;
+        }
+        return top;
+      };
+      if (panel && channelMenuRef.current) {
+        setChannelListHeight(Math.max(0,
+          panel.clientHeight - offsetWithinPanel(channelMenuRef.current) - 8
+        ));
       }
     };
     resizeList();
+    const observer = new ResizeObserver(resizeList);
+    if (chatPanelRef.current) observer.observe(chatPanelRef.current);
+    if (chatComposerRef.current) observer.observe(chatComposerRef.current);
     window.addEventListener("resize", resizeList);
     window.visualViewport?.addEventListener("resize", resizeList);
     window.visualViewport?.addEventListener("scroll", resizeList);
     return () => {
+      observer.disconnect();
       window.removeEventListener("resize", resizeList);
       window.visualViewport?.removeEventListener("resize", resizeList);
       window.visualViewport?.removeEventListener("scroll", resizeList);
@@ -1998,6 +2023,10 @@ export default function MapChat({ launcherTarget = null }) {
         sm:left-5 sm:right-auto sm:bottom-5 sm:w-[400px] sm:h-[min(680px,calc(100dvh-40px))]"
       style={{
         isolation: "isolate",
+        ...(channelMenuOpen && channelViewport ? {
+          maxHeight: `${channelViewport.maxHeight}px`,
+          bottom: `${channelViewport.bottom}px`,
+        } : {}),
       }}
     >
       <ImageBackground {...(CHAT_LINE_BACKGROUNDS[selectedChannel.backgroundKey] || images.chatBakerloo)} sizes="(max-width: 639px) calc(100vw - 24px), 400px" shaded />
@@ -2017,7 +2046,7 @@ export default function MapChat({ launcherTarget = null }) {
         </button>
       </div>
 
-      <div className="chat-channel relative z-20 shrink-0 px-4 py-3">
+      <div className="chat-channel relative z-[80] shrink-0 px-4 py-3">
         <label
           htmlFor="chat-channel"
           className="sr-only"
@@ -2045,13 +2074,14 @@ export default function MapChat({ launcherTarget = null }) {
             <span className="min-w-0 truncate">{selectedChannel.displayName}</span>
             <span aria-hidden="true" className="absolute right-3 text-lg leading-none">⌄</span>
           </button>
+
           {channelMenuOpen && (
             <div
               ref={channelMenuRef}
               role="dialog"
               aria-label="Chatter channels"
-              style={{ maxHeight: `min(80dvh, 760px, ${channelListHeight}px)`, paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
-              className="absolute left-0 right-0 top-[calc(100%+8px)] z-40 flex flex-col overflow-hidden rounded-xl border border-white/10 bg-[#29292e] text-white shadow-2xl"
+              style={{ boxSizing: "border-box", maxHeight: `min(80dvh, 760px, ${channelListHeight}px)`, paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+              className="absolute left-0 right-0 top-[calc(100%+8px)] z-[60] flex flex-col overflow-hidden rounded-xl border border-white/10 bg-[#29292e] text-white shadow-2xl"
             >
               <div className="sticky top-0 z-10 shrink-0 border-b border-white/10 bg-[#29292e] p-2">
                 <label htmlFor="chat-channel-search" className="sr-only">Search all Chatter channels</label>
@@ -2078,7 +2108,7 @@ export default function MapChat({ launcherTarget = null }) {
                   {visibleChannels.length} channel{visibleChannels.length === 1 ? "" : "s"} found
                 </p>
               </div>
-              <div ref={mainChannelListRef} className="min-h-0 overflow-x-hidden overflow-y-auto overscroll-contain py-1"
+              <div ref={mainChannelListRef} className="chat-channel-list min-h-0 overflow-x-hidden overflow-y-auto overscroll-contain py-1"
                 onKeyDown={(event) => {
                   const buttons = [...event.currentTarget.querySelectorAll("button")];
                   const index = buttons.indexOf(document.activeElement);
@@ -2306,7 +2336,8 @@ export default function MapChat({ launcherTarget = null }) {
         </div>
       )}
 
-      <div className="chat-composer relative z-50 shrink-0 p-3">
+      <div ref={chatComposerRef} className="chat-composer relative z-[70] shrink-0 p-3">
+
         <>
           <div className="flex items-center gap-2">
           <div className="chat-compose-field flex min-w-0 flex-1 items-center gap-0.5 rounded-full border border-white/50 bg-black/30 p-1 pl-1.5 backdrop-blur-sm focus-within:border-yellow-300 focus-within:ring-2 focus-within:ring-yellow-300/25">
@@ -2413,6 +2444,15 @@ export default function MapChat({ launcherTarget = null }) {
   return (
     <>
       <style>{`
+        .chat-channel-list {
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+        .chat-channel-list::-webkit-scrollbar {
+          display: none;
+          width: 0;
+          height: 0;
+        }
         .chatter-launcher {
           isolation: isolate;
         }

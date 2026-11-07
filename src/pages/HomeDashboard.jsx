@@ -1,3 +1,4 @@
+import { requestMapLocation, locationErrorMessage, positionToLocation } from '../lib/mapLocation'
 import { useState, useRef, useEffect } from 'react'
 import TopPromoBar from '../components/TopPromoBar'
 import NavBar from '../components/NavBar'
@@ -59,6 +60,13 @@ export default function HomeDashboard() {
   const [liveLocation, setLiveLocation] = useState(null)
   const [liveLocationEnabled, setLiveLocationEnabled] = useState(false)
   const [liveLocationError, setLiveLocationError] = useState('')
+  const [liveLocationPending, setLiveLocationPending] = useState(false)
+  const locationRequestRef = useRef(null)
+  const locationMountedRef = useRef(true)
+  useEffect(() => {
+    locationMountedRef.current = true
+    return () => { locationMountedRef.current = false }
+  }, [])
   const [stationActionsNode, setStationActionsNode] = useState(null)
   const [desktopActionsNode, setDesktopActionsNode] = useState(null)
   const [isMobileLayout, setIsMobileLayout] = useState(() => window.matchMedia('(max-width: 767px)').matches)
@@ -85,26 +93,26 @@ export default function HomeDashboard() {
   const wantsLiveLocation = liveLocationEnabled || hasPlannedJourney || usingCurrentLocation
 
   const locateLiveLocation = () => {
-    if (!navigator.geolocation) {
-      setLiveLocationError('Location is not available on this device.')
-      return
-    }
-
+    if (locationRequestRef.current) return locationRequestRef.current
+    setLiveLocationPending(true)
     setLiveLocationError('')
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setLiveLocation({
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-          heading: Number.isFinite(pos.coords.heading) ? pos.coords.heading : 0,
-        })
+    const request = requestMapLocation()
+      .then(location => {
+        if (!locationMountedRef.current) return null
+        setLiveLocation(location)
         setLiveLocationEnabled(true)
-      },
-      (err) => {
-        setLiveLocationError(err.message || 'Could not get your location.')
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 4000 }
-    )
+        return location
+      })
+      .catch(error => {
+        if (locationMountedRef.current) setLiveLocationError(locationErrorMessage(error))
+        return null
+      })
+      .finally(() => {
+        locationRequestRef.current = null
+        if (locationMountedRef.current) setLiveLocationPending(false)
+      })
+    locationRequestRef.current = request
+    return request
   }
 
   useEffect(() => {
@@ -127,8 +135,10 @@ export default function HomeDashboard() {
 
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
-        const lat = pos.coords.latitude
-        const lng = pos.coords.longitude
+        let fix
+        try { fix = positionToLocation(pos) } catch (error) { setLiveLocationError(locationErrorMessage(error)); return }
+        const { lat, lng } = fix
+        setLiveLocationError('')
         let heading = Number.isFinite(pos.coords.heading) ? pos.coords.heading : null
 
         const prev = prevFixRef.current
@@ -140,10 +150,10 @@ export default function HomeDashboard() {
         }
         const resolvedHeading = heading ?? prev?.heading ?? 0
         prevFixRef.current = { lat, lng, heading: resolvedHeading }
-        setLiveLocation({ lat, lng, heading: resolvedHeading })
+        setLiveLocation({ lat, lng, heading: resolvedHeading, accuracy: fix.accuracy })
       },
       (err) => {
-        setLiveLocationError(err.message || 'Could not get your location.')
+        setLiveLocationError(locationErrorMessage(err))
         console.warn('Live location unavailable:', err.message)
       },
       { enableHighAccuracy: true, maximumAge: 4000, timeout: 10000 }
@@ -196,9 +206,8 @@ export default function HomeDashboard() {
           highlightLines={plannedJourney?.selectedOption?.lines || []}
           route={mapRoute}
           liveLocation={liveLocation}
-          liveLocationEnabled={liveLocationEnabled}
+          liveLocationPending={liveLocationPending}
           liveLocationError={liveLocationError}
-          onToggleLiveLocation={() => setLiveLocationEnabled((enabled) => !enabled)}
           onLocateLiveLocation={locateLiveLocation}
           onGetDirections={(station) => {
             planner.setToStation(station)

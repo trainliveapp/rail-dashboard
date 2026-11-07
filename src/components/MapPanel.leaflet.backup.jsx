@@ -2,12 +2,13 @@ import { useRef, useEffect, useState, useMemo } from 'react'
 import { MapContainer, TileLayer, Polyline, Marker, Popup, Tooltip, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet-rotate'
-import { Plus, Minus, LocateFixed, Flag, Sun, Moon, Compass, Route, CheckCircle2 } from 'lucide-react'
+import { LocateFixed, Flag, LoaderCircle, CheckCircle2 } from 'lucide-react'
 import { lines, housingPins, coffeePins, liveEventPin, stations } from '../data/mockData'
 import { tubeLineGeometry } from '../data/tubeLineGeometry'
 import { getStationScores } from '../lib/stationRatings'
 import ReportIssueModal from './ReportIssueModal'
 import StationPopup from './StationPopup'
+import { attachCooperativeMapGestures } from '../lib/cooperativeMapGestures'
 
 const CENTER = [51.5246, -0.1339]
 const MAP_THEMES = {
@@ -214,10 +215,9 @@ function ZoomTracker({ onZoomChange }) {
   return null
 }
 
-function BearingTracker({ onBearingChange }) {
-  const map = useMapEvents({
-    rotate: () => onBearingChange(map.getBearing()),
-  })
+function CooperativeGestures({ onHint, onInteraction }) {
+  const map = useMap()
+  useEffect(() => attachCooperativeMapGestures(map, { onHint, onInteraction }), [map, onHint, onInteraction])
   return null
 }
 
@@ -238,9 +238,8 @@ export default function MapPanel({
   highlightLines = [],
   route = null,
   liveLocation = null,
-  liveLocationEnabled = false,
+  liveLocationPending = false,
   liveLocationError = '',
-  onToggleLiveLocation = null,
   onLocateLiveLocation = null,
   onGetDirections = null,
   className = 'h-[420px] lg:h-[520px]',
@@ -249,8 +248,7 @@ export default function MapPanel({
   const [stationScores, setStationScores] = useState({})
   const [followSuspended, setFollowSuspended] = useState(false)
   const [zoom, setZoom] = useState(16)
-  const [bearing, setBearing] = useState(0)
-  const [directionMode, setDirectionMode] = useState(false)
+  const [gestureHint, setGestureHint] = useState(false)
   const [reportContext, setReportContext] = useState(null)
   const [reportNotice, setReportNotice] = useState(null)
   const [mobileStation, setMobileStation] = useState(null)
@@ -343,23 +341,12 @@ export default function MapPanel({
     return boundsList.some((b) => segmentInBounds(segment, b))
   }
 
-  const setMapBearing = (nextBearing) => {
-    const normalizedBearing = ((nextBearing % 360) + 360) % 360
-    mapRef.current?.setBearing?.(normalizedBearing)
-    setBearing(normalizedBearing)
-  }
-
-  const currentMapBearing = () => mapRef.current?.getBearing?.() ?? bearing
-
-  const showRouteOverview = () => {
-    if (routeFitPoints.length < 2) return
-    setMapBearing(0)
-    mapRef.current?.flyToBounds(L.latLngBounds(routeFitPoints), {
-      paddingTopLeft: [40, 40],
-      paddingBottomRight: [40, 260],
-      maxZoom: 16,
-      duration: 0.75,
-    })
+  const suspendFollow = useMemo(() => () => setFollowSuspended(true), [])
+  const handleLocate = async () => {
+    const location = await onLocateLiveLocation?.()
+    if (!location || !mapRef.current) return
+    setFollowSuspended(false)
+    mapRef.current.flyTo([location.lat, location.lng], Math.max(mapRef.current.getZoom(), 16), { duration: 0.75 })
   }
 
   return (
@@ -376,7 +363,7 @@ export default function MapPanel({
       >
         <MapBridge mapRef={mapRef} />
         <ZoomTracker onZoomChange={setZoom} />
-        <BearingTracker onBearingChange={setBearing} />
+        <CooperativeGestures onHint={setGestureHint} onInteraction={suspendFollow} />
         
         <TileLayer
           key={mapTheme}
@@ -530,75 +517,35 @@ export default function MapPanel({
         </div>
       )}
 
-      <div className="map-controls absolute right-3 top-3 z-[1000] flex flex-col gap-1.5 sm:gap-2">
-        <button aria-label="Seen Something?" onClick={() => setReportContext({ station: null })} className="w-11 h-11 bg-yellow-400 hover:bg-yellow-300 shadow-sm rounded-lg flex items-center justify-center text-brand-ink">
-          <Flag size={18} />
-        </button>
-        <button aria-label="Zoom in" onClick={() => mapRef.current?.zoomIn()} className="w-11 h-11 bg-white shadow-sm rounded-lg flex items-center justify-center text-slate-600 active:bg-slate-50">
-          <Plus size={18} />
-        </button>
-        <button aria-label="Zoom out" onClick={() => mapRef.current?.zoomOut()} className="w-11 h-11 bg-white shadow-sm rounded-lg flex items-center justify-center text-slate-600 active:bg-slate-50">
-          <Minus size={18} />
+      <div className="map-controls absolute right-3 top-3 z-[1000] flex flex-col gap-2.5">
+        <button type="button" aria-label="Seen Something?" onClick={() => setReportContext({ station: null })} className="w-12 h-12 bg-yellow-400 hover:bg-yellow-300 shadow-sm rounded-xl flex items-center justify-center text-brand-ink focus-visible:outline-2 focus-visible:outline-offset-2">
+          <Flag size={22} />
         </button>
         <button
           type="button"
-          aria-label={liveLocationEnabled ? 'Hide my live location' : 'Show my live location'}
-          aria-pressed={liveLocationEnabled}
-          title={liveLocationError || (liveLocationEnabled ? 'Hide my live location' : 'Show my live location')}
-          onClick={() => {
-            if (liveLocationEnabled) {
-              onToggleLiveLocation?.()
-            } else {
-              onLocateLiveLocation?.()
-            }
-            if (liveLocation) {
-              mapRef.current?.panTo([liveLocation.lat, liveLocation.lng], { animate: true })
-              setFollowSuspended(false)
-            }
-          }}
-          className={`w-11 h-11 shadow-sm rounded-lg flex items-center justify-center active:bg-slate-50 ${
-            liveLocationEnabled ? 'bg-yellow-400 text-brand-ink' : 'bg-white text-brand-ink'
-          }`}
+          aria-label={liveLocationPending ? 'Finding your location' : 'Locate Me'}
+          aria-busy={liveLocationPending}
+          aria-describedby={liveLocationError ? 'map-location-status' : undefined}
+          disabled={liveLocationPending}
+          onClick={handleLocate}
+          className="w-12 h-12 bg-white text-brand-ink shadow-sm rounded-xl flex items-center justify-center active:bg-slate-50 disabled:cursor-wait focus-visible:outline-2 focus-visible:outline-offset-2"
         >
-          <LocateFixed size={15} />
+          {liveLocationPending ? <LoaderCircle size={22} className="animate-spin motion-reduce:animate-none" /> : <LocateFixed size={22} />}
         </button>
-        {liveLocation && (
-          <button
-            type="button"
-            aria-label={directionMode ? 'Reset map angle to north' : 'Face the direction of travel'}
-            title={directionMode ? 'Reset map angle to north' : 'Face the direction of travel'}
-            onClick={() => {
-              if (directionMode) {
-                setMapBearing(0)
-                setDirectionMode(false)
-              } else {
-                setMapBearing(liveLocation.heading || 0)
-                setDirectionMode(true)
-              }
-            }}
-            className={`w-11 h-11 shadow-sm rounded-lg flex items-center justify-center active:bg-slate-50 ${
-              directionMode ? 'bg-white' : 'bg-slate-700'
-            }`}
-          >
-            <Compass
-              size={15}
-              className={directionMode ? 'text-blue-600' : 'text-white'}
-              style={{ transform: `rotate(${bearing}deg)` }}
-            />
-          </button>
-        )}
-        {routeFitPoints.length > 1 && (
-          <button
-            type="button"
-            aria-label="Show route overview"
-            title="Show route overview"
-            onClick={showRouteOverview}
-            className="w-11 h-11 bg-white shadow-sm rounded-lg flex items-center justify-center text-slate-600 active:bg-slate-50"
-          >
-            <Route size={15} />
-          </button>
-        )}
       </div>
+      {gestureHint && (
+        <div role="status" className="pointer-events-none absolute left-3 right-[76px] top-3 z-[1000] flex justify-center">
+          <p className="rounded-lg bg-white px-3 py-2 text-xs text-slate-700 shadow-sm">Use two fingers to move map</p>
+        </div>
+      )}
+      {(liveLocationPending || liveLocationError) && (
+        <div id="map-location-status" role="status" aria-live="polite" className="absolute left-3 right-[76px] top-[68px] z-[1000] rounded-lg bg-white p-3 text-xs text-slate-700 shadow-sm">
+          {liveLocationPending ? 'Finding your location…' : <>
+            <p>{liveLocationError}</p>
+            <button type="button" onClick={handleLocate} className="mt-1 min-h-12 px-2 font-semibold underline focus-visible:outline-2">Retry location</button>
+          </>}
+        </div>
+      )}
 
       {/* <div className="hidden sm:block absolute bottom-24 left-3 z-[1000] bg-white shadow-sm rounded-xl px-4 py-3 text-xs text-slate-600">
         <p className="font-bold tracking-widest text-[10px] text-slate-400 mb-2">LEGEND</p>
