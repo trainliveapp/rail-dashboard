@@ -2052,7 +2052,7 @@ export default function MapChat({ launcherTarget = null }) {
         </button>
       </div>
 
-      <div className="chat-channel relative z-[80] shrink-0 px-4 py-3">
+      <div className="chat-channel relative z-[80] shrink-0 px-0 py-3">
         <label
           htmlFor="chat-channel"
           className="sr-only"
