@@ -2,7 +2,7 @@ import { useRef, useEffect, useState, useMemo } from 'react'
 import { MapContainer, TileLayer, Polyline, Marker, Popup, Tooltip, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet-rotate'
-import { LocateFixed, Flag, LoaderCircle, CheckCircle2 } from 'lucide-react'
+import { LocateFixed, Flag, Plus, Minus, CheckCircle2 } from 'lucide-react'
 import { lines, housingPins, coffeePins, liveEventPin, stations } from '../data/mockData'
 import { tubeLineGeometry } from '../data/tubeLineGeometry'
 import { getStationScores } from '../lib/stationRatings'
@@ -524,20 +524,35 @@ export default function MapPanel({
           type="button"
           aria-label={liveLocationPending ? 'Finding your location' : 'Locate Me'}
           aria-busy={liveLocationPending}
+          aria-pressed={!!liveLocation && !liveLocationError}
           aria-describedby={liveLocationError ? 'map-location-status' : undefined}
           disabled={liveLocationPending}
           onClick={handleLocate}
-          className="w-12 h-12 bg-white text-brand-ink shadow-sm rounded-xl flex items-center justify-center active:bg-slate-50 disabled:cursor-wait focus-visible:outline-2 focus-visible:outline-offset-2"
+          className={`w-12 h-12 ${liveLocation && !liveLocationError ? 'bg-yellow-400 hover:bg-yellow-300' : 'bg-white'} text-brand-ink shadow-sm rounded-xl flex items-center justify-center disabled:cursor-wait focus-visible:outline-2 focus-visible:outline-offset-2`}
         >
-          {liveLocationPending ? <LoaderCircle size={22} className="animate-spin motion-reduce:animate-none" /> : <LocateFixed size={22} />}
+          <LocateFixed size={22} />
+        </button>
+        <button
+          type="button"
+          aria-label="Zoom in"
+          onClick={() => { suspendFollow(); mapRef.current?.zoomIn() }}
+          className="w-12 h-12 bg-white text-brand-ink shadow-sm rounded-xl flex items-center justify-center active:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2"
+        >
+          <Plus size={22} />
+        </button>
+        <button
+          type="button"
+          aria-label="Zoom out"
+          onClick={() => { suspendFollow(); mapRef.current?.zoomOut() }}
+          className="w-12 h-12 bg-white text-brand-ink shadow-sm rounded-xl flex items-center justify-center active:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2"
+        >
+          <Minus size={22} />
         </button>
       </div>
-      {(liveLocationPending || liveLocationError) && (
+      {liveLocationError && (
         <div id="map-location-status" role="status" aria-live="polite" className="absolute left-3 right-[76px] top-[68px] z-[1000] rounded-lg bg-white p-3 text-xs text-slate-700 shadow-sm">
-          {liveLocationPending ? 'Finding your location…' : <>
             <p>{liveLocationError}</p>
             <button type="button" onClick={handleLocate} className="mt-1 min-h-12 px-2 font-semibold underline focus-visible:outline-2">Retry location</button>
-          </>}
         </div>
       )}
 
