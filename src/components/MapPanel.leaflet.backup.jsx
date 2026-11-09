@@ -345,7 +345,7 @@ export default function MapPanel({
     const location = await onLocateLiveLocation?.()
     if (!location || !mapRef.current) return
     setFollowSuspended(false)
-    mapRef.current.flyTo([location.lat, location.lng], Math.max(mapRef.current.getZoom(), 16), { duration: 0.75 })
+    mapRef.current.flyTo([location.lat, location.lng], 15, { duration: 0.75 })
   }
 
   return (
@@ -517,7 +517,7 @@ export default function MapPanel({
         </div>
       )}
 
-      <div className="map-controls absolute right-3 top-3 z-[1000] flex flex-col gap-2.5">
+      <div className="map-controls absolute right-3 top-3 z-[1000] flex flex-col gap-2" role="group" aria-label="Map controls">
         <button type="button" aria-label="Seen Something?" onClick={() => setReportContext({ station: null })} className="w-12 h-12 bg-yellow-400 hover:bg-yellow-300 shadow-sm rounded-xl flex items-center justify-center text-brand-ink focus-visible:outline-2 focus-visible:outline-offset-2">
           <Flag size={22} />
         </button>
@@ -525,7 +525,7 @@ export default function MapPanel({
           type="button"
           aria-label={liveLocationPending ? 'Finding your location' : 'Locate Me'}
           aria-busy={liveLocationPending}
-          aria-pressed={!!liveLocation && !liveLocationError}
+          title={liveLocationError ? 'Retry locating me' : 'Locate me'}
           aria-describedby={liveLocationError ? 'map-location-status' : undefined}
           disabled={liveLocationPending}
           onClick={handleLocate}
@@ -533,27 +533,31 @@ export default function MapPanel({
         >
           <LocateFixed size={22} />
         </button>
+        <div role="group" aria-label="Map zoom" className="overflow-hidden rounded-xl bg-white shadow-sm divide-y divide-slate-200">
         <button
           type="button"
           aria-label="Zoom in"
+          disabled={zoom >= (mapRef.current?.getMaxZoom() ?? 20)}
           onClick={() => { suspendFollow(); mapRef.current?.zoomIn() }}
-          className="w-12 h-12 bg-white text-brand-ink shadow-sm rounded-xl flex items-center justify-center active:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2"
+          className="w-12 h-11 bg-white text-brand-ink flex items-center justify-center active:bg-slate-50 disabled:opacity-40 focus-visible:outline-2 focus-visible:-outline-offset-2"
         >
           <Plus size={22} />
         </button>
         <button
           type="button"
           aria-label="Zoom out"
+          disabled={zoom <= (mapRef.current?.getMinZoom() ?? 0)}
           onClick={() => { suspendFollow(); mapRef.current?.zoomOut() }}
-          className="w-12 h-12 bg-white text-brand-ink shadow-sm rounded-xl flex items-center justify-center active:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2"
+          className="w-12 h-11 bg-white text-brand-ink flex items-center justify-center active:bg-slate-50 disabled:opacity-40 focus-visible:outline-2 focus-visible:-outline-offset-2"
         >
           <Minus size={22} />
         </button>
+        </div>
       </div>
       {liveLocationError && (
         <div id="map-location-status" role="status" aria-live="polite" className="absolute left-3 right-[76px] top-[68px] z-[1000] rounded-lg bg-white p-3 text-xs text-slate-700 shadow-sm">
             <p>{liveLocationError}</p>
-            <button type="button" onClick={handleLocate} className="mt-1 min-h-12 px-2 font-semibold underline focus-visible:outline-2">Retry location</button>
+            <p className="mt-1">Tap Locate me to retry.</p>
         </div>
       )}
 

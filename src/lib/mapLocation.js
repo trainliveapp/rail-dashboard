@@ -19,6 +19,6 @@ export function requestMapLocation(geolocation = navigator.geolocation, secure =
   return new Promise((resolve, reject) => {
     geolocation.getCurrentPosition(position => {
       try { resolve(positionToLocation(position)) } catch (error) { reject(error) }
-    }, reject, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 })
+    }, reject, { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 })
   })
 }

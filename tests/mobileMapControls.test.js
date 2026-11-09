@@ -51,11 +51,11 @@ test('popup interactions are untouched and unmount restores mouse dragging', () 
   assert.equal(f.enabled(), true)
 })
 
-test('Locate requests a fresh fix once, returns validated coordinates and accuracy', async () => {
+test('Locate requests a fix once, returns validated coordinates and accuracy', async () => {
   let calls = 0
   const result = await requestMapLocation({ getCurrentPosition(success, error, options) {
     calls++
-    assert.deepEqual(options, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 })
+    assert.deepEqual(options, { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 })
     success({ coords: { latitude: 51.5, longitude: -0.12, heading: null, accuracy: 20 } })
   } }, true)
   assert.equal(calls, 1)

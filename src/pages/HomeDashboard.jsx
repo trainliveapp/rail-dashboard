@@ -55,8 +55,7 @@ export default function HomeDashboard() {
   // search bar and expanded planner can share the same journey selection.
   const planner = useJourneyPlanner({ onJourneyPlanned: setPlannedJourney, onDraftChange: setDraftStations })
   // The user's real position, drives the moving arrow on the map. Starts
-  // tracking as soon as "current location" is in use anywhere, or a
-  // journey's been planned, not run for free just browsing the network map.
+  // tracking only after a location action or choosing current location.
   const [liveLocation, setLiveLocation] = useState(null)
   const [liveLocationEnabled, setLiveLocationEnabled] = useState(false)
   const [liveLocationError, setLiveLocationError] = useState('')
@@ -81,7 +80,6 @@ export default function HomeDashboard() {
   const watchIdRef = useRef(null)
   const prevFixRef = useRef(null)
 
-  const hasPlannedJourney = !!plannedJourney
   // Waze shows your position the moment it has it, not just once you've
   // finished picking a route, tracking should start the moment "current
   // location" is used for either field, planned or still just a draft.
@@ -90,7 +88,7 @@ export default function HomeDashboard() {
     draftStations?.toStation?.id === 'current-location' ||
     plannedJourney?.originStation?.id === 'current-location' ||
     plannedJourney?.destinationStation?.id === 'current-location'
-  const wantsLiveLocation = liveLocationEnabled || hasPlannedJourney || usingCurrentLocation
+  const wantsLiveLocation = liveLocationEnabled || usingCurrentLocation
 
   const locateLiveLocation = () => {
     if (locationRequestRef.current) return locationRequestRef.current
