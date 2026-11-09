@@ -349,11 +349,12 @@ export default function MapPanel({
   }
 
   return (
-    <div className={`map-panel relative w-full ${className} overflow-hidden bg-slate-100`}>
+    <div title="Scroll to move the page. Drag with a mouse or use two fingers to move the map; pinch or use + and − to zoom." className={`map-panel relative w-full ${className} overflow-hidden bg-slate-100`}>
       <MapContainer
         center={CENTER}
         zoom={16}
         zoomControl={false}
+        scrollWheelZoom={false}
         rotate
         bearing={0}
         touchRotate

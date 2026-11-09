@@ -806,5 +806,5 @@ button:disabled,
 }
 
 .map-panel .leaflet-container.cooperative-map {
-  touch-action: none;
+  touch-action: pan-y;
 }

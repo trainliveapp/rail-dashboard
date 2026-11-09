@@ -20,11 +20,12 @@ function fixture() {
   return { map, emit, cleanup, hint, listeners, enabled: () => enabled, interacted: () => interacted }
 }
 
-test('one-finger gestures keep Leaflet dragging enabled', () => {
+test('one-finger gestures leave page scrolling available and restore mouse dragging on release', () => {
   const f = fixture()
   f.emit('touchstart', [[0, 0]])
-  assert.equal(f.enabled(), true)
+  assert.equal(f.enabled(), false)
   assert.deepEqual(f.hint, [])
+  f.emit('touchend', [])
   assert.equal(f.enabled(), true)
   f.cleanup()
   assert.equal(f.listeners.size, 0)
@@ -37,7 +38,7 @@ test('two-finger gestures retain pinch/rotation and stop automatic follow', () =
   assert.equal(f.interacted(), 1)
   assert.equal(f.map.touchZoom.enabled(), true)
   assert.equal(f.map.touchRotate.enabled(), true)
-  assert.equal(f.enabled(), true)
+  assert.equal(f.enabled(), false)
   f.cleanup()
 })
 
