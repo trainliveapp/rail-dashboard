@@ -247,6 +247,7 @@ export default function MapPanel({
   const mapRef = useRef(null)
   const [stationScores, setStationScores] = useState({})
   const [followSuspended, setFollowSuspended] = useState(false)
+  const [gestureHint, setGestureHint] = useState(false)
   const [zoom, setZoom] = useState(16)
   const [reportContext, setReportContext] = useState(null)
   const [reportNotice, setReportNotice] = useState(null)
@@ -349,13 +350,14 @@ export default function MapPanel({
   }
 
   return (
-    <div title="Scroll to move the page. Drag with a mouse or use two fingers to move the map; pinch or use + and − to zoom." className={`map-panel relative w-full ${className} overflow-hidden bg-slate-100`}>
+    <div className={`map-panel relative w-full ${className} overflow-hidden bg-slate-100`}>
       <MapContainer
         center={CENTER}
         zoom={16}
         zoomControl={false}
         scrollWheelZoom={false}
         rotate
+        rotateControl={false}
         bearing={0}
         touchRotate
         shiftKeyRotate
@@ -363,7 +365,7 @@ export default function MapPanel({
       >
         <MapBridge mapRef={mapRef} />
         <ZoomTracker onZoomChange={setZoom} />
-        <CooperativeGestures onInteraction={suspendFollow} />
+        <CooperativeGestures onHint={setGestureHint} onInteraction={suspendFollow} />
         
         <TileLayer
           key={mapTheme}
@@ -516,6 +518,10 @@ export default function MapPanel({
           </div>
         </div>
       )}
+
+      <div role="status" aria-live="polite" aria-atomic="true" className="map-gesture-hint pointer-events-none absolute bottom-8 left-3 right-[76px] z-[1000] flex justify-center">
+        {gestureHint && <p className="max-w-56 rounded-lg bg-slate-900/90 px-3 py-2 text-center text-xs text-white shadow-sm">Use two fingers to move the map. One finger scrolls the page.</p>}
+      </div>
 
       <div className="map-controls absolute right-3 top-3 z-[1000] flex flex-col gap-2" role="group" aria-label="Map controls">
         <button type="button" aria-label="Seen Something?" onClick={() => setReportContext({ station: null })} className="w-12 h-12 bg-yellow-400 hover:bg-yellow-300 shadow-sm rounded-xl flex items-center justify-center text-brand-ink focus-visible:outline-2 focus-visible:outline-offset-2">

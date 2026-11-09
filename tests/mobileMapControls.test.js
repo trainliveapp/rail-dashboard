@@ -15,7 +15,7 @@ function fixture() {
   }
   const pinch = { enabled: () => true }
   const map = { getContainer: () => container, dragging: { enabled: () => enabled, disable() { enabled = false }, enable() { enabled = true } }, touchZoom: pinch, touchRotate: pinch }
-  const cleanup = attachCooperativeMapGestures(map, { onInteraction: () => interacted++ })
+  const cleanup = attachCooperativeMapGestures(map, { onInteraction: () => interacted++, onHint: visible => hint.push(visible) })
   const emit = (type, points, popup = false) => listeners.get(type)({ target: { closest: () => popup }, touches: points.map(([clientX, clientY]) => ({ clientX, clientY })) })
   return { map, emit, cleanup, hint, listeners, enabled: () => enabled, interacted: () => interacted }
 }
@@ -24,7 +24,7 @@ test('one-finger gestures leave page scrolling available and restore mouse dragg
   const f = fixture()
   f.emit('touchstart', [[0, 0]])
   assert.equal(f.enabled(), false)
-  assert.deepEqual(f.hint, [])
+  assert.deepEqual(f.hint, [true])
   f.emit('touchend', [])
   assert.equal(f.enabled(), true)
   f.cleanup()
@@ -122,4 +122,21 @@ test('installed leaflet-rotate two-finger handler pans at constant distance and 
   handler._onTouchMove({ touches: [touch(100, 100), touch(100, 140)] })
   assert.notEqual(bearing, 0)
   handler._onTouchEnd()
+})
+
+
+test('gesture hint appears once, dismisses automatically and never blocks two-finger interaction', t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] })
+  const f = fixture()
+  f.emit('touchstart', [[0, 0]])
+  assert.deepEqual(f.hint, [true])
+  t.mock.timers.tick(3500)
+  assert.deepEqual(f.hint, [true, false])
+  f.emit('touchend', [])
+  f.emit('touchstart', [[0, 0]])
+  assert.deepEqual(f.hint, [true, false])
+  f.emit('touchstart', [[0, 0], [30, 30]])
+  assert.equal(f.hint.at(-1), false)
+  assert.equal(f.interacted(), 1)
+  f.cleanup()
 })
