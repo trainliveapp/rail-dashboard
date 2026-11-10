@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import useReportDialog from '../lib/useReportDialog'
 import { createPortal } from 'react-dom'
 import { X, ArrowRight } from 'lucide-react'
 import { reportCategories } from '../data/mockData'
@@ -23,6 +24,7 @@ const categoryTone = {
 
 
 export default function ReportIssueModal({ initialStation = null, onClose, onReportSubmitted }) {
+  const panelRef = useReportDialog(onClose)
   const [category, setCategory] = useState('')
   const [stationQuery, setStationQuery] = useState(initialStation?.name || '')
   const [submitting, setSubmitting] = useState(false)
@@ -65,7 +67,7 @@ export default function ReportIssueModal({ initialStation = null, onClose, onRep
   }
 
   return createPortal(
-    <div className="viewport-overlay fixed inset-0 z-[2000] flex items-center justify-center p-3 sm:p-4 bg-slate-900/40"
+    <div className="report-overlay viewport-overlay fixed inset-0 z-[2000] flex items-center justify-center p-3 sm:p-4 bg-slate-900/40"
       onPointerDown={(event) => event.stopPropagation()}
       onClick={(event) => event.stopPropagation()}
       onDoubleClick={(event) => event.stopPropagation()}
@@ -73,7 +75,7 @@ export default function ReportIssueModal({ initialStation = null, onClose, onRep
       onTouchStart={(event) => event.stopPropagation()}
       onTouchMove={(event) => event.stopPropagation()}
     >
-      <form role="dialog" aria-modal="true" aria-labelledby="report-title" onSubmit={handleSubmit} className="viewport-panel flex min-w-0 flex-col bg-slate-50 rounded-3xl shadow-2xl w-full max-w-[620px] overflow-hidden p-4 sm:p-8">
+      <form ref={panelRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="report-title" onSubmit={handleSubmit} className="report-panel bg-slate-50 rounded-3xl shadow-2xl p-4 sm:p-8">
         <div className="flex shrink-0 items-start justify-between gap-3 mb-4">
           <div>
             <h2 id="report-title" className="text-xl font-bold text-slate-900">Seen Something?</h2>
@@ -83,13 +85,13 @@ export default function ReportIssueModal({ initialStation = null, onClose, onRep
           </button>
         </div>
 
-        <div className="no-scrollbar min-h-0 overflow-y-auto overscroll-contain">
+        <div className="min-w-0">
         <ReportStationSearch value={stationQuery} onChange={(value) => {
           setStationQuery(value)
           setError('')
         }} />
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+        <div className="report-options mb-6">
           {reportCategories.map((cat) => {
             const active = category === cat.key
             return (
@@ -102,9 +104,9 @@ export default function ReportIssueModal({ initialStation = null, onClose, onRep
                   setError('')
                 }}
                 aria-pressed={active}
-                className={`flex flex-col items-center justify-center text-center gap-2 rounded-xl border px-3 py-4 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue ${active ? 'border-brand-blue bg-blue-50 text-brand-blue' : 'border-brand-line bg-white text-brand-slate hover:border-brand-blue hover:bg-blue-50'}`}
+                className={`report-option flex flex-col items-center justify-center text-center gap-2 rounded-xl border px-3 py-4 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue ${active ? 'border-brand-blue bg-blue-50 text-brand-blue' : 'border-brand-line bg-white text-brand-slate hover:border-brand-blue hover:bg-blue-50'}`}
               >
-                <ReportCategoryImage category={cat.key} className="h-16 w-16 sm:h-20 sm:w-20" />
+                <ReportCategoryImage category={cat.key} className="report-category-image" />
                 {cat.label}
                 {cooldown.canUndo(matchedStation?.name, cat.key) && <span className="text-xs text-emerald-700">Reported</span>}
               </button>

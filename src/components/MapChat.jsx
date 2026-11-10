@@ -1434,6 +1434,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { supabase } from "../supabase";
+import { readChatSelection, saveChatSelection } from "../lib/chatSelection";
 import { getChatVisitorId } from "../lib/chatIdentity";
 import { images } from "../data/optimizedImages";
 import ImageBackground from "./ImageBackground";
@@ -1487,19 +1488,13 @@ function formatMessageTime(value) {
   }
 }
 
+
 export default function MapChat({ launcherTarget = null }) {
   const [open, setOpen] = useState(false);
   const [channelId, setChannelId] = useState(() => {
-    try {
-      const savedChannelId = localStorage.getItem("trainlive-chat-channel");
-      return savedChannelId && getChatChannel(savedChannelId).id === savedChannelId
-        ? savedChannelId
-        : "underground_central";
-    } catch {
-      return "underground_central";
-    }
+    try { return readChatSelection(window.localStorage); } catch { return null; }
   });
-  const [channelMenuOpen, setChannelMenuOpen] = useState(false);
+  const [channelMenuOpen, setChannelMenuOpen] = useState(() => !channelId);
   const [channelView, setChannelView] = useState("main");
   const [channelQuery, setChannelQuery] = useState("");
   const [channelListHeight, setChannelListHeight] = useState(0);
@@ -1538,24 +1533,24 @@ export default function MapChat({ launcherTarget = null }) {
   const channelSearchRef = useRef(null);
   const messageGenerationRef = useRef(0);
   const mainChannelScrollTopRef = useRef(0);
-  const selectedChannel = getChatChannel(channelId);
+  const selectedChannel = channelId ? getChatChannel(channelId) : { displayName: "Choose a channel", themeColour: "#29292e" };
   const searchingChannels = Boolean(normalizeChannelSearch(channelQuery));
   const visibleChannels = searchingChannels
-    ? searchChatChannels(channelQuery)
+    ? searchChatChannels(channelQuery, channelView === "nationalRail" ? NATIONAL_RAIL_CHANNELS : undefined)
     : channelView === "nationalRail" ? NATIONAL_RAIL_CHANNELS : MAIN_CHAT_CHANNELS;
 
   useEffect(() => {
-    if (!channelMenuOpen) return;
+    if (!open || !channelMenuOpen) return;
     const list = mainChannelListRef.current;
     if (list) list.scrollTop = !searchingChannels && channelView === "main" ? mainChannelScrollTopRef.current : 0;
-  }, [channelMenuOpen, channelView, channelQuery, searchingChannels]);
+  }, [open, channelMenuOpen, channelView, channelQuery, searchingChannels]);
 
   useEffect(() => {
-    if (channelMenuOpen) channelSearchRef.current?.focus({ preventScroll: true });
-  }, [channelMenuOpen]);
+    if (open && channelMenuOpen) channelSearchRef.current?.focus({ preventScroll: true });
+  }, [open, channelMenuOpen]);
 
   useEffect(() => {
-    if (!channelMenuOpen) {
+    if (!open || !channelMenuOpen) {
       setChannelViewport(null);
       return undefined;
     }
@@ -1598,30 +1593,23 @@ export default function MapChat({ launcherTarget = null }) {
       window.visualViewport?.removeEventListener("resize", resizeList);
       window.visualViewport?.removeEventListener("scroll", resizeList);
     };
-  }, [channelMenuOpen]);
+  }, [open, channelMenuOpen]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem("trainlive-chat-channel", channelId);
-    } catch {
-      console.warn("Could not save selected chat channel.");
-    }
-  }, [channelId]);
-
-  useEffect(() => {
-    if (!channelMenuOpen) return undefined;
+    if (!open || !channelMenuOpen) return undefined;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
     const handleMenuDismiss = (event) => {
       if (event.key === "Escape") {
+        if (!channelId) setOpen(false);
         setChannelMenuOpen(false);
         channelTriggerRef.current?.focus();
         return;
       }
 
       if (event.type === "pointerdown" && !channelMenuRef.current?.contains(event.target) && !channelTriggerRef.current?.contains(event.target)) {
-        setChannelMenuOpen(false);
+        if (channelId) setChannelMenuOpen(false);
       }
     };
 
@@ -1632,10 +1620,10 @@ export default function MapChat({ launcherTarget = null }) {
       window.removeEventListener("keydown", handleMenuDismiss);
       window.removeEventListener("pointerdown", handleMenuDismiss);
     };
-  }, [channelMenuOpen]);
+  }, [open, channelMenuOpen, channelId]);
 
   useEffect(() => {
-    if (!open) return undefined;
+    if (!open || !channelId) return undefined;
     setBreakdownOpen(false);
     setReportBreakdown([]);
     let cancelled = false;
@@ -1893,7 +1881,7 @@ export default function MapChat({ launcherTarget = null }) {
   }
 
   useEffect(() => {
-    if (!open) return undefined;
+    if (!open || !channelId) return undefined;
 
     let cancelled = false;
 
@@ -1943,6 +1931,7 @@ export default function MapChat({ launcherTarget = null }) {
   }, [open, channelId]);
 
   async function sendMessage() {
+    if (!channelId) return;
     if (sending) return;
     if (!text.trim() && !selectedImage) return;
 
@@ -2024,7 +2013,7 @@ export default function MapChat({ launcherTarget = null }) {
   const panel = (
     <div
       ref={chatPanelRef}
-      className="trainlive-chat-panel fixed z-[2147483000] flex flex-col overflow-hidden rounded-2xl border border-white/20 bg-slate-950 bg-cover bg-center text-white shadow-[0_20px_60px_rgba(15,23,42,0.28)]
+      className="trainlive-chat-panel fixed z-[2147483000] flex flex-col overflow-hidden rounded-2xl border border-white/20 bg-[#29292e] bg-cover bg-center text-white shadow-[0_20px_60px_rgba(15,23,42,0.28)]
         left-3 right-3 bottom-3 h-[min(680px,calc(100dvh-24px))]
         sm:left-5 sm:right-auto sm:bottom-5 sm:w-[400px] sm:h-[min(680px,calc(100dvh-40px))]"
       style={{
@@ -2035,7 +2024,7 @@ export default function MapChat({ launcherTarget = null }) {
         } : {}),
       }}
     >
-      <ImageBackground {...(CHAT_LINE_BACKGROUNDS[selectedChannel.backgroundKey] || images.chatBakerloo)} sizes="(max-width: 639px) calc(100vw - 24px), 400px" imageStyle={["piccadilly", "jubilee", "northern"].includes(selectedChannel.backgroundKey) ? PORTRAIT_PHOTO_BACKGROUND_STYLE : undefined} shaded />
+      {channelId && !channelMenuOpen && CHAT_LINE_BACKGROUNDS[selectedChannel.backgroundKey] && <ImageBackground {...CHAT_LINE_BACKGROUNDS[selectedChannel.backgroundKey]} sizes="(max-width: 639px) calc(100vw - 24px), 400px" imageStyle={["piccadilly", "jubilee", "northern"].includes(selectedChannel.backgroundKey) ? PORTRAIT_PHOTO_BACKGROUND_STYLE : undefined} shaded />}
       <div className="chat-panel-header relative z-30 m-2 mb-0 flex h-[52px] shrink-0 items-center justify-between rounded-xl bg-yellow-400 px-4 text-brand-ink">
         <div className="flex min-w-0 items-center gap-3">
           <span className="text-xl font-black text-brand-ink">chatter</span>
@@ -2044,6 +2033,9 @@ export default function MapChat({ launcherTarget = null }) {
           type="button"
           onClick={() => {
             setOpen(false);
+            setChannelMenuOpen(false);
+            setChannelQuery("");
+            setChannelView("main");
           }}
           aria-label="Close chatter"
           className="flex h-11 w-11 items-center justify-center rounded-full text-brand-ink/70 transition hover:bg-black/10 hover:text-brand-ink"
@@ -2061,6 +2053,7 @@ export default function MapChat({ launcherTarget = null }) {
         </label>
         <div className="relative">
           <button
+            style={{ display: channelId ? undefined : "none", backgroundColor: selectedChannel.themeColour, outlineColor: selectedChannel.themeColour, color: channelId === "underground_circle" ? "#111827" : "#ffffff" }}
             ref={channelTriggerRef}
             id="chat-channel"
             type="button"
@@ -2075,7 +2068,6 @@ export default function MapChat({ launcherTarget = null }) {
               });
             }}
             className="flex min-h-11 w-full items-center justify-between rounded-xl px-3 pr-24 text-left text-base font-semibold text-white outline-none focus-visible:outline-2 focus-visible:outline-offset-2"
-            style={{ backgroundColor: selectedChannel.themeColour, outlineColor: selectedChannel.themeColour, color: channelId === "underground_circle" ? "#111827" : "#ffffff" }}
           >
             <span className="min-w-0 truncate">{selectedChannel.displayName}</span>
             <span aria-hidden="true" className="absolute right-3 text-lg leading-none">⌄</span>
@@ -2087,7 +2079,7 @@ export default function MapChat({ launcherTarget = null }) {
               role="dialog"
               aria-label="Chatter channels"
               style={{ boxSizing: "border-box", maxHeight: `min(80dvh, 760px, ${channelListHeight}px)`, paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
-              className="absolute left-0 right-0 top-[calc(100%+8px)] z-[60] flex flex-col overflow-hidden rounded-xl border border-white/10 bg-[#29292e] text-white shadow-2xl"
+              className={`absolute left-0 right-0 ${channelId ? "top-[calc(100%+8px)]" : "top-0"} z-[60] flex flex-col overflow-hidden rounded-xl border border-white/10 bg-[#29292e] text-white shadow-2xl`}
             >
               <div className="sticky top-0 z-10 shrink-0 border-b border-white/10 bg-[#29292e] p-2">
                 <label htmlFor="chat-channel-search" className="sr-only">Search all Chatter channels</label>
@@ -2098,7 +2090,6 @@ export default function MapChat({ launcherTarget = null }) {
                   value={channelQuery}
                   onChange={(event) => {
                     setChannelQuery(event.target.value);
-                    if (!normalizeChannelSearch(event.target.value)) setChannelView("main");
                   }}
                   onKeyDown={(event) => {
                     if (event.key === "ArrowDown") {
@@ -2108,11 +2099,26 @@ export default function MapChat({ launcherTarget = null }) {
                   }}
                   placeholder="Search channels"
                   autoComplete="off"
-                  className="min-h-12 w-full min-w-0 rounded-lg border border-white/15 bg-white/10 px-3 text-base text-white outline-none placeholder:text-white/60 focus:border-white/50 focus:ring-2 focus:ring-white/20"
+                  className="min-h-12 w-full min-w-0 rounded-lg border border-white/15 bg-white/10 px-3 text-[17px] text-white outline-none placeholder:text-white/60 focus:border-white/50 focus:ring-2 focus:ring-white/20"
                 />
                 <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
                   {visibleChannels.length} channel{visibleChannels.length === 1 ? "" : "s"} found
                 </p>
+              </div>
+              <div className="shrink-0 bg-[#29292e]">
+                {channelView === "nationalRail" && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setChannelView("main");
+                      setChannelQuery("");
+                      channelSearchRef.current?.focus({ preventScroll: true });
+                    }}
+                    className="flex min-h-14 w-full items-center border-b border-white/10 px-3 text-left text-[18px] font-semibold hover:bg-white/10 focus-visible:bg-white/10 focus-visible:outline-none"
+                  >
+                    <span aria-hidden="true" className="mr-2 text-lg">‹</span> Back to London channels
+                  </button>
+                )}
               </div>
               <div ref={mainChannelListRef} className="chat-channel-list min-h-0 overflow-x-hidden overflow-y-auto overscroll-contain py-1"
                 onKeyDown={(event) => {
@@ -2125,26 +2131,30 @@ export default function MapChat({ launcherTarget = null }) {
                   if (event.key === "End") next = buttons.length - 1;
                   if (next !== undefined) { event.preventDefault(); buttons[next]?.focus(); }
                 }}>
-                {!searchingChannels && channelView === "nationalRail" && (
+                {!searchingChannels && channelView === "main" && (
                   <button
                     type="button"
                     onClick={() => {
-                      setChannelView("main");
-                      channelSearchRef.current?.focus({ preventScroll: true });
+                      mainChannelScrollTopRef.current = mainChannelListRef.current?.scrollTop || 0;
+                      setChannelView("nationalRail");
+                      window.requestAnimationFrame(() => mainChannelListRef.current?.querySelector("button")?.focus({ preventScroll: true }));
                     }}
-                    className="flex min-h-14 w-full items-center border-b border-white/10 px-3 text-left text-sm font-semibold hover:bg-white/10 focus-visible:bg-white/10 focus-visible:outline-none"
+                    className="flex min-h-14 w-full items-center justify-between gap-3 border-b border-white/10 px-3 py-3 text-left text-[18px] font-semibold hover:bg-white/10 focus-visible:bg-white/10 focus-visible:outline-none"
                   >
-                    <span aria-hidden="true" className="mr-2 text-lg">‹</span> Back to London channels
+                    <span>Browse National Rail operators</span>
+                    <span aria-hidden="true" className="text-lg">›</span>
                   </button>
                 )}
-                <div role="radiogroup" aria-label={searchingChannels ? "Channel search results" : channelView === "main" ? "London channels" : "National Rail operators"}>
+                <div role="group" aria-label={searchingChannels ? "Channel search results" : channelView === "main" ? "London channels" : "National Rail operators"}>
                 {visibleChannels.map((channel) => (
                     <button
                       key={channel.id}
                       type="button"
-                      role="radio"
-                      aria-checked={channel.id === channelId}
+                      aria-pressed={channel.id === channelId}
                       onClick={() => {
+                        try {
+                          if (!saveChatSelection(window.localStorage, channel.id)) return;
+                        } catch { /* Storage may be unavailable; keep the in-memory selection. */ }
                         if (channel.id !== channelId) {
                           messageGenerationRef.current += 1;
                           setMessages([]);
@@ -2158,34 +2168,20 @@ export default function MapChat({ launcherTarget = null }) {
 
                         setChannelView("main");
                       }}
-                      className="flex min-h-14 w-full items-center justify-between gap-3 border-b border-white/10 px-3 text-left text-sm transition last:border-b-0 hover:bg-white/10 focus-visible:bg-white/10 focus-visible:outline-none"
+                      className="flex min-h-14 w-full items-center gap-3 border-b border-white/10 px-3 py-3 text-left text-[18px] font-medium leading-6 transition last:border-b-0 hover:bg-white/10 focus-visible:bg-white/10 focus-visible:outline-none"
                     >
+                      <span aria-hidden="true" className="h-7 w-1 shrink-0 rounded-sm ring-1 ring-white/25" style={{ backgroundColor: channel.themeColour }} />
                       <span className="min-w-0 break-words">{channel.displayName}</span>
-                      <span aria-hidden="true" className={`h-4 w-4 shrink-0 rounded-full border-2 ${channel.id === channelId ? "border-white bg-white shadow-[inset_0_0_0_3px_#29292e]" : "border-white/70"}`} />
                     </button>
                 ))}
 
                 </div>
-                {!searchingChannels && channelView === "main" && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      mainChannelScrollTopRef.current = mainChannelListRef.current?.scrollTop || 0;
-                      setChannelView("nationalRail");
-                      window.requestAnimationFrame(() => mainChannelListRef.current?.querySelector("button")?.focus({ preventScroll: true }));
-                    }}
-                    className="flex min-h-14 w-full items-center justify-between gap-3 border-t border-white/10 px-3 text-left text-sm font-semibold hover:bg-white/10 focus-visible:bg-white/10 focus-visible:outline-none"
-                  >
-                    <span>Browse National Rail operators</span>
-                    <span aria-hidden="true" className="text-lg">›</span>
-                  </button>
-                )}
                 {!visibleChannels.length && <p className="px-3 py-5 text-sm text-white/70">No channels found.</p>}
               </div>
             </div>
           )}
         </div>
-        <button type="button" className="absolute right-10 top-[2.125rem] z-10 flex min-h-9 min-w-[52px] -translate-y-1/2 items-center justify-center gap-1 rounded-md px-1 hover:bg-black/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white" aria-label={`View ${reportCount} active reports for ${selectedChannel.displayName}`} aria-expanded={breakdownOpen} onClick={async () => {
+        {channelId && <button type="button" className="absolute right-10 top-[2.125rem] z-10 flex min-h-9 min-w-[52px] -translate-y-1/2 items-center justify-center gap-1 rounded-md px-1 hover:bg-black/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white" aria-label={`View ${reportCount} active reports for ${selectedChannel.displayName}`} aria-expanded={breakdownOpen} onClick={async () => {
           if (!breakdownOpen) {
             try { setReportBreakdown(await getChannelReportBreakdown(channelId)) } catch (error) { console.error("Could not load report breakdown:", error); setReportBreakdown([]) }
           }
@@ -2194,6 +2190,7 @@ export default function MapChat({ launcherTarget = null }) {
           <TriangleAlert className="h-5 w-5 text-yellow-300" fill="currentColor" stroke="#111827" strokeWidth={2.5} aria-hidden="true" />
           <span className="text-sm font-bold tabular-nums" style={{ color: channelId === "underground_circle" ? "#111827" : "#ffffff" }}>{reportCount}</span>
         </button>
+        }
         {breakdownOpen && <div role="dialog" aria-label={`${selectedChannel.displayName} active report breakdown`} className="absolute right-4 top-[3.875rem] z-30 w-[min(224px,calc(100vw-48px))] rounded-lg bg-white p-3 text-slate-800 shadow-xl">
           <div className="mb-2 flex items-center justify-between gap-2"><strong className="text-xs">Relevant reports</strong><button type="button" aria-label="Close report breakdown" onClick={() => setBreakdownOpen(false)} className="text-lg leading-none">×</button></div>
           <p className="mb-2 text-[11px] text-slate-500">Active reports relevant to this channel; not confirmed disruptions.</p>
@@ -2202,6 +2199,7 @@ export default function MapChat({ launcherTarget = null }) {
       </div>
 
       <div
+        inert={!channelId || channelMenuOpen}
         className="chat-messages relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3 [scrollbar-width:thin]"
       >
         {messages.map((message, index) => {
@@ -2342,7 +2340,7 @@ export default function MapChat({ launcherTarget = null }) {
         </div>
       )}
 
-      <div ref={chatComposerRef} className="chat-composer relative z-[70] shrink-0 p-3">
+      <div inert={!channelId || channelMenuOpen} ref={chatComposerRef} className="chat-composer relative z-[70] shrink-0 p-3">
 
         <>
           <div className="flex items-center gap-2">
@@ -2478,7 +2476,7 @@ export default function MapChat({ launcherTarget = null }) {
         createPortal(
           <button
             type="button"
-            onClick={() => setOpen(true)}
+            onClick={() => { if (!channelId) setChannelMenuOpen(true); setOpen(true); }}
             aria-label="Open chatter"
             className="chatter-launcher"
           >

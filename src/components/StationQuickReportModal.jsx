@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Info, MapPin, Check, Loader2 } from 'lucide-react'
+import { createPortal } from 'react-dom'
+import useReportDialog from '../lib/useReportDialog'
+import { Info, MapPin, Check, Loader2, X } from 'lucide-react'
 import ReportCategoryImage from './ReportCategoryImage'
 import { stationReportCategories } from '../data/mockData'
 import { getStationUpdates, postReport, undoReport } from '../lib/stationUpdates'
@@ -10,6 +12,7 @@ import useReportCooldown from '../lib/useReportCooldown'
 // ReportIssueModal, the station is already known from the map, so there's
 // no location search here, just pick what's happening and confirm.
 export default function StationQuickReportModal({ station, onClose, onReportSubmitted }) {
+  const panelRef = useReportDialog(onClose)
   const [selected, setSelected] = useState(null)
   const [counts, setCounts] = useState({})
   const [submitting, setSubmitting] = useState(false)
@@ -54,15 +57,15 @@ export default function StationQuickReportModal({ station, onClose, onReportSubm
     }
   }
 
-  return (
-    <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-900/40">
-      <div className="bg-slate-50 rounded-3xl shadow-2xl w-full max-w-[620px] max-h-[calc(100dvh-2rem)] overflow-y-auto p-4 sm:p-8">
-        <div className="flex items-start gap-3 mb-4">
+  return createPortal(
+    <div onPointerDown={(event) => event.stopPropagation()} onClick={(event) => event.stopPropagation()} onWheel={(event) => event.stopPropagation()} onTouchMove={(event) => event.stopPropagation()} className="report-overlay viewport-overlay fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-900/40">
+      <div ref={panelRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="quick-report-title" className="report-panel bg-slate-50 rounded-3xl shadow-2xl p-4 sm:p-8">
+        <div className="flex items-start gap-3 mb-4 pr-10">
           <div className="w-10 h-10 rounded-xl bg-brand-secondary flex items-center justify-center shrink-0">
             <Info size={18} className="text-white" />
           </div>
           <div className="min-w-0">
-            <h2 className="text-lg font-bold text-slate-900 truncate">Report — {station.name}</h2>
+            <h2 id="quick-report-title" className="text-lg font-bold text-slate-900 truncate">Report — {station.name}</h2>
             <p className="text-sm text-slate-400 flex items-center gap-1">
               {selected ? (
                 <>
@@ -75,12 +78,14 @@ export default function StationQuickReportModal({ station, onClose, onReportSubm
           </div>
         </div>
 
+        <button type="button" onClick={onClose} aria-label="Close report" className="absolute right-3 top-3 flex h-11 w-11 items-center justify-center rounded-full bg-white text-slate-500"><X size={16} /></button>
+
         <div className="flex items-center gap-2 bg-slate-50 rounded-full px-4 py-2.5 mb-4 text-sm text-slate-600">
           <MapPin size={14} className="text-slate-400 shrink-0" />
           {station.name}
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+        <div className="report-options mb-6">
           {stationReportCategories.map((cat) => {
             const isSelected = selected?.key === cat.key
             return (
@@ -90,9 +95,9 @@ export default function StationQuickReportModal({ station, onClose, onReportSubm
                 key={cat.key}
                 onClick={() => setSelected(cat)}
                 aria-pressed={isSelected}
-                className={`relative flex min-w-0 flex-col items-center justify-center gap-2 rounded-xl border px-3 py-4 text-center text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue ${isSelected ? 'border-brand-blue bg-blue-50 text-brand-blue' : 'border-brand-line bg-white text-brand-slate hover:border-brand-blue hover:bg-blue-50'}`}
+                className={`report-option relative flex min-w-0 flex-col items-center justify-center gap-2 rounded-xl border px-3 py-4 text-center text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue ${isSelected ? 'border-brand-blue bg-blue-50 text-brand-blue' : 'border-brand-line bg-white text-brand-slate hover:border-brand-blue hover:bg-blue-50'}`}
               >
-                <ReportCategoryImage category={cat.key} className="h-16 w-16 sm:h-20 sm:w-20" />
+                <ReportCategoryImage category={cat.key} className="report-category-image" />
                 <span className="flex min-h-10 items-center break-words leading-tight">{cat.label}</span>
                 <span className="text-xs text-slate-400">{counts[cat.key] ?? 0} reported</span>
                 {cooldown.canUndo(station.name, cat.key) && <span className="text-xs text-emerald-700">Reported</span>}
@@ -128,6 +133,6 @@ export default function StationQuickReportModal({ station, onClose, onReportSubm
           </button>
         </div>
       </div>
-    </div>
+    </div>, document.body
   )
 }

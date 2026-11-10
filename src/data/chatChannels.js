@@ -60,6 +60,7 @@ export const NATIONAL_RAIL_CHANNELS = [
   type: "national",
   displayName,
   group: "nationalRail",
+  backgroundKey: key == "great_western_railway" ? "great western railway" : undefined,
   aliases: displayName === "Great Western Railway"
     ? ["gwr"]
     : displayName === "South Western Railway"
@@ -89,10 +90,10 @@ export function normalizeChannelSearch(value) {
   return String(value || "").toLowerCase().trim().replace(/[^a-z0-9]/g, "");
 }
 
-export function searchChatChannels(query) {
+export function searchChatChannels(query, channels = CHAT_CHANNELS) {
   const normalizedQuery = normalizeChannelSearch(query);
   if (!normalizedQuery) return [];
-  return CHAT_CHANNELS.filter((channel) =>
+  return channels.filter((channel) =>
     [channel.displayName, ...(channel.aliases || [])]
       .some((value) => normalizeChannelSearch(value).includes(normalizedQuery))
   );
