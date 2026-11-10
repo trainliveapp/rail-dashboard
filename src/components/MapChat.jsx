@@ -1440,6 +1440,7 @@ import { images } from "../data/optimizedImages";
 import ImageBackground from "./ImageBackground";
 import jubileeFullResolution from "../assets/jubilee-line.webp";
 import northernFullResolution from "../assets/northern-line.webp";
+import piccadillyFullResolution from "../assets/piccadilly-line.webp";
 import circleCleanPortrait from "../assets/circle-line-clean-portrait.webp";
 import SmoothImage from "./SmoothImage";
 import { getChannelReportBreakdown, getChannelReportSummary, subscribeToCanonicalReports } from "../lib/canonicalReports";
@@ -1451,6 +1452,9 @@ import {
   normalizeChannelSearch,
 } from "../data/chatChannels";
 
+// View the sharp photograph inside these padded sources without modifying the assets.
+const PADDED_PHOTO_VIEWPORT = { x: 0, y: 655, width: 1080, height: 610, sourceWidth: 1080, sourceHeight: 1920 };
+
 const CHAT_LINE_BACKGROUNDS = {
   central: images.chatCentral,
   bakerloo: images.chatBakerloo,
@@ -1458,17 +1462,14 @@ const CHAT_LINE_BACKGROUNDS = {
   circle: { src: circleCleanPortrait, width: 853, height: 1844 },
   district: images.chatDistrict,
   "hammersmith & city": images.chatHammersmith,
-  jubilee: { src: jubileeFullResolution, width: 1080, height: 1920 },
+  jubilee: { src: jubileeFullResolution, width: 1080, height: 1920, photoViewport: PADDED_PHOTO_VIEWPORT },
   metropolitan: images.chatMetropolitan,
-  northern: { src: northernFullResolution, width: 1080, height: 1920 },
-  piccadilly: images.chatPiccadilly,
+  northern: { src: northernFullResolution, width: 1080, height: 1920, photoViewport: PADDED_PHOTO_VIEWPORT },
+  piccadilly: { src: piccadillyFullResolution, width: 1080, height: 1920, photoViewport: PADDED_PHOTO_VIEWPORT },
   victoria: images.chatVictoria,
   "waterloo & city": images.chatWaterloo,
   "great western railway": images.chatGreatWestern,
 };
-
-// Fill the panel with the sharp photo region instead of its blurred padding.
-const PORTRAIT_PHOTO_BACKGROUND_STYLE = { transform: "scale(3.2)", transformOrigin: "center" };
 
 const CHAT_VISIBILITY_WINDOW_MS = 24 * 60 * 60 * 1000;
 const HEART_REACTION = "\u2764\ufe0f";
@@ -2024,7 +2025,9 @@ export default function MapChat({ launcherTarget = null }) {
         } : {}),
       }}
     >
-      {channelId && !channelMenuOpen && CHAT_LINE_BACKGROUNDS[selectedChannel.backgroundKey] && <ImageBackground {...CHAT_LINE_BACKGROUNDS[selectedChannel.backgroundKey]} sizes="(max-width: 639px) calc(100vw - 24px), 400px" imageStyle={["piccadilly", "jubilee", "northern"].includes(selectedChannel.backgroundKey) ? PORTRAIT_PHOTO_BACKGROUND_STYLE : undefined} shaded />}
+        {channelId && !channelMenuOpen && CHAT_LINE_BACKGROUNDS[selectedChannel.backgroundKey] && (
+          <ImageBackground key={channelId} {...CHAT_LINE_BACKGROUNDS[selectedChannel.backgroundKey]} sizes="(max-width: 639px) calc(100vw - 24px), 400px" fit="cover" />
+        )}
       <div className="chat-panel-header relative z-30 m-2 mb-0 flex h-[52px] shrink-0 items-center justify-between rounded-xl bg-yellow-400 px-4 text-brand-ink">
         <div className="flex min-w-0 items-center gap-3">
           <span className="text-xl font-black text-brand-ink">chatter</span>
@@ -2198,9 +2201,13 @@ export default function MapChat({ launcherTarget = null }) {
         </div>}
       </div>
 
+      <div className="relative min-h-0 flex-1 isolate">
       <div
         inert={!channelId || channelMenuOpen}
-        className="chat-messages relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3 [scrollbar-width:thin]"
+        role="region"
+        aria-label="Chat messages"
+        tabIndex={channelId && !channelMenuOpen ? 0 : -1}
+        className="chat-messages relative z-10 h-full min-h-0 overflow-y-auto overscroll-contain px-4 py-3 [scrollbar-width:thin]"
       >
         {messages.map((message, index) => {
             const reactionState = reactions[message.id] || { counts: {}, myReaction: null };
@@ -2214,7 +2221,7 @@ export default function MapChat({ launcherTarget = null }) {
                   <UserRound size={25} fill="currentColor" strokeWidth={1.5} />
                 </span>
                 <div className="group relative min-w-0 flex-1">
-                  <div className="chat-message relative text-white">
+                  <div className="chat-message relative rounded-xl bg-black/75 px-3 py-2 text-white">
                     <div className="mb-0.5 flex flex-wrap items-baseline gap-x-2">
                       <p className="text-xs font-bold">{message.username || "TrainLive Guest"}</p>
                       <span className="text-[11px] text-white/75">{formatMessageTime(message.created_at)}</span>
@@ -2293,6 +2300,8 @@ export default function MapChat({ launcherTarget = null }) {
               </div>
             );
           })}
+      </div>
+
       </div>
 
       <div className="pointer-events-none absolute inset-x-0 bottom-[76px] z-40 h-56 overflow-hidden" aria-hidden="true">
