@@ -1,0 +1,47 @@
+.flavio-coming-soon {
+  box-sizing: border-box; position: fixed; inset: auto 0 max(12px, env(safe-area-inset-bottom)); margin: auto;
+  width: min(760px, calc(100% - 24px)); max-height: min(90dvh, calc(var(--visible-height) - 24px));
+  overflow-y: auto; overscroll-behavior: contain; border: 1px solid #e2e8f0; border-radius: 28px;
+  padding: 32px 24px 24px; background: white; color: #101633; box-shadow: 0 12px 48px #0f172a33;
+}
+.flavio-coming-soon::backdrop, .form-dialog::backdrop { background: #0f172a66; }
+.dialog-close { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin-left: auto; border-radius: 50%; color: #475569; flex: none; }
+.dialog-close:hover { background: #f1f5f9; }
+.dialog-close:focus-visible { outline: 2px solid #0564c7; outline-offset: 2px; }
+.flavio-coming-soon > .dialog-close { position: sticky; top: 0; z-index: 1; margin: -26px -8px -18px auto; background: white; }
+.flavio-approved-layout { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.7fr); align-items: center; gap: 12px; }
+.flavio-approved-art { min-width: 0; }
+.flavio-approved-art svg { display: block; width: 100%; height: auto; }
+.flavio-heading { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.flavio-heading h2 { margin: 0; font-size: clamp(36px, 7vw, 62px); font-weight: 800; line-height: 1; letter-spacing: -.04em; }
+.flavio-gold-stars { color: #eab308; width: 30px; height: 30px; }
+.flavio-soon-badge { border-radius: 999px; padding: 6px 14px; background: #0564c7; color: white; font-weight: 700; font-size: 15px; }
+.flavio-tagline { margin: 12px 0 24px; font-size: clamp(16px, 3vw, 20px); }
+.flavio-approved-features { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; padding: 0; margin: 0; list-style: none; }
+.flavio-approved-features li { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; font-size: 14px; font-weight: 650; line-height: 1.2; min-width: 0; }
+.flavio-approved-features svg { width: 36px; height: 36px; flex: none; background: transparent; }
+.feature-tone-blue { color: #0564c7; }
+.feature-tone-amber { color: #b77900; }
+.feature-tone-green { color: #16803c; }
+.feature-tone-purple { color: #7e22ce; }
+@media (max-width: 540px) {
+  .flavio-coming-soon { padding: 44px 16px 20px; border-radius: 22px; }
+  .flavio-approved-layout { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .flavio-approved-art { width: min(100%, 210px); margin: 0 auto; }
+  .flavio-approved-copy { text-align: center; }
+  .flavio-heading { justify-content: center; }
+  .flavio-approved-features { gap: 8px; }
+  .flavio-approved-features li { font-size: 12px; }
+  .flavio-approved-features svg { width: 30px; height: 30px; }
+}
+
+.flavio-coming-soon h2, .flavio-coming-soon p, .flavio-coming-soon li, .flavio-soon-badge { text-transform: none; letter-spacing: normal; }
+
+.flavio-countdown { display: flex; align-items: center; gap: 16px; margin-top: 20px; padding: 16px; border-radius: 24px; background: #f3f6fc; }
+.flavio-countdown > strong { font-size: 18px; }
+.flavio-countdown dl { display: grid; flex: 1; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0; }
+.flavio-countdown dl > div { display: flex; flex-direction: column-reverse; text-align: center; border-left: 1px solid #cbd5e1; padding-inline: 4px; }
+.flavio-countdown dd { margin: 0; font-size: clamp(24px, 5vw, 36px); font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.flavio-countdown dt { margin-top: 6px; text-transform: capitalize; font-size: 12px; }
+.flavio-launch-pending { margin-top: 20px; text-align: center; color: #475569; }
+@media (max-width: 540px) { .flavio-countdown { display: block; padding: 16px 8px; text-align: center; } .flavio-countdown dl { margin-top: 12px; } .flavio-countdown dl > div:first-child { border-left: 0; } }

@@ -1,0 +1,25 @@
+.form-dialog { box-sizing: border-box; width: min(480px, calc(100% - 24px)); max-height: calc(var(--visible-height) - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); overflow-y: auto; overscroll-behavior: contain; padding: 20px; border: 1px solid #e2e8f0; border-radius: 24px; background: white; color: #17233f; margin: auto; }
+.form-dialog h2 { margin: 16px 0 12px; font-size: 24px; font-weight: 750; text-transform: none; letter-spacing: normal; }
+.form-dialog p { margin-block: 12px; line-height: 1.5; text-transform: none; letter-spacing: normal; }
+.form-dialog-icon { color: #0564c7; }
+.form-dialog label { display: block; margin-top: 16px; font-weight: 600; }
+.form-dialog input:not([type=checkbox]), .form-dialog textarea { box-sizing: border-box; display: block; width: 100%; min-width: 0; min-height: 48px; margin-top: 6px; border: 1px solid #94a3b8; border-radius: 10px; padding: 10px 12px; color: #17233f; background: white; font-size: 16px; }
+.form-dialog textarea { min-height: 120px; resize: vertical; }
+.form-dialog input:focus-visible, .form-dialog textarea:focus-visible { outline: 2px solid #0564c7; outline-offset: 2px; }
+.form-dialog .public-form-consent { display: flex; align-items: flex-start; gap: 10px; min-height: 44px; padding-block: 8px; font-size: 14px; font-weight: 400; }
+.public-form-consent input { flex: none; width: 20px; height: 20px; margin-top: 2px; accent-color: #0564c7; }
+.public-form-privacy { font-size: 12px; color: #475569; }
+.public-form-submit, .flavio-notify-cta { display: flex; width: 100%; min-height: 48px; align-items: center; justify-content: center; gap: 10px; border-radius: 999px; padding: 12px 16px; color: white; background: #0564c7; font-weight: 700; text-align: center; }
+.public-form-submit:hover, .flavio-notify-cta:hover { background: #0a4f98; }
+.public-form-submit:disabled { opacity: .65; cursor: wait; }
+.public-form-submit:focus-visible, .flavio-notify-cta:focus-visible { outline: 2px solid #0564c7; outline-offset: 3px; }
+.public-form-error { color: #b91c1c; }
+.flavio-notify-cta { margin-top: 20px; }
+.flavio-notify-cta svg { flex: none; }
+
+.advertising-enquiry-logo { display: block; width: min(100%, 170px); height: auto; object-fit: contain; }
+
+/* Centre in the visible viewport, including above the mobile on-screen keyboard. */
+.form-dialog { position: fixed; inset: auto; top: calc(var(--visible-top) + var(--visible-height) * .5); left: calc(var(--visible-left) + var(--visible-width) * .5); margin: 0; transform: translate(-50%, -50%); width: min(480px, calc(var(--visible-width) - 24px)); }
+
+.form-dialog > .dialog-close { position: sticky; top: 0; z-index: 1; background: white; }

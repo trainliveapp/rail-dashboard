@@ -1,107 +1,46 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Bell, Bike, Map, ShoppingBag, X } from 'lucide-react'
-import flavioAvatar from '../assets/flavio-avatar.webp'
+import { ArrowRight, Bell, Bike, MapPinned, ShoppingBag, Sparkles, TrainFront, X } from 'lucide-react'
+import approvedArtwork from '../assets/flavio-approved-2962.jpg'
 import FlavioLauncher from './FlavioLauncher'
+import ModalDialog from './ModalDialog'
+import FlavioCountdown from './FlavioCountdown'
+import FlavioNotifyDialog from './FlavioNotifyDialog'
+import './FlavioComingSoon.css'
 
 const FEATURES = [
-  { icon: Map, title: 'Journey planning', text: 'routes and connections', tone: 'blue' },
-  { icon: Bell, title: 'Station updates', text: 'disruption, engineering works and live information', tone: 'blue' },
-  { icon: Bike, title: 'Greener travel', text: 'cycling between stations and walking alternatives', tone: 'green' },
-  { icon: ShoppingBag, title: 'Station discoveries', text: 'retail, food, facilities and services', tone: 'blue' },
+  { icon: MapPinned, title: 'Journeys', tone: 'blue' },
+  { icon: TrainFront, title: 'Station Updates', tone: 'amber' },
+  { icon: Bike, title: 'Greener Travel', tone: 'green' },
+  { icon: ShoppingBag, title: 'Discoveries', tone: 'purple' },
 ]
 
 export default function FlavioComingSoonSheet({ launcherTarget = null }) {
   const [open, setOpen] = useState(false)
+  const [notifyOpen, setNotifyOpen] = useState(false)
   const launcherRef = useRef(null)
-  const closeButtonRef = useRef(null)
-
-  const close = () => {
-    setOpen(false)
-    window.requestAnimationFrame(() => launcherRef.current?.focus())
-  }
-
-  useEffect(() => {
-    if (!open) return undefined
-
-    const previousOverflow = document.body.style.overflow
-    const onKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        close()
-        return
-      }
-
-      if (event.key !== 'Tab') return
-      const dialog = document.querySelector('.flavio-sheet')
-      const focusable = dialog?.querySelectorAll('button:not([disabled])')
-      if (!focusable?.length) return
-
-      const first = focusable[0]
-      const last = focusable[focusable.length - 1]
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault()
-        last.focus()
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault()
-        first.focus()
-      }
-    }
-
-    document.body.style.overflow = 'hidden'
-    document.addEventListener('keydown', onKeyDown)
-    closeButtonRef.current?.focus()
-
-    return () => {
-      document.body.style.overflow = previousOverflow
-      document.removeEventListener('keydown', onKeyDown)
-    }
-  }, [open])
-
-  return (
-    <>
-      {!open && launcherTarget && createPortal(
-        <FlavioLauncher buttonRef={launcherRef} onOpen={() => setOpen(true)} />,
-        launcherTarget
-      )}
-
-      {open && createPortal(
-        <div className="flavio-overlay" role="presentation">
-          <button type="button" className="flavio-backdrop" aria-label="Close Flavio panel" onClick={close} />
-          <section className="flavio-sheet" role="dialog" aria-modal="true" aria-labelledby="flavio-title">
-            <div className="flavio-sheet__handle" aria-hidden="true"><span /></div>
-            <header className="flavio-sheet__header">
-              <img src={flavioAvatar} alt="Flavio" className="flavio-sheet__avatar" />
-              <div>
-                <h2 id="flavio-title">Flavio</h2>
-                <p>Your AI Travel Companion</p>
-              </div>
-              <button ref={closeButtonRef} type="button" className="flavio-sheet__close" aria-label="Close Flavio panel" onClick={close}>
-                <X size={20} />
-              </button>
-            </header>
-
-            <div className="flavio-sheet__body">
-              <h3>Flavio is coming soon</h3>
-              <p className="flavio-sheet__description">
-                Your personal AI companion for smarter journeys, station updates, greener travel and station discoveries — from cycling between stations to retail, food and more.
-              </p>
-              <div className="flavio-features">
-                {FEATURES.map(({ icon: Icon, title, text, tone }) => (
-                  <article className={`flavio-feature flavio-feature--${tone}`} key={title}>
-                    <span className="flavio-feature__icon" aria-hidden="true"><Icon size={18} strokeWidth={2.2} /></span>
-                    <div><h4>{title}</h4><p>{text}</p></div>
-                  </article>
-                ))}
-              </div>
-              <div className="flavio-preview" aria-disabled="true">
-                <span>Ask Flavio anything…</span>
-                <strong>Coming soon</strong>
-              </div>
-            </div>
-          </section>
-        </div>,
-        document.body
-      )}
-    </>
-  )
+  return <>
+    {launcherTarget && createPortal(<FlavioLauncher buttonRef={launcherRef} onOpen={() => setOpen(true)} />, launcherTarget)}
+    {open && <ModalDialog className="flavio-coming-soon" aria-labelledby="flavio-title" onClose={() => setOpen(false)}>
+      <button type="button" className="dialog-close" aria-label="Close Flavio panel" onClick={() => setOpen(false)} autoFocus><X size={20} /></button>
+      <div className="flavio-approved-layout">
+        <div className="flavio-approved-art">
+          <svg role="img" aria-label="Flavio with grey curls, headphones, hoodie, phone and two robotic forearms" viewBox="20 12 490 568">
+            <defs><clipPath id="flavio-approved-character"><path d="M20 12H470V280H510V530H285Q185 530 185 585H20Z" /></clipPath></defs>
+            <image clipPath="url(#flavio-approved-character)" href={approvedArtwork} width="1536" height="786" />
+          </svg>
+        </div>
+        <div className="flavio-approved-copy">
+          <div className="flavio-heading"><h2 id="flavio-title">Flavio</h2><Sparkles aria-hidden="true" className="flavio-gold-stars" /><span className="flavio-soon-badge">Coming Soon</span></div>
+          <p className="flavio-tagline">Your AI Travel Companion</p>
+          <ul className="flavio-approved-features">
+            {FEATURES.map(({ icon: Icon, title, tone }) => <li key={title}><Icon className={`feature-tone-${tone}`} aria-hidden="true" /><span>{title}</span></li>)}
+          </ul>
+        </div>
+      </div>
+      <FlavioCountdown />
+      <button type="button" className="flavio-notify-cta" onClick={() => setNotifyOpen(true)}><Bell size={22} aria-hidden="true" /><span>Notify me when Flavio launches</span><ArrowRight size={20} aria-hidden="true" /></button>
+      {notifyOpen && <FlavioNotifyDialog onClose={() => setNotifyOpen(false)} />}
+    </ModalDialog>}
+  </>
 }

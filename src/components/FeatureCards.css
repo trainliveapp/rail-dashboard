@@ -17,8 +17,8 @@
 .flavio-logo { display: block; width: clamp(88px, 20vw, 116px); height: auto; flex-shrink: 0; }
 .flavio-handwritten { font-family: 'Segoe Print', 'Bradley Hand', 'Comic Sans MS', cursive; font-style: italic; font-weight: 600; line-height: 1.2; }
 .flavio-brand-note { position: relative; margin: 0; font-size: clamp(12px, 2.8vw, 17px); transform: rotate(-6deg); }
-.flavio-brand-note::after, .flavio-footer-note::after { content: ''; display: block; width: 78%; height: 3px; margin: 7px auto 0; background: var(--flavio-red); clip-path: polygon(0 100%, 100% 0, 92% 100%); }
-.flavio-coming-soon { display: inline-block; margin-bottom: 8px; font-size: 10px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; }
+.flavio-brand-note::after { content: ''; display: block; width: 78%; height: 3px; margin: 7px auto 0; background: var(--flavio-red); clip-path: polygon(0 100%, 100% 0, 92% 100%); }
+.flavio-copy .flavio-coming-soon { display: inline-block; margin-bottom: 8px; font-size: 10px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; }
 .flavio-copy h2 { margin: 0; font-size: clamp(25px, 6vw, 36px); font-weight: 750; letter-spacing: -.045em; line-height: 1.12; overflow-wrap: break-word; }
 .flavio-copy h2 > span { display: block; }
 .flavio-copy h2 .flavio-meet { margin-bottom: 3px; font-size: 1.42em; font-weight: 800; letter-spacing: -.05em; }
@@ -150,10 +150,24 @@
   .flavio-benefit p { font-size: clamp(11px, .85vw, 14px); }
   .flavio-footer { grid-template-columns: minmax(0, 1fr) minmax(190px, 18%) minmax(150px, 16%); gap: 24px; min-height: 115px; padding: 20px clamp(28px, 3vw, 64px); border-radius: 36px 36px 0 0; }
   .flavio-feature-list { grid-column: auto; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0; }
-  .flavio-feature-list li { padding-inline: 10px; border-right: 1px solid #dce1e8; }
+  .flavio-feature-list li { padding-inline: 10px; border-right: 0; }
   .flavio-feature-list li:first-child { padding-left: 0; }
   .flavio-feature-list li:last-child { border-right: 0; }
   .flavio-feature-list svg { width: clamp(25px, 2.5vw, 40px); height: clamp(28px, 2.5vw, 40px); }
   .flavio-feature-list span { font-size: clamp(10px, .85vw, 14px); }
   .flavio-footer-note { font-size: clamp(18px, 1.65vw, 28px); white-space: nowrap; }
 }
+
+/* Standalone footer icons preserve the original labels without decorative boxes. */
+.flavio-feature-list li { min-height: 44px; border: 0; background: transparent; }
+.flavio-feature-list svg { padding: 0; border: 0; border-radius: 0; background: transparent; }
+
+.advertising-banner-wrap { background: white; padding: 16px; }
+.advertising-banner { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: min(100%, 896px); min-height: 80px; margin: 0 auto; padding: 14px 20px; border: 1px solid #e2e8f0; border-radius: 12px; background: white; color: #07336b; text-align: left; cursor: pointer; }
+.advertising-banner > span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.advertising-banner strong { font-size: clamp(20px, 3vw, 24px); font-weight: 750; line-height: 1.25; }
+.advertising-banner span span { font-size: clamp(14px, 2vw, 16px); line-height: 1.4; }
+.advertising-banner svg { flex: none; }
+.advertising-banner:hover { background: #f8fafc; border-color: #94a3b8; }
+.advertising-banner:focus-visible { outline: 2px solid #0564c7; outline-offset: 3px; }
+.flavio-feature-list span { font-size: 14px; }

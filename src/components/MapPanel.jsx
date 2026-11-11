@@ -604,9 +604,6 @@ export default function MapPanel({
         Live trains: {trainCount}
       </div>
 
-      {/* CHAT PANEL */}
-      {open && (
-        <div
-          className="absolute right-4 bottom-4 w-[360px] max-w-[calc(100%-32px)] bg-white rounded-xl shadow-2xl overflow-hidden"
-          style={{ zIndex: 
-
+    </div>
+  );
+}

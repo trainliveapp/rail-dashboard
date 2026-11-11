@@ -3,3 +3,6 @@ dist
 .DS_Store
 .env
 .env.local
+
+# Local PDF references and browser QA evidence
+tmp/

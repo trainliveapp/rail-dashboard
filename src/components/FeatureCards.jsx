@@ -1,6 +1,9 @@
-import { ArrowUpRight, CalendarDays, ChartNoAxesColumnIncreasing, MessageSquare, Route, ShieldCheck, Users } from 'lucide-react'
+import { CalendarDays, ChartNoAxesColumnIncreasing, MessageSquare, Route, ShieldCheck, Users } from 'lucide-react'
 import { images } from '../data/optimizedImages'
 import SmoothImage from './SmoothImage'
+import { useState } from 'react'
+import AdvertisingBanner from './AdvertisingBanner'
+import AdvertisingEnquiryDialog from './AdvertisingEnquiryDialog'
 import './FeatureCards.css'
 
 const features = [
@@ -13,17 +16,11 @@ const features = [
 ]
 
 export default function FeatureCards() {
+  const [advertisingOpen, setAdvertisingOpen] = useState(false)
   return (
     <section className="flavio-banner" aria-label="StationLive community">
-      <div className="flex min-h-60 w-full items-center justify-center bg-white px-4 py-8 sm:min-h-80 sm:px-6">
-        <aside aria-label="Advertise with StationLive" className="flex w-full max-w-4xl items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white px-5 py-5 text-[#07336b] sm:px-8 sm:py-6">
-          <div className="min-w-0">
-            <p className="text-[clamp(1.5rem,5vw,2.5rem)] font-extrabold leading-tight">Reach travellers</p>
-            <p className="mt-1 text-[clamp(1rem,3.5vw,1.75rem)] font-semibold leading-snug">Advertise with StationLive</p>
-          </div>
-          <ArrowUpRight aria-hidden="true" className="h-8 w-8 shrink-0 sm:h-12 sm:w-12" strokeWidth={2.2} />
-        </aside>
-      </div>
+      <AdvertisingBanner onOpen={() => setAdvertisingOpen(true)} />
+      {advertisingOpen && <AdvertisingEnquiryDialog onClose={() => setAdvertisingOpen(false)} />}
 
       <div className="flavio-footer">
         <ul className="flavio-feature-list" aria-label="The StationLive community">
