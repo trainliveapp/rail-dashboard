@@ -1,4 +1,3 @@
-import { ChevronRight, MessageCircle, ShieldAlert, TrainFront, Users } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { images } from '../data/optimizedImages'
 import { loadImage } from '../lib/imageLoading'
@@ -6,49 +5,7 @@ import ImageBackground from './ImageBackground'
 
 const AD_SIZES = '(max-width: 960px) calc(100vw - 32px), 896px'
 
-const slides = [
-  {
-    image: images.ad1,
-    title: <>Know before you <span className="text-[#ffd21a]">go.</span></>,
-    description: 'Live updates from real passengers at the stations you care about.',
-    updates: [
-      { icon: ShieldAlert, color: 'bg-red-500', title: 'Euston', text: 'Signalling problems being reported by passengers.', time: '5 mins ago' },
-    ],
-    icon: Users,
-  },
-  {
-    image: images.ad2,
-    title: <>See what passengers <span className="text-[#ffd21a]">are reporting.</span></>,
-    description: 'Real-time updates about your trains and stations.',
-    updates: [
-      { icon: Users, color: 'bg-red-500', title: 'Train to Birmingham', text: 'A man is staring at me on board and making me feel uncomfortable.', time: '6 mins ago' },
-    ],
-    icon: Users,
-  },
-  {
-    image: images.ad3,
-    title: <>Keep them safe <span className="text-[#ffd21a]">on their journey.</span></>,
-    description: 'Check real-time reports and live chat updates on the stations and lines they use.',
-    updates: [
-      { icon: TrainFront, color: 'bg-blue-600', title: 'Chiltern Line', text: 'Trains running normally at the moment.', time: '2 mins ago' },
-      { icon: TrainFront, color: 'bg-emerald-500', title: 'Live chat - Marylebone', text: 'Trains are busy but running on time. No issues reported so far.', time: '4 mins ago' },
-      { icon: ShieldAlert, color: 'bg-amber-500', title: 'Update from passengers', text: 'No security issues being reported on this line.', time: '6 mins ago' },
-      { icon: MessageCircle, color: 'bg-blue-600', title: 'Live chat', text: 'My train has just departed and it’s quiet. Plenty of seats.', time: '7 mins ago' },
-    ],
-    icon: MessageCircle,
-  },
-  {
-    image: images.ad4,
-    title: <>Passengers helping <span className="text-[#ffd21a]">passengers.</span></>,
-    description: 'Get updates, tips and alternative travel options from the StationLive community.',
-    updates: [
-      { icon: ShieldAlert, color: 'bg-red-500', title: 'Delays at Waterloo', text: 'Trains are currently delayed. No staff around here yet.', time: '12 mins ago' },
-      { icon: Users, color: 'bg-blue-600', title: 'Try the Jubilee line instead.', text: 'It’s moving now.', time: '10 mins ago' },
-      { icon: TrainFront, color: 'bg-emerald-500', title: 'Buses towards Victoria are running.', text: 'Takes about 25 mins.', time: '8 mins ago' },
-    ],
-    icon: Users,
-  },
-]
+const slides = [images.ad1, images.ad2, images.ad3, images.ad4].map(image => ({ image }))
 
 export default function AdSlot({ size = 'leaderboard', className = '' }) {
   const [activeSlide, setActiveSlide] = useState(0)
@@ -111,29 +68,6 @@ export default function AdSlot({ size = 'leaderboard', className = '' }) {
             decoding="async"
             className="absolute left-0 top-0 w-full max-w-none -translate-x-[15%] -translate-y-[35%]"
           />
-        </div>
-
-        <div className={`ad-updates absolute right-2 flex w-[min(58%,300px)] max-h-[68%] overflow-y-auto pr-0.5 [scrollbar-width:none] sm:right-7 sm:w-[min(52%,300px)] sm:max-h-[78%] ${activeSlide === 2 ? 'top-[14%] sm:top-[16%]' : 'top-[20%] sm:top-[22%]'}`}>
-          <div className="flex w-full flex-col gap-1.5 sm:gap-2">
-            {slide.updates.map(({ icon: UpdateIcon, color, title, text, time }, index) => (
-              <div key={`${title}-${index}`} className="flex shrink-0 items-start gap-1.5 rounded-2xl bg-white/95 px-2 py-1.5 text-slate-900 shadow-lg backdrop-blur-sm sm:gap-3 sm:px-4 sm:py-3">
-                <span className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-white sm:h-7 sm:w-7 ${color}`}>
-                  <UpdateIcon size={13} className="sm:h-[15px] sm:w-[15px]" />
-                </span>
-                <div className="min-w-0">
-                  <p className="text-[10px] font-bold leading-tight sm:text-sm">{title}</p>
-                  <p className="text-[9px] leading-tight sm:text-xs">{text}</p>
-                  <p className="mt-0.5 text-[9px] text-slate-400 sm:text-[10px]">{time}</p>
-                </div>
-                <ChevronRight size={16} className="ml-auto mt-1 shrink-0 text-slate-300 sm:h-[18px] sm:w-[18px]" />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="ad-copy max-w-[38%] pb-5 sm:max-w-[62%]">
-          <h2 className="text-[clamp(1.05rem,4.5vw,3rem)] font-extrabold leading-[1.02] tracking-tight sm:text-[clamp(1.5rem,4.5vw,3rem)]">{slide.title}</h2>
-          <p className="mt-2 text-[clamp(0.62rem,1.8vw,1.25rem)] leading-tight text-white sm:text-[clamp(0.8rem,1.8vw,1.25rem)]">{slide.description}</p>
         </div>
       </div>
 
