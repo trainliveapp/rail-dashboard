@@ -843,6 +843,15 @@ button:disabled,
 .report-option svg { width: clamp(22px, 6vw, 30px); height: auto; }
 .report-option > span { max-width: 100%; }
 @media (max-width: 640px) {
+  .report-option {
+    min-height: 132px;
+    padding: 12px 6px;
+    font-size: clamp(14px, 3.8vw, 16px);
+  }
+  .report-option .report-category-image {
+    width: clamp(56px, 17vw, 72px);
+    height: clamp(56px, 17vw, 72px);
+  }
   .report-overlay {
     align-items: flex-end;
     /* Leave a visible strip for the lower map controls and device home indicator. */
