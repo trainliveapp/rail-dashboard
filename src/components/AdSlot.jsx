@@ -71,7 +71,7 @@ export default function AdSlot({ size = 'leaderboard', className = '' }) {
         </div>
       </div>
 
-      <div className="absolute bottom-1 left-1/2 z-10 flex -translate-x-1/2 items-center" role="tablist" aria-label="Advertisement slides">
+      <div className="absolute bottom-1 left-1/2 z-10 flex -translate-x-1/2 items-center -space-x-2" role="tablist" aria-label="Advertisement slides">
         {slides.map((item, index) => (
           <button
             key={item.image.src}
