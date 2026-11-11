@@ -87,7 +87,7 @@ async function setup(page, state) {
     await footer.screenshot({ path: 'tmp/qa/task11-footer-390.png' })
     console.log('Task 11 PASS: original labels retained, no icon boxes, backgrounds or separators')
     if (through < 12) return
-    const banner = page.getByRole('button', { name: 'Advertise with StationLive: open advertising enquiry' })
+    const banner = page.getByRole('button', { name: 'Reach travellers. Advertise with StationLive: open advertising enquiry' })
     await banner.scrollIntoViewIfNeeded()
     const bannerStyle = await banner.evaluate(e => ({ height: e.getBoundingClientRect().height, background: getComputedStyle(e).backgroundColor, overflow: e.scrollWidth > e.clientWidth }))
     assert.ok(bannerStyle.height <= 110)
@@ -100,6 +100,7 @@ async function setup(page, state) {
     await page.keyboard.press('Enter')
     const enquiry = page.locator('dialog.form-dialog')
     await enquiry.getByRole('heading', { name: 'Advertise with StationLive' }).waitFor()
+    for (let i = 0; i < 8; i++) { await page.keyboard.press('Tab'); assert.equal(await enquiry.evaluate(e => e.contains(document.activeElement)), true) }
     assert.equal(await enquiry.getByRole('img', { name: 'StationLive', exact: true }).count(), 1)
     await enquiry.getByLabel('Business email', { exact: true }).fill('business@example.test')
     await enquiry.getByLabel('Company', { exact: true }).fill('Test company')
@@ -183,7 +184,7 @@ async function setup(page, state) {
         await screen.mouse.wheel(0, 300)
         await screen.waitForFunction(previous => scrollY > previous, before)
       }
-      const ad = screen.getByRole('button', { name: 'Advertise with StationLive: open advertising enquiry' })
+      const ad = screen.getByRole('button', { name: 'Reach travellers. Advertise with StationLive: open advertising enquiry' })
       await ad.click()
       const adForm = screen.locator('dialog.form-dialog')
       assert.equal(await adForm.evaluate(e => e.scrollWidth <= e.clientWidth), true, `Advertising width ${width}`)

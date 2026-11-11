@@ -48,3 +48,10 @@ test('client requires affirmative backend success', async () => {
   }
   assert.deepEqual(await submitPublicForm({ invoke: async () => ({ data: { ok: true } }) }, 'flavio-notify', valid), { ok: true })
 })
+
+test('client explains unavailable endpoints, authorization, rate limits and outages without claiming success', async () => {
+  for (const [status, message] of [[404, /temporarily unavailable/], [401, /connect securely/], [403, /connect securely/], [429, /Too many attempts/], [503, /could not save/]]) {
+    await assert.rejects(submitPublicForm({ invoke: async () => ({ data: null, error: { context: new Response('{}', { status }) } }) }, 'flavio-notify', valid), message)
+  }
+  await assert.rejects(submitPublicForm({ invoke: async () => ({ error: { name: 'FunctionsFetchError' } }) }, 'flavio-notify', valid), /Check your connection/)
+})

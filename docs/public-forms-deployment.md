@@ -4,7 +4,7 @@ The frontend and Supabase Edge Functions are implemented, but this change does n
 
 ## Confirmed and pending settings
 
-- Advertising recipient confirmed by the user: **stationlive@gmail.com**. This is the server-side default in `advertising-enquiry/index.ts`. It is not a browser mailto placeholder. `ADVERTISING_TO_EMAIL` may override it if a replacement is explicitly confirmed.
+- `ADVERTISING_TO_EMAIL`: required server-only founder-confirmed advertising destination. There is no hardcoded fallback; the addresses shown in visual mock-ups are not configuration. Earlier notes recorded **stationlive@gmail.com**; confirm the intended destination before configuring production delivery.
 - Flavio launch date/time: **not supplied**. Do not use the date in the PDF example or the browser test fixture as a real launch date.
 - `FLAVIO_LAUNCH_AT`: one confirmed ISO UTC timestamp, including seconds and `Z`. Unset/invalid configuration returns HTTP 503 and the UI says “Launch date to be announced”.
 - `PUBLIC_FORM_ORIGINS`: comma-separated exact production origins, for example the actual HTTPS StationLive host(s). No wildcard.
@@ -15,13 +15,28 @@ The frontend and Supabase Edge Functions are implemented, but this change does n
 
 ## Deployment sequence
 
+### Diagnosed 11 November 2026
+
+Read-only OPTIONS probes against the project configured in `.env.local` returned HTTP 404 with `NOT_FOUND` / `Requested function was not found` for both `flavio-notify` and `flavio-config`. No email was submitted. The notification failure requires backend deployment; changing email validation or showing local success cannot fix a missing endpoint.
+
+From an authenticated Supabase CLI, deploy to the intended project after applying the migration and setting `PUBLIC_FORM_ORIGINS` and `FORM_RATE_LIMIT_SECRET`:
+
+```powershell
+supabase functions deploy flavio-notify --project-ref <project-ref>
+supabase functions deploy flavio-config --project-ref <project-ref>
+```
+
+Use the exact browser origin in `PUBLIC_FORM_ORIGINS` (including scheme and local port when testing). The notification function does not require Resend or an email sender: it saves the launch opt-in in the database. Confirm the launch timestamp before setting `FLAVIO_LAUNCH_AT`; the example date is not approval. Re-test a real consented submission after deployment, including duplicate and failure behavior.
+
+Artwork compliance remains pending: the checked-in `flavio-approved-2962.jpg` is documented as an extraction from the supplied PDF, not the original user-supplied `2962.png`. Obtain that exact original before claiming exact-file approval.
+
 1. Apply `supabase/migrations/20261111000000_public_enquiry_forms.sql` to the intended project, after reviewing the migration in staging. Existing channel migrations, including the Hammersmith mapping correction, must already be applied.
 2. Configure the server settings above. Keep the launch timestamp unset until it is confirmed.
 3. Deploy `flavio-config`, `flavio-notify`, and `advertising-enquiry` using the Supabase CLI from the repository root. These functions import their checked-in shared modules and validators.
 4. Retain the platform JWT verification expected by the existing Supabase client; guests use the public anon key and do not need an account. Ensure browser preflight requests are accepted by the gateway.
 5. Confirm CORS allows only the real website origins and that the gateway supplies the trusted client-IP header. Rate limits are 5 attempts per form per IP hash per UTC hour.
 6. In staging, submit one consented notification and check that repeating it creates only one row. Verify failures and the sixth attempt never display success.
-7. After explicit authorization to send a real test enquiry, verify provider acceptance and receipt at **stationlive@gmail.com**. Browser QA uses mocks and cannot prove inbox delivery.
+7. After explicit authorization to send a real test enquiry, verify provider acceptance and receipt at the founder-confirmed `ADVERTISING_TO_EMAIL`. Browser QA uses mocks and cannot prove inbox delivery.
 8. Confirm the real launch timestamp before publishing an active countdown. The code never creates a per-visitor six-month target.
 
 ## Data handling

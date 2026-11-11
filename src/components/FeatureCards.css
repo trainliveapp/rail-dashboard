@@ -162,10 +162,12 @@
 .flavio-feature-list li { min-height: 44px; border: 0; background: transparent; }
 .flavio-feature-list svg { padding: 0; border: 0; border-radius: 0; background: transparent; }
 
-.advertising-banner-wrap { background: white; padding: 16px; }
-.advertising-banner { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: min(100%, 896px); min-height: 80px; margin: 0 auto; padding: 14px 20px; border: 1px solid #e2e8f0; border-radius: 12px; background: white; color: #07336b; text-align: left; cursor: pointer; }
+.advertising-banner-wrap { background: white; padding: 12px 16px; }
+.advertising-banner { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: min(100%, 896px); min-height: 64px; margin: 0 auto; padding: 10px 16px; border: 1px solid #e2e8f0; border-radius: 8px; background: white; color: #07336b; text-align: left; cursor: pointer; }
 .advertising-banner > span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.advertising-banner strong { font-size: clamp(20px, 3vw, 24px); font-weight: 750; line-height: 1.25; }
+.advertising-banner strong { font-size: clamp(18px, 2.5vw, 20px); font-weight: 750; line-height: 1.25; }
+.advertising-banner, .advertising-banner span, .advertising-banner strong { text-decoration: none; background-image: none; box-shadow: none; }
+.advertising-banner::before, .advertising-banner::after, .advertising-banner span::before, .advertising-banner span::after, .advertising-banner strong::before, .advertising-banner strong::after { content: none; }
 .advertising-banner span span { font-size: clamp(14px, 2vw, 16px); line-height: 1.4; }
 .advertising-banner svg { flex: none; }
 .advertising-banner:hover { background: #f8fafc; border-color: #94a3b8; }

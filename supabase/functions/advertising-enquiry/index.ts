@@ -4,7 +4,8 @@ import { createAdvertisingSubmit } from '../_shared/advertisingDelivery.js'
 import { formOrigins, hashFormIp } from '../_shared/formRuntime.ts'
 import { normalizeEmail } from '../../../src/lib/publicFormValidation.js'
 
-const to = normalizeEmail(Deno.env.get('ADVERTISING_TO_EMAIL') || 'stationlive@gmail.com')
+// Set only to the founder-confirmed destination; never infer it from a mock-up.
+const to = normalizeEmail(Deno.env.get('ADVERTISING_TO_EMAIL'))
 const from = Deno.env.get('FORMS_FROM_EMAIL')
 const apiKey = Deno.env.get('RESEND_API_KEY')
 const url = Deno.env.get('SUPABASE_URL')
