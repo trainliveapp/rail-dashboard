@@ -49,7 +49,7 @@ export default function AdSlot({ size = 'leaderboard', className = '' }) {
     <aside
       ref={containerRef}
       aria-label="Advertising"
-      className={`ad-slot relative h-[clamp(300px,62vw,500px)] overflow-hidden rounded-2xl border border-slate-200 bg-slate-950 shadow-sm ${size === 'rail' ? 'h-[clamp(280px,48vw,420px)]' : ''} ${className}`}
+      className={`ad-slot relative h-[clamp(300px,62vw,500px)] overflow-hidden rounded-2xl border border-slate-200 bg-transparent shadow-sm ${size === 'rail' ? 'h-[clamp(280px,48vw,420px)]' : ''} ${className}`}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >

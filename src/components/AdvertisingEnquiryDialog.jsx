@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { ArrowRight, Building2, CircleCheck, Mail, Megaphone, MessageSquare, X } from 'lucide-react'
 import BrandLogo from './BrandLogo'
 import ModalDialog from './ModalDialog'
@@ -10,6 +10,7 @@ export default function AdvertisingEnquiryDialog({ onClose }) {
   const [values, setValues] = useState({ email: '', company: '', message: '', consent: false })
   const [status, setStatus] = useState('idle')
   const [error, setError] = useState('')
+  const handleGesture = useRef(null)
   const update = (key, value) => setValues(previous => ({ ...previous, [key]: value }))
   async function submit(event) {
     event.preventDefault()
@@ -22,6 +23,18 @@ export default function AdvertisingEnquiryDialog({ onClose }) {
   }
   return <ModalDialog className="form-dialog advertising-dialog" aria-labelledby="advertising-title" onClose={onClose}>
     <header className="advertising-dialog-header">
+      <button type="button" className="advertising-sheet-handle" aria-label="Close advertising enquiry" onClick={() => {
+        if (!handleGesture.current?.moved) onClose()
+        handleGesture.current = null
+      }} onPointerDown={event => {
+        handleGesture.current = { y: event.clientY, moved: false }
+        event.currentTarget.setPointerCapture(event.pointerId)
+      }} onPointerUp={event => {
+        if (!handleGesture.current) return
+        const distance = event.clientY - handleGesture.current.y
+        handleGesture.current.moved = Math.abs(distance) > 10
+        if (distance >= 40) onClose()
+      }} onPointerCancel={() => { handleGesture.current = { moved: true } }}><span aria-hidden="true" /></button>
       <div className="advertising-header-top"><BrandLogo className="advertising-navbar-logo" />
       <button type="button" className="dialog-close" aria-label="Close advertising enquiry" onClick={onClose}><X size={20} /></button>
       </div>

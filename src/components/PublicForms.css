@@ -49,14 +49,17 @@
 .advertising-dialog .advertising-reply-note { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 12px 0 0; font-size: 12px; }
 .advertising-reply-note svg, .advertising-success > svg { color: #16a34a; flex: none; }
 .advertising-success { padding-top: 16px; }
+.advertising-sheet-handle { display: none; }
 @media (max-width: 767px) {
   .form-dialog.advertising-dialog {
     top: calc(var(--visible-top) + var(--visible-height)); left: var(--visible-left);
     width: var(--visible-width); max-width: none; max-height: calc(var(--visible-height) - max(16px, env(safe-area-inset-top)));
     transform: translateY(-100%); border-radius: 22px 22px 0 0; border-bottom: 0;
   }
-  .advertising-dialog-header { padding-top: 16px; }
+  .advertising-dialog-header { padding-top: 28px; }
   .advertising-dialog-header .dialog-close { display: none; }
-  .advertising-dialog-header::before { content: ''; position: absolute; top: 6px; left: calc(50% - 18px); width: 36px; height: 4px; background: #ffffff66; border-radius: 999px; }
+  .advertising-sheet-handle { position: absolute; top: 0; left: calc(50% - 44px); display: flex; align-items: center; justify-content: center; width: 88px; height: 28px; border: 0; background: transparent; cursor: grab; touch-action: none; }
+  .advertising-sheet-handle span { width: 36px; height: 4px; background: #ffffff99; border-radius: 999px; }
+  .advertising-sheet-handle:focus-visible { outline: 2px solid white; outline-offset: -3px; border-radius: 12px; }
   .advertising-dialog-body { padding: 20px 20px calc(20px + env(safe-area-inset-bottom, 0px)); }
 }
