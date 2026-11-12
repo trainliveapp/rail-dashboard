@@ -6,7 +6,6 @@ import path from 'node:path'
 const root = fileURLToPath(new URL('../', import.meta.url))
 const output = path.join(root, 'src/assets/optimized')
 const assets = {
-  brandLogo: ['../../Avviso-1/PNG/Logo-PNG-transparent.png', [1200]],
   ad1: ['1ad.png', [480, 960, 1440]],
   ad2: ['2ad.png', [480, 960, 1440]],
   ad3: ['3ad.png', [480, 960, 1440]],
@@ -52,7 +51,7 @@ for (const [key, [filename, widths]] of Object.entries(assets)) {
   for (const width of widths) {
     const name = `${key}-${width}.webp`
     const { data, info } = await sharp(source).rotate().resize({ width, withoutEnlargement: true })
-      .webp({ quality: key.startsWith('report') ? 84 : 80, lossless: key === 'brandLogo', effort: 5 }).toBuffer({ resolveWithObject: true })
+      .webp({ quality: key.startsWith('report') ? 84 : 80, effort: 5 }).toBuffer({ resolveWithObject: true })
     await writeFile(path.join(output, name), data)
     const binding = `${key}${width}`
     imports.push(`import ${binding} from '../assets/optimized/${name}'`)

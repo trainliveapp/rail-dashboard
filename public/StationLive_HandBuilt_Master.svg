@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1536" height="768" viewBox="0 0 1536 768" role="img" aria-label="Station Live logo">
+<g fill="#fff">
+<!-- Three broadcast rays: clean constant widths and rounded caps -->
+<path d="M158 238 L221 264" stroke="white" stroke-width="34" stroke-linecap="round" fill="none"/>
+<path d="M221 143 L278 203" stroke="white" stroke-width="34" stroke-linecap="round" fill="none"/>
+<path d="M347 94 L347 178" stroke="white" stroke-width="34" stroke-linecap="round" fill="none"/>
+<!-- train body and its empty windscreen, geometrically defined -->
+<path fill-rule="evenodd" d="M383 253 H585 C653 253 707 306 707 374 V606 C707 649 684 677 642 692 L694 762 H639 L594 700 H373 L328 762 H273 L326 692 C283 677 261 649 261 606 V374 C261 306 315 253 383 253 Z M385 307 H583 C625 307 655 339 655 379 V478 C655 519 626 548 584 548 H383 C342 548 312 519 312 478 V379 C312 339 343 307 385 307 Z M362 590 A34 34 0 1 0 362 658 A34 34 0 1 0 362 590 Z M608 590 A34 34 0 1 0 608 658 A34 34 0 1 0 608 590 Z"/>
+<!-- Broadcast arc -->
+<path d="M435 178 H584 C677 178 746 231 803 318" stroke="white" stroke-width="36" stroke-linecap="round" fill="none"/>
+<!-- LIVE capsule; red dot intentionally masks the left edge -->
+<path fill-rule="evenodd" d="M887 283 H1415 C1484 283 1535 336 1535 405 V502 C1535 573 1484 623 1415 623 H884 C812 623 765 572 765 502 V405 C765 336 815 283 887 283 Z M888 321 H1415 C1460 321 1498 357 1498 405 V502 C1498 550 1460 587 1415 587 H888 C841 587 802 550 802 502 V405 C802 357 841 321 888 321 Z"/>
+<path d="M945.00,375.00 L984.21,375.00 L984.21,499.80 L1053.04,499.80 L1053.04,530.00 L945.00,530.00 L945.00,375.00 Z M1077.91,375.00 L1117.12,375.00 L1117.12,530.00 L1077.91,530.00 L1077.91,375.00 Z M1137.37,375.00 L1176.81,375.00 L1217.12,489.41 L1257.37,375.00 L1296.78,375.00 L1240.46,530.00 L1193.69,530.00 L1137.37,375.00 Z M1316.96,375.00 L1422.75,375.00 L1422.75,405.23 L1356.17,405.23 L1356.17,434.06 L1418.81,434.06 L1418.81,464.29 L1356.17,464.29 L1356.17,499.80 L1425.00,499.80 L1425.00,530.00 L1316.96,530.00 L1316.96,375.00 Z" fill="white" fill-rule="nonzero"/>
+</g>
+<circle cx="811" cy="456" r="91" fill="#ff1018"/>
+</svg>

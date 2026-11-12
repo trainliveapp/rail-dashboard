@@ -27,7 +27,7 @@ export default function FloatingTopBar() {
         >
           {menuOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
-        <BrandLogo className="h-8 max-w-[145px]" />
+        <BrandLogo className="h-8 w-auto max-w-[145px] object-left" />
 
         {menuOpen && (
           <>

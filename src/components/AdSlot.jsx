@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { images } from '../data/optimizedImages'
 import { loadImage } from '../lib/imageLoading'
 import ImageBackground from './ImageBackground'
+import BrandLogo from './BrandLogo'
 
 const AD_SIZES = '(max-width: 960px) calc(100vw - 32px), 896px'
 
@@ -60,14 +61,8 @@ export default function AdSlot({ size = 'leaderboard', className = '' }) {
       </div>
 
       <div className="ad-content relative flex h-full flex-col justify-between p-4 text-white sm:p-7">
-        <div className="relative aspect-[3.1] w-[clamp(150px,24vw,260px)] overflow-hidden">
-          <img
-            src={images.brandLogo.src}
-            alt="Avviso Live"
-            loading="lazy"
-            decoding="async"
-            className="absolute left-0 top-0 w-full max-w-none -translate-x-[15%] -translate-y-[35%]"
-          />
+        <div className="w-[clamp(100px,14vw,150px)] max-w-full self-start">
+          <BrandLogo className="block h-auto w-full" />
         </div>
       </div>
 

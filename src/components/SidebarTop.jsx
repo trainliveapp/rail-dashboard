@@ -41,7 +41,7 @@ export default function SidebarTop({ className = '', onSearch }) {
           >
             {menuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
-          <BrandLogo className="h-10 max-w-[175px]" />
+          <BrandLogo className="h-10 w-auto max-w-[175px] object-left" />
         </div>
         {menuOpen && (
           <>

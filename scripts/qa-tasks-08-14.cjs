@@ -106,7 +106,7 @@ async function setup(page, state) {
     assert.equal(await enquiry.evaluate(e => e.scrollWidth <= e.clientWidth), true)
     await enquiry.screenshot({ path: 'tmp/qa/task13-enquiry-form-390.png' })
     for (let i = 0; i < 8; i++) { await page.keyboard.press('Tab'); assert.equal(await enquiry.evaluate(e => e.contains(document.activeElement)), true) }
-    assert.equal(await enquiry.getByRole('img', { name: 'Avviso Live', exact: true }).count(), 1)
+    assert.equal(await enquiry.getByRole('img', { name: 'Station Live', exact: true }).count(), 1)
     await enquiry.getByLabel('Business email', { exact: true }).fill('business@example.test')
     await enquiry.getByLabel('Company', { exact: true }).fill('Test company')
     await enquiry.getByLabel('Message', { exact: true }).fill('Please send advertising rates and available formats.')
