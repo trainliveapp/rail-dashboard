@@ -2,20 +2,22 @@ import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 
 // Native modal dialogs handle focus trapping, nested modals and focus return.
-export default function ModalDialog({ onClose, children, ...props }) {
+export default function ModalDialog({ onClose, children, dialogRef, ...props }) {
   const ref = useRef(null)
   useEffect(() => {
     const dialog = ref.current
+    if (dialogRef) dialogRef.current = dialog
     const previous = document.activeElement
     const overflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     dialog.showModal()
     return () => {
       dialog.close()
+      if (dialogRef) dialogRef.current = null
       document.body.style.overflow = overflow
       if (previous?.isConnected) previous.focus({ preventScroll: true })
     }
-  }, [])
+  }, [dialogRef])
   return createPortal(<dialog {...props} ref={ref} tabIndex={-1} onKeyDown={(event) => {
     if (event.key !== 'Tab') return
     event.stopPropagation()
