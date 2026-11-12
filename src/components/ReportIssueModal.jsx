@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import useReportDialog from '../lib/useReportDialog'
+import useBottomSheet from '../lib/useBottomSheet'
 import { createPortal } from 'react-dom'
 import { X, ArrowRight } from 'lucide-react'
 import { reportCategories } from '../data/mockData'
@@ -24,11 +25,19 @@ const categoryTone = {
 
 
 export default function ReportIssueModal({ initialStation = null, onClose, onReportSubmitted }) {
-  const panelRef = useReportDialog(onClose)
+  const closeRef = useRef(onClose)
+  const panelRef = useReportDialog(() => closeRef.current(), { watchBack: true })
   const [category, setCategory] = useState('')
   const [stationQuery, setStationQuery] = useState(initialStation?.name || '')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [saved, setSaved] = useState(false)
+  const { requestClose, handleProps } = useBottomSheet({
+    panelRef, onClose, busy: submitting,
+    dirty: !saved && Boolean(category || stationQuery !== (initialStation?.name || '')),
+    discardMessage: 'Discard your unsent issue report?',
+  })
+  closeRef.current = requestClose
   const cooldown = useReportCooldown()
 
   const matchedStation = resolveReportStation(stationQuery)
@@ -58,6 +67,7 @@ export default function ReportIssueModal({ initialStation = null, onClose, onRep
         whereOn: null,
       }
       const savedReport = canUndo ? await undoReport(cooldown.reportId(matchedStation.name, category)) : await postReport(report)
+      setSaved(true)
       onReportSubmitted?.(savedReport)
     } catch (err) {
       setError(err.message || 'Could not submit that report, try again.')
@@ -67,7 +77,7 @@ export default function ReportIssueModal({ initialStation = null, onClose, onRep
   }
 
   return createPortal(
-    <div className="report-overlay viewport-overlay fixed inset-0 z-[2000] flex items-center justify-center p-3 sm:p-4 bg-slate-900/40"
+    <div className="report-overlay report-issue-overlay viewport-overlay fixed inset-0 z-[2000] flex items-center justify-center p-3 sm:p-4 bg-slate-900/40"
       onPointerDown={(event) => event.stopPropagation()}
       onClick={(event) => event.stopPropagation()}
       onDoubleClick={(event) => event.stopPropagation()}
@@ -75,12 +85,13 @@ export default function ReportIssueModal({ initialStation = null, onClose, onRep
       onTouchStart={(event) => event.stopPropagation()}
       onTouchMove={(event) => event.stopPropagation()}
     >
-      <form ref={panelRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="report-title" onSubmit={handleSubmit} className="report-panel bg-slate-50 rounded-3xl shadow-2xl p-4 sm:p-8">
+      <form ref={panelRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="report-title" onSubmit={handleSubmit} className="report-panel report-issue-panel bg-slate-50 rounded-3xl shadow-2xl p-4 sm:p-8">
+        <button type="button" className="report-sheet-handle" aria-label="Close issue report" {...handleProps}><span aria-hidden="true" /></button>
         <div className="flex shrink-0 items-start justify-between gap-3 mb-4">
           <div>
             <h2 id="report-title" className="text-xl font-bold text-slate-900">Seen Something?</h2>
           </div>
-          <button type="button" onClick={onClose} aria-label="Close" className="w-11 h-11 rounded-full bg-white flex items-center justify-center text-slate-500 shrink-0">
+          <button type="button" onClick={requestClose} aria-label="Close" className="report-issue-close w-11 h-11 rounded-full bg-white flex items-center justify-center text-slate-500 shrink-0">
             <X size={16} />
           </button>
         </div>
@@ -88,6 +99,7 @@ export default function ReportIssueModal({ initialStation = null, onClose, onRep
         <div className="min-w-0">
         <ReportStationSearch value={stationQuery} onChange={(value) => {
           setStationQuery(value)
+          setSaved(false)
           setError('')
         }} />
 
@@ -101,6 +113,7 @@ export default function ReportIssueModal({ initialStation = null, onClose, onRep
                 disabled={submitting}
                 onClick={() => {
                   setCategory(cat.key)
+                  setSaved(false)
                   setError('')
                 }}
                 aria-pressed={active}

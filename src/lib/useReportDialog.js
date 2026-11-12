@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 
 // Keep keyboard and assistive-technology navigation inside the open report.
-export default function useReportDialog(onClose) {
+export default function useReportDialog(onClose, { watchBack = false } = {}) {
   const panelRef = useRef(null)
   const closeRef = useRef(onClose)
   closeRef.current = onClose
@@ -35,11 +35,24 @@ export default function useReportDialog(onClose) {
       }
     }
     document.addEventListener('keydown', onKeyDown)
+    // Android Back can dismiss this custom dialog without navigating the page.
+    // Re-arm after a close request because discarding may be cancelled.
+    let watcher
+    function watch() {
+      if (!watchBack || !window.CloseWatcher) return
+      watcher = new window.CloseWatcher()
+      watcher.addEventListener('close', () => {
+        watch()
+        closeRef.current()
+      })
+    }
+    watch()
     return () => {
+      watcher?.destroy()
       document.removeEventListener('keydown', onKeyDown)
       document.body.style.overflow = overflow
       if (previous?.isConnected) previous.focus({ preventScroll: true })
     }
-  }, [])
+  }, [watchBack])
   return panelRef
 }

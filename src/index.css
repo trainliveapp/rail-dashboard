@@ -810,6 +810,23 @@ button:disabled,
 }
 
 /* Report pickers scroll independently of the map, including with the keyboard open. */
+.report-sheet-handle { display: none; }
+@media (max-width: 767px) {
+  .report-issue-close { display: none; }
+  .report-overlay.report-issue-overlay { align-items: flex-end; padding: 0; }
+  .report-panel.report-issue-panel {
+    width: 100%; max-height: calc(var(--visible-height) - max(16px, env(safe-area-inset-top)));
+    border-radius: 22px 22px 0 0; padding-top: 32px;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)); scrollbar-gutter: auto;
+  }
+  .report-sheet-handle {
+    position: absolute; top: 0; left: calc(50% - 44px); display: flex;
+    align-items: center; justify-content: center; width: 88px; height: 28px;
+    border: 0; background: transparent; cursor: grab; touch-action: none;
+  }
+  .report-sheet-handle span { width: 36px; height: 4px; background: #94a3b8; border-radius: 999px; }
+  .report-sheet-handle:focus-visible { outline: 2px solid #0564c7; outline-offset: -3px; border-radius: 12px; }
+}
 .report-overlay {
   padding-inline: max(12px, env(safe-area-inset-left)) max(12px, env(safe-area-inset-right));
 }
@@ -842,6 +859,29 @@ button:disabled,
 }
 .report-option svg { width: clamp(22px, 6vw, 30px); height: auto; }
 .report-option > span { max-width: 100%; }
+@media (min-width: 768px) {
+  .report-panel.report-issue-panel {
+    width: min(600px, calc(var(--visible-width) - 64px));
+    max-height: min(760px, calc(var(--visible-height) - 48px));
+    padding: 28px;
+    border-radius: 24px;
+    scrollbar-width: none;
+    scrollbar-gutter: auto;
+  }
+  .report-issue-panel::-webkit-scrollbar { display: none; }
+  .report-issue-panel .report-options {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .report-issue-panel .report-option {
+    min-height: 112px;
+    padding: 12px 8px;
+    font-size: 13px;
+    line-height: 1.35;
+  }
+  .report-issue-panel .report-category-image { width: 44px; height: 44px; object-fit: cover; }
+}
 @media (max-width: 640px) {
   .report-option {
     min-height: 132px;
