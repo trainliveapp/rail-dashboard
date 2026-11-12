@@ -32,7 +32,7 @@ function StarRow({ label, value, onChange, disabled }) {
   )
 }
 
-export default function StationRatingForm({ stationName, stationId, onSubmitted, onCancel }) {
+export default function StationRatingForm({ stationName, stationId, onSubmitted, onCancel, onDraftStateChange }) {
   const { user, loading: authLoading } = useAuth()
   const [values, setValues] = useState({})
   const [review, setReview] = useState('')
@@ -44,6 +44,14 @@ export default function StationRatingForm({ stationName, stationId, onSubmitted,
   const [existingReview, setExistingReview] = useState(null)
   const [retry, setRetry] = useState(0)
   const submitLock = useRef(false)
+  useEffect(() => {
+    const dirty = !done && !loadingReview && !loadError && (
+      review !== (existingReview?.review_text || '') ||
+      CATEGORIES.some(cat => values[cat.key] !== (existingReview?.[cat.dbKey] ?? undefined))
+    )
+    onDraftStateChange?.({ dirty, busy: submitting })
+    return () => onDraftStateChange?.({ dirty: false, busy: false })
+  }, [values, review, done, loadingReview, loadError, existingReview, submitting, onDraftStateChange])
 
   useEffect(() => {
     let cancelled = false

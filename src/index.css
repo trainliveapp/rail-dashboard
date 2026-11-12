@@ -652,7 +652,7 @@ button:disabled,
   height: min(55dvh, 440px);
   max-height: calc(100dvh - env(safe-area-inset-top));
   transform: translateY(calc(100% + var(--station-sheet-drag, 0px)));
-  transition: transform 300ms ease, height 300ms ease;
+  transition: transform 220ms ease, height 300ms ease;
   pointer-events: auto;
   touch-action: pan-y;
   padding-bottom: max(8px, env(safe-area-inset-bottom));
@@ -779,7 +779,10 @@ button:disabled,
   background: white;
   touch-action: none;
   cursor: grab;
+  border: 0;
+  width: 100%;
 }
+.station-sheet-handle:focus-visible { outline: 2px solid #0564c7; outline-offset: -2px; }
 .station-sheet-handle:active { cursor: grabbing; }
 .station-sheet-handle span {
   width: 36px;

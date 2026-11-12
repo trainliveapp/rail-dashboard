@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { ChevronDown, ChevronRight, Loader2, Star } from 'lucide-react'
+import { ChevronRight, Loader2, Star } from 'lucide-react'
 import ReportCategoryImage from './ReportCategoryImage'
 import { stationReportCategories, lines } from '../data/mockData'
 import { lineColorFor } from './lineColors'
@@ -44,7 +44,6 @@ export default function StationReportSummary({ station, onRate, onViewReviews, r
   const [submittingCategory, setSubmittingCategory] = useState(null)
   const [submitNotice, setSubmitNotice] = useState('')
   const [submitError, setSubmitError] = useState('')
-  const [linesExpanded, setLinesExpanded] = useState(false)
   const cooldown = useReportCooldown()
   const submittingRef = useRef(false)
   const currentStationRef = useRef(station.id)
@@ -62,7 +61,6 @@ export default function StationReportSummary({ station, onRate, onViewReviews, r
     if (bodyRef.current) bodyRef.current.scrollTop = 0
     setSubmitNotice('')
     setSubmitError('')
-    setLinesExpanded(false)
   }, [station.id])
 
   const reportIssue = async (category) => {
@@ -136,33 +134,16 @@ export default function StationReportSummary({ station, onRate, onViewReviews, r
     .sort((a, b) => (lineOrder.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (lineOrder.get(b.id) ?? Number.MAX_SAFE_INTEGER) || a.name.localeCompare(b.name, 'en-GB'))
   const scoreLabel = score == null ? 'Loading…' : score.overallScore == null ? 'Not rated yet' : Number(score.overallScore).toFixed(1)
   const reviewActionClass = 'flex min-h-11 min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-2.5 text-xs font-semibold transition-colors [&>svg]:shrink-0 focus-visible:outline-2 focus-visible:outline-blue-600'
-  const lineNamesId = `station-line-names-${station.id}`
 
   return <div className={`station-summary ${mobile ? 'station-summary--mobile' : 'w-[min(27.5rem,calc(100vw-3rem))]'} overflow-hidden rounded-xl bg-white text-slate-900 shadow-xl`}>
     <header className={`station-summary-header shrink-0 bg-gradient-to-r from-blue-900 to-blue-600 ${mobile ? 'px-3 py-2 pr-12' : 'px-4 py-3 pr-14'}`}>
       <h3 className="station-summary-title break-words text-lg font-bold leading-tight text-white">{station.name}</h3>
       {stationLines.length > 0 && <div className="station-summary-lines">
         {mobile ? <div className="station-summary-lines-row">
-          <div className="station-summary-line-dots" aria-hidden="true">
-            {stationLines.map((line) => <span key={line.id} className="station-summary-line-dot" style={{ backgroundColor: line.color }} />)}
+          <div className="station-summary-line-dots">
+            {stationLines.map((line) => <span key={line.id} className="station-summary-line-dot" role="img" aria-label={line.name} title={line.name} style={{ backgroundColor: line.color }} />)}
           </div>
-          <button
-            type="button"
-            className="station-summary-lines-toggle"
-            aria-expanded={linesExpanded}
-            aria-controls={lineNamesId}
-            aria-label={linesExpanded ? 'Hide station lines' : 'Show station lines'}
-            onClick={() => setLinesExpanded((value) => !value)}
-          >
-            <ChevronDown aria-hidden="true" />
-          </button>
         </div> : <div className="flex flex-wrap gap-1">{stationLines.map((line) => <span key={line.id} className="rounded-full px-2 py-0.5 text-[10px] font-semibold text-white" style={{ backgroundColor: line.color }}>{line.name}</span>)}</div>}
-        {mobile && linesExpanded && <ul id={lineNamesId} className="station-summary-line-names">
-          {stationLines.map((line) => <li key={line.id}>
-            <span className="station-summary-line-dot" aria-hidden="true" style={{ backgroundColor: line.color }} />
-            <span>{line.name}</span>
-          </li>)}
-        </ul>}
       </div>}
     </header>
     <div ref={bodyRef} className={`station-summary-body relative min-h-0 overflow-y-auto overscroll-contain ${mobile ? 'p-2.5' : 'max-h-[min(65dvh,560px)] p-3'}`}>

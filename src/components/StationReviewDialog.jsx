@@ -1,10 +1,10 @@
-﻿import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { ArrowLeft, ChevronRight, Star, X } from 'lucide-react'
 import StationRatingForm from './StationRatingForm'
 import { getStationReviews, subscribeToStationReviews } from '../lib/stationRatings'
 
-export default function StationReviewDialog({ stationId, stationName, initialView = 'rating', onClose, embedded = false }) {
+export default function StationReviewDialog({ stationId, stationName, initialView = 'rating', onClose, embedded = false, onDraftStateChange }) {
   const [view, setView] = useState(initialView)
   const [reviews, setReviews] = useState([])
   const [status, setStatus] = useState('loading')
@@ -64,7 +64,7 @@ export default function StationReviewDialog({ stationId, stationName, initialVie
           <h2 className="font-bold text-slate-900">{view === 'rating' ? 'Write a review' : 'Station reviews'}</h2>
           <button type="button" onClick={onClose} aria-label={view === 'rating' ? 'Close review form' : 'Close station reviews'} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100"><X size={20} /></button>
         </div>
-        {view === 'rating' ? <StationRatingForm stationId={stationId} stationName={stationName} onCancel={onClose} onSubmitted={() => { setPage(0); setRevision((n) => n + 1); setView('reviews') }} /> : <div className="p-4">
+        {view === 'rating' ? <StationRatingForm onDraftStateChange={onDraftStateChange} stationId={stationId} stationName={stationName} onCancel={onClose} onSubmitted={() => { setPage(0); setRevision((n) => n + 1); setView('reviews') }} /> : <div className="p-4">
           <button type="button" onClick={onClose} className="mb-3 flex items-center gap-1 text-xs font-semibold text-slate-500"><ArrowLeft size={14} /> Back to station</button>
           <h3 className="mb-3 text-base font-bold text-slate-900">Reviews for {stationName}</h3>
           {status === 'loading' ? <p role="status" className="text-sm text-slate-500">Loading reviews…</p> : status === 'error' ? <div role="alert" className="text-sm text-slate-600"><p>Reviews could not be loaded.</p><button type="button" onClick={() => setRevision((n) => n + 1)} className="mt-2 font-semibold text-blue-700">Try again</button></div> : reviews.length === 0 ? <p className="text-sm text-slate-500">{page === 0 ? 'No reviews yet. Be the first to share your experience.' : 'No more reviews. Return to the previous page.'}</p> : <div className={embedded ? 'space-y-3' : 'max-h-[45dvh] space-y-3 overflow-y-auto'}>
