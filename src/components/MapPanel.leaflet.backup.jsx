@@ -8,6 +8,7 @@ import { tubeLineGeometry } from '../data/tubeLineGeometry'
 import { getStationScores } from '../lib/stationRatings'
 import ReportIssueModal from './ReportIssueModal'
 import StationPopup from './StationPopup'
+import { animateHeadingUp } from '../lib/travelHeading'
 import { attachCooperativeMapGestures } from '../lib/cooperativeMapGestures'
 
 const CENTER = [51.5246, -0.1339]
@@ -51,7 +52,7 @@ function liveArrowIcon(heading = 0) {
   return L.divIcon({
     html: `<div style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;">
       <div style="width:34px;height:34px;border-radius:9999px;background:rgba(37,99,235,0.18);position:absolute;"></div>
-      <div style="width:22px;height:22px;border-radius:9999px;background:#2563eb;border:3px solid white;box-shadow:0 1px 4px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;transform:rotate(${heading}deg);transition:transform 0.4s ease;">
+      <div data-travel-arrow style="width:22px;height:22px;border-radius:9999px;background:#2563eb;border:3px solid white;box-shadow:0 1px 4px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;transform:rotate(${heading}deg);">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="white" stroke="none"><path d="M12 2 L19 21 L12 17 L5 21 Z"/></svg>
       </div>
     </div>`,
@@ -199,6 +200,33 @@ function LiveFollow({ lat, lng, suspended }) {
     map.panTo([lat, lng], { animate: true, duration: 0.5 })
   }, [lat, lng, suspended, map])
   return null
+}
+
+// Markers and tooltips remain in the plugin's upright pane. Only the
+// direction arrow adds the current map bearing to its geographic heading.
+function HeadingUp({ location, suspended }) {
+  const map = useMap()
+  useEffect(() => {
+    if (suspended || !location?.moving || !Number.isFinite(location.heading)) return
+    return animateHeadingUp(map, location.heading)
+  }, [map, location, suspended])
+  return null
+}
+
+function LiveDirectionMarker({ location }) {
+  const map = useMap()
+  const marker = useRef(null)
+  const icon = useMemo(() => liveArrowIcon(0), [])
+  useEffect(() => {
+    const align = () => {
+      const arrow = marker.current?.getElement()?.querySelector('[data-travel-arrow]')
+      if (arrow) arrow.style.transform = `rotate(${(location.heading ?? 0) + map.getBearing()}deg)`
+    }
+    align()
+    map.on('rotate', align)
+    return () => map.off('rotate', align)
+  }, [map, location.heading])
+  return <Marker ref={marker} position={[location.lat, location.lng]} icon={icon} zIndexOffset={1000} />
 }
 
 function MapInteractionWatcher({ onUserDrag }) {
@@ -436,7 +464,8 @@ export default function MapPanel({
           <>
             <MapInteractionWatcher onUserDrag={() => setFollowSuspended(true)} />
             <LiveFollow lat={liveLocation.lat} lng={liveLocation.lng} suspended={followSuspended} />
-            <Marker position={[liveLocation.lat, liveLocation.lng]} icon={liveArrowIcon(liveLocation.heading)} zIndexOffset={1000} />
+            <HeadingUp location={liveLocation} suspended={followSuspended} />
+            <LiveDirectionMarker location={liveLocation} />
           </>
         )}
 

@@ -6,11 +6,11 @@ export function locationErrorMessage(error) {
 }
 
 export function positionToLocation(position) {
-  const { latitude: lat, longitude: lng, heading, accuracy } = position.coords
+  const { latitude: lat, longitude: lng, heading, accuracy, speed } = position.coords
   if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) {
     throw new Error('No valid location was returned. Please retry.')
   }
-  return { lat, lng, heading: Number.isFinite(heading) ? heading : 0, accuracy }
+  return { lat, lng, heading: Number.isFinite(heading) && heading >= 0 && heading < 360 ? heading : null, accuracy, speed: Number.isFinite(speed) && speed >= 0 ? speed : null, timestamp: position.timestamp ?? Date.now() }
 }
 
 export function requestMapLocation(geolocation = navigator.geolocation, secure = window.isSecureContext) {

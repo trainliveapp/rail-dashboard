@@ -1,3 +1,4 @@
+import { updateTravelHeading } from '../lib/travelHeading'
 import { requestMapLocation, locationErrorMessage, positionToLocation } from '../lib/mapLocation'
 import { useState, useRef, useEffect } from 'react'
 import TopPromoBar from '../components/TopPromoBar'
@@ -16,21 +17,6 @@ import Footer from '../components/Footer'
 import AdSlot from '../components/AdSlot'
 import { nearbyToggles, mapLayerToggles } from '../data/mockData'
 import { useJourneyPlanner } from '../lib/useJourneyPlanner'
-
-// Most phones only report GPS heading while actually moving at a decent
-// pace, it's frequently null. When that happens, this derives a heading
-// from the last two fixes instead, so the live arrow still points the
-// direction of travel rather than freezing at whatever it last had.
-function bearingBetween(a, b) {
-  const toRad = (deg) => (deg * Math.PI) / 180
-  const toDeg = (rad) => (rad * 180) / Math.PI
-  const lat1 = toRad(a.lat)
-  const lat2 = toRad(b.lat)
-  const dLng = toRad(b.lng - a.lng)
-  const y = Math.sin(dLng) * Math.cos(lat2)
-  const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng)
-  return (toDeg(Math.atan2(y, x)) + 360) % 360
-}
 
 export default function HomeDashboard() {
   const [nearby, setNearby] = useState(nearbyToggles)
@@ -135,20 +121,10 @@ export default function HomeDashboard() {
       (pos) => {
         let fix
         try { fix = positionToLocation(pos) } catch (error) { setLiveLocationError(locationErrorMessage(error)); return }
-        const { lat, lng } = fix
         setLiveLocationError('')
-        let heading = Number.isFinite(pos.coords.heading) ? pos.coords.heading : null
-
-        const prev = prevFixRef.current
-        if (heading == null && prev) {
-          const moved = Math.hypot(lat - prev.lat, lng - prev.lng)
-          // ~5m threshold, ignores GPS jitter while stationary so the arrow
-          // doesn't spin randomly when someone's standing still.
-          if (moved > 0.00005) heading = bearingBetween(prev, { lat, lng })
-        }
-        const resolvedHeading = heading ?? prev?.heading ?? 0
-        prevFixRef.current = { lat, lng, heading: resolvedHeading }
-        setLiveLocation({ lat, lng, heading: resolvedHeading, accuracy: fix.accuracy })
+        const travel = updateTravelHeading(prevFixRef.current, fix)
+        prevFixRef.current = travel
+        setLiveLocation({ ...fix, heading: travel.heading, moving: travel.moving })
       },
       (err) => {
         setLiveLocationError(locationErrorMessage(err))

@@ -56,10 +56,10 @@ test('Locate requests a fix once, returns validated coordinates and accuracy', a
   const result = await requestMapLocation({ getCurrentPosition(success, error, options) {
     calls++
     assert.deepEqual(options, { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 })
-    success({ coords: { latitude: 51.5, longitude: -0.12, heading: null, accuracy: 20 } })
+    success({ coords: { latitude: 51.5, longitude: -0.12, heading: null, accuracy: 20 }, timestamp: 1000 })
   } }, true)
   assert.equal(calls, 1)
-  assert.deepEqual(result, { lat: 51.5, lng: -0.12, heading: 0, accuracy: 20 })
+  assert.deepEqual(result, { lat: 51.5, lng: -0.12, heading: null, accuracy: 20, speed: null, timestamp: 1000 })
 })
 
 test('insecure, unavailable, invalid and denied/timeout requests produce retryable errors', async () => {
