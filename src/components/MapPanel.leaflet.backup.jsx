@@ -2,6 +2,7 @@ import { useRef, useEffect, useState, useMemo } from 'react'
 import { MapContainer, TileLayer, Polyline, Marker, Popup, Tooltip, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet-rotate'
+import navigationIconUrl from '../assets/station-live-navigation-clean.svg'
 import { LocateFixed, Flag, Plus, Minus, CheckCircle2 } from 'lucide-react'
 import { lines, housingPins, coffeePins, liveEventPin, stations } from '../data/mockData'
 import { tubeLineGeometry } from '../data/tubeLineGeometry'
@@ -48,12 +49,13 @@ function segmentInBounds(segment, bounds) {
   )
 }
 
-function liveArrowIcon(heading = 0) {
+// The supplied artwork points northeast; offset it to north before applying GPS heading.
+function liveArrowIcon() {
   return L.divIcon({
     html: `<div style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;">
       <div style="width:34px;height:34px;border-radius:9999px;background:rgba(37,99,235,0.18);position:absolute;"></div>
-      <div data-travel-arrow style="width:22px;height:22px;border-radius:9999px;background:#2563eb;border:3px solid white;box-shadow:0 1px 4px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;transform:rotate(${heading}deg);">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="white" stroke="none"><path d="M12 2 L19 21 L12 17 L5 21 Z"/></svg>
+      <div data-travel-arrow style="width:28px;height:28px;transform:rotate(0deg);">
+        <img src="${navigationIconUrl}" alt="Direction of travel" width="28" height="28" draggable="false" style="display:block;transform:rotate(-45deg);filter:drop-shadow(0 1px 4px rgba(0,0,0,.4));" />
       </div>
     </div>`,
     className: '',
@@ -216,7 +218,7 @@ function HeadingUp({ location, suspended }) {
 function LiveDirectionMarker({ location }) {
   const map = useMap()
   const marker = useRef(null)
-  const icon = useMemo(() => liveArrowIcon(0), [])
+  const icon = useMemo(() => liveArrowIcon(), [])
   useEffect(() => {
     const align = () => {
       const arrow = marker.current?.getElement()?.querySelector('[data-travel-arrow]')
