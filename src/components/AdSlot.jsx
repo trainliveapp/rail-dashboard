@@ -60,10 +60,8 @@ export default function AdSlot({ size = 'leaderboard', className = '' }) {
         <div className="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-black/35 to-transparent" />
       </div>
 
-      <div className="ad-content relative flex h-full flex-col justify-between p-4 text-white sm:p-7">
-        <div className="w-[clamp(100px,14vw,150px)] max-w-full self-start">
-          <BrandLogo className="block h-auto w-full" />
-        </div>
+      <div className="absolute left-2 top-2 z-10 w-[clamp(100px,14vw,150px)] max-w-full">
+        <BrandLogo className="block h-auto w-full" />
       </div>
 
       <div className="absolute bottom-1 left-1/2 z-10 flex -translate-x-1/2 items-center -space-x-2" role="tablist" aria-label="Advertisement slides">
