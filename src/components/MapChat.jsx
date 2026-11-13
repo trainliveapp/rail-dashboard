@@ -2100,7 +2100,7 @@ export default function MapChat({ launcherTarget = null }) {
                       mainChannelListRef.current?.querySelector("button")?.focus();
                     }
                   }}
-                  placeholder="Search channels"
+                  placeholder="Search "
                   autoComplete="off"
                   className="min-h-12 w-full min-w-0 rounded-lg border border-white/15 bg-white/10 px-3 text-[17px] text-white outline-none placeholder:text-white/60 focus:border-white/50 focus:ring-2 focus:ring-white/20"
                 />
