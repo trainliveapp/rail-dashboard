@@ -24,7 +24,7 @@ export default function NavBar({ mapTheme = 'dark', onMapThemeChange = null }) {
     <div className="relative bg-blue-700 border-b border-blue-800 text-white">
       <div className="flex min-w-0 items-center justify-between gap-3 px-3 py-3 sm:px-4">
         <div className="flex min-w-0 items-center gap-2">
-          <BrandLogo className="h-8 w-auto max-w-[120px] object-left sm:h-10 sm:max-w-[170px]" />
+          <BrandLogo className="h-10 w-auto max-w-[150px] object-left sm:h-12 sm:max-w-[200px]" />
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <div className="flex items-center gap-1 rounded-lg border border-white/15 bg-white/10 p-1" role="group" aria-label="Map theme">
