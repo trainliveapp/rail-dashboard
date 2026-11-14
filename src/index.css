@@ -937,3 +937,9 @@ button:disabled,
 @media (prefers-reduced-motion: reduce) {
   .map-location-toast span { animation: none; }
 }
+/* Keep the live arrow above stations visually, but let taps and gestures pass
+   through its DivIcon wrapper and all nested artwork (including SVGs). */
+.leaflet-marker-icon.live-location-arrow,
+.leaflet-marker-icon.live-location-arrow * {
+  pointer-events: none !important;
+}

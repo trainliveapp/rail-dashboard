@@ -59,7 +59,7 @@ function liveArrowIcon() {
         <img src="${navigationIconUrl}" alt="Direction of travel" width="28" height="28" draggable="false" style="display:block;transform:rotate(-45deg);filter:drop-shadow(0 1px 4px rgba(0,0,0,.4));" />
       </div>
     </div>`,
-    className: '',
+    className: 'live-location-arrow',
     iconSize: [36, 36],
     iconAnchor: [18, 18],
   })
@@ -229,7 +229,7 @@ function LiveDirectionMarker({ location, stale }) {
     map.on('rotate', align)
     return () => map.off('rotate', align)
   }, [map, location.heading])
-  return <Marker ref={marker} position={[location.lat, location.lng]} icon={icon} opacity={stale ? 0.45 : 1} title={stale ? "Last known location (GPS unavailable)" : "Current location"} zIndexOffset={1000} />
+  return <Marker ref={marker} position={[location.lat, location.lng]} icon={icon} interactive={false} keyboard={false} opacity={stale ? 0.45 : 1} title={stale ? "Last known location (GPS unavailable)" : "Current location"} zIndexOffset={1000} />
 }
 
 function MapInteractionWatcher({ onUserDrag }) {
