@@ -1,5 +1,5 @@
 import { updateTravelHeading } from '../lib/travelHeading'
-import { requestMapLocation, locationErrorMessage, positionToLocation } from '../lib/mapLocation'
+import { locationErrorMessage, positionToLocation, isReliableMapLocation } from '../lib/mapLocation'
 import { useState, useRef, useEffect } from 'react'
 import TopPromoBar from '../components/TopPromoBar'
 import NavBar from '../components/NavBar'
@@ -46,12 +46,6 @@ export default function HomeDashboard() {
   const [liveLocationEnabled, setLiveLocationEnabled] = useState(false)
   const [liveLocationError, setLiveLocationError] = useState('')
   const [liveLocationPending, setLiveLocationPending] = useState(false)
-  const locationRequestRef = useRef(null)
-  const locationMountedRef = useRef(true)
-  useEffect(() => {
-    locationMountedRef.current = true
-    return () => { locationMountedRef.current = false }
-  }, [])
   const [stationActionsNode, setStationActionsNode] = useState(null)
   const [desktopActionsNode, setDesktopActionsNode] = useState(null)
   const [isMobileLayout, setIsMobileLayout] = useState(() => window.matchMedia('(max-width: 767px)').matches)
@@ -63,6 +57,7 @@ export default function HomeDashboard() {
     mediaQuery.addEventListener('change', updateLayout)
     return () => mediaQuery.removeEventListener('change', updateLayout)
   }, [])
+  const [locationAttempt, setLocationAttempt] = useState(0)
   const watchIdRef = useRef(null)
   const prevFixRef = useRef(null)
 
@@ -77,26 +72,11 @@ export default function HomeDashboard() {
   const wantsLiveLocation = liveLocationEnabled || usingCurrentLocation
 
   const locateLiveLocation = () => {
-    if (locationRequestRef.current) return locationRequestRef.current
-    setLiveLocationPending(true)
     setLiveLocationError('')
-    const request = requestMapLocation()
-      .then(location => {
-        if (!locationMountedRef.current) return null
-        setLiveLocation(location)
-        setLiveLocationEnabled(true)
-        return location
-      })
-      .catch(error => {
-        if (locationMountedRef.current) setLiveLocationError(locationErrorMessage(error))
-        return null
-      })
-      .finally(() => {
-        locationRequestRef.current = null
-        if (locationMountedRef.current) setLiveLocationPending(false)
-      })
-    locationRequestRef.current = request
-    return request
+    setLiveLocationPending(true)
+    setLiveLocationEnabled(true)
+    if (watchIdRef.current == null) setLocationAttempt(value => value + 1)
+    else setLiveLocationPending(false)
   }
 
   useEffect(() => {
@@ -106,40 +86,55 @@ export default function HomeDashboard() {
         watchIdRef.current = null
       }
       prevFixRef.current = null
-      setLiveLocation(null)
-      setLiveLocationError('')
       return
     }
-    if (!navigator.geolocation) {
-      setLiveLocationError('Location is not available on this device.')
+    if (!window.isSecureContext || !navigator.geolocation) {
+      setLiveLocationError('Location requires HTTPS and device location permission.')
+      setLiveLocationPending(false)
       return
     }
 
     setLiveLocationError('')
+    let active = true
 
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
+        if (!active) return
         let fix
-        try { fix = positionToLocation(pos) } catch (error) { setLiveLocationError(locationErrorMessage(error)); return }
+        try { fix = positionToLocation(pos) } catch (error) { setLiveLocationPending(false); setLiveLocationError(locationErrorMessage(error)); return }
+        if (!isReliableMapLocation(fix)) {
+          setLiveLocationError('Waiting for an accurate location.')
+          setLiveLocationPending(false)
+          return
+        }
+        setLiveLocationPending(false)
         setLiveLocationError('')
         const travel = updateTravelHeading(prevFixRef.current, fix)
         prevFixRef.current = travel
         setLiveLocation({ ...fix, heading: travel.heading, moving: travel.moving })
       },
       (err) => {
+        if (!active) return
+        setLiveLocationPending(false)
         setLiveLocationError(locationErrorMessage(err))
+        if (err.code === 1 && watchIdRef.current != null) {
+          navigator.geolocation.clearWatch(watchIdRef.current)
+          watchIdRef.current = null
+          setLiveLocationEnabled(false)
+        }
         console.warn('Live location unavailable:', err.message)
       },
       { enableHighAccuracy: true, maximumAge: 4000, timeout: 10000 }
     )
 
     return () => {
+      active = false
       if (watchIdRef.current != null) {
         navigator.geolocation.clearWatch(watchIdRef.current)
         watchIdRef.current = null
       }
     }
-  }, [wantsLiveLocation])
+  }, [wantsLiveLocation, locationAttempt])
 
   const toggleNearby = (i) =>
     setNearby((prev) => prev.map((item, idx) => (idx === i ? { ...item, enabled: !item.enabled } : item)))

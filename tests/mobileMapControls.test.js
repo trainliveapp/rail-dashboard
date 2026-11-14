@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { attachCooperativeMapGestures } from '../src/lib/cooperativeMapGestures.js'
-import { requestMapLocation, locationErrorMessage } from '../src/lib/mapLocation.js'
+import { requestMapLocation, locationErrorMessage, isReliableMapLocation } from '../src/lib/mapLocation.js'
 
 function fixture() {
   const listeners = new Map()
@@ -35,6 +35,8 @@ test('two-finger gestures retain pinch/rotation and stop automatic follow', () =
   const f = fixture()
   f.emit('touchstart', [[0, 0]])
   f.emit('touchstart', [[0, 0], [30, 30]])
+  assert.equal(f.interacted(), 0)
+  f.emit('touchmove', [[10, 10], [40, 40]])
   assert.equal(f.interacted(), 1)
   assert.equal(f.map.touchZoom.enabled(), true)
   assert.equal(f.map.touchRotate.enabled(), true)
@@ -137,6 +139,17 @@ test('gesture hint appears once, dismisses automatically and never blocks two-fi
   assert.deepEqual(f.hint, [true, false])
   f.emit('touchstart', [[0, 0], [30, 30]])
   assert.equal(f.hint.at(-1), false)
+  assert.equal(f.interacted(), 0)
+  f.emit('touchmove', [[10, 10], [40, 40]])
   assert.equal(f.interacted(), 1)
   f.cleanup()
+})
+
+test('follow accepts only fresh accurate GPS fixes, including after tunnels or tab suspension', () => {
+  const fix = { lat: 51.5, lng: -0.12, accuracy: 20, timestamp: 10000 }
+  assert.equal(isReliableMapLocation(fix, 11000), true)
+  for (const changed of [{ accuracy: 101 }, { accuracy: null }, { timestamp: 0 }, { timestamp: 30000 }, { lat: NaN }]) {
+    assert.equal(isReliableMapLocation({ ...fix, ...changed }, 20000), false)
+  }
+  assert.equal(isReliableMapLocation(fix, 25000), false)
 })

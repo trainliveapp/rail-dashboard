@@ -22,3 +22,12 @@ export function requestMapLocation(geolocation = navigator.geolocation, secure =
     }, reject, { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 })
   })
 }
+
+// GPS age uses the device fix timestamp, not the time the callback arrived.
+export function isReliableMapLocation(fix, now = Date.now()) {
+  return !!fix && Number.isFinite(fix.lat) && Number.isFinite(fix.lng)
+    && Math.abs(fix.lat) <= 90 && Math.abs(fix.lng) <= 180
+    && Number.isFinite(fix.accuracy) && fix.accuracy >= 0 && fix.accuracy <= 100
+    && Number.isFinite(fix.timestamp) && now - fix.timestamp >= -1000
+    && now - fix.timestamp < 15000
+}

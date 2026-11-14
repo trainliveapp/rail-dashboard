@@ -1,5 +1,6 @@
+import { isReliableMapLocation } from '../lib/mapLocation'
 import { useRef, useEffect, useState, useMemo } from 'react'
-import { MapContainer, TileLayer, Polyline, Marker, Popup, Tooltip, useMap, useMapEvents } from 'react-leaflet'
+import { MapContainer, TileLayer, Pane, Polyline, Marker, Popup, Tooltip, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet-rotate'
 import navigationIconUrl from '../assets/station-live-navigation-clean.svg'
@@ -199,7 +200,7 @@ function LiveFollow({ lat, lng, suspended }) {
   const map = useMap()
   useEffect(() => {
     if (lat == null || lng == null || suspended) return
-    map.panTo([lat, lng], { animate: true, duration: 0.5 })
+    map.panTo([lat, lng], { animate: false })
   }, [lat, lng, suspended, map])
   return null
 }
@@ -215,7 +216,7 @@ function HeadingUp({ location, suspended }) {
   return null
 }
 
-function LiveDirectionMarker({ location }) {
+function LiveDirectionMarker({ location, stale }) {
   const map = useMap()
   const marker = useRef(null)
   const icon = useMemo(() => liveArrowIcon(), [])
@@ -228,7 +229,7 @@ function LiveDirectionMarker({ location }) {
     map.on('rotate', align)
     return () => map.off('rotate', align)
   }, [map, location.heading])
-  return <Marker ref={marker} position={[location.lat, location.lng]} icon={icon} zIndexOffset={1000} />
+  return <Marker ref={marker} position={[location.lat, location.lng]} icon={icon} opacity={stale ? 0.45 : 1} title={stale ? "Last known location (GPS unavailable)" : "Current location"} zIndexOffset={1000} />
 }
 
 function MapInteractionWatcher({ onUserDrag }) {
@@ -276,7 +277,44 @@ export default function MapPanel({
 }) {
   const mapRef = useRef(null)
   const [stationScores, setStationScores] = useState({})
-  const [followSuspended, setFollowSuspended] = useState(false)
+  const [followMode, setFollowMode] = useState('off')
+  const followRef = useRef('off')
+  const startMessage = useRef(null)
+  const [locationToast, setLocationToast] = useState('')
+  const toastTimer = useRef(null)
+  const [now, setNow] = useState(Date.now())
+  const reliable = isReliableMapLocation(liveLocation, now) && !liveLocationError && !document.hidden
+  const followSuspended = followMode !== 'following' || !reliable
+  const showLocationToast = (message, duration = 2000) => {
+    clearTimeout(toastTimer.current)
+    setLocationToast(message)
+    toastTimer.current = setTimeout(() => setLocationToast(''), duration)
+  }
+  useEffect(() => {
+    const refresh = () => setNow(Date.now())
+    const timer = setInterval(refresh, 1000)
+    document.addEventListener('visibilitychange', refresh)
+    return () => {
+      clearInterval(timer)
+      clearTimeout(toastTimer.current)
+      document.removeEventListener('visibilitychange', refresh)
+    }
+  }, [])
+  useEffect(() => {
+    if (reliable && followMode === 'following' && startMessage.current) {
+      showLocationToast(startMessage.current)
+      startMessage.current = null
+    }
+  }, [reliable, followMode])
+  useEffect(() => {
+    if (!liveLocationError) return
+    showLocationToast('Location unavailable \u00b7 Check permissions')
+    if (/denied|HTTPS|not available on this device/i.test(liveLocationError)) {
+      followRef.current = 'off'
+      setFollowMode('off')
+      startMessage.current = null
+    }
+  }, [liveLocationError])
   const [gestureHint, setGestureHint] = useState(false)
   const [zoom, setZoom] = useState(16)
   const [reportContext, setReportContext] = useState(null)
@@ -312,12 +350,6 @@ export default function MapPanel({
       message: report.status === 'RESOLVED' ? 'Report deselected' : 'Report submitted',
     })
   }
-
-  // A new live-tracked journey should resume auto-follow, even if the user
-  // had paused it (by dragging) on a previous one.
-  useEffect(() => {
-    setFollowSuspended(false)
-  }, [route?.selectedOption?.id])
 
   const isOn = (list, label) => list.find((i) => i.label === label)?.enabled
   const visibleLines = highlightLines.length ? highlightLines : activeLines
@@ -371,12 +403,26 @@ export default function MapPanel({
     return boundsList.some((b) => segmentInBounds(segment, b))
   }
 
-  const suspendFollow = useMemo(() => () => setFollowSuspended(true), [])
-  const handleLocate = async () => {
-    const location = await onLocateLiveLocation?.()
-    if (!location || !mapRef.current) return
-    setFollowSuspended(false)
-    mapRef.current.flyTo([location.lat, location.lng], 15, { duration: 0.75 })
+  const suspendFollow = useMemo(() => () => {
+    if (followRef.current !== 'following') return
+    followRef.current = 'paused'
+    setFollowMode('paused')
+    startMessage.current = null
+    showLocationToast('Following paused \u00b7 Tap location to resume', 3000)
+  }, [])
+  const handleLocate = () => {
+    if (followRef.current === 'following') {
+      followRef.current = 'off'
+      setFollowMode('off')
+      startMessage.current = null
+      showLocationToast('Live following off')
+      return
+    }
+    startMessage.current = followRef.current === 'paused' ? 'Back to live location' : 'Following your location'
+    followRef.current = 'following'
+    setFollowMode('following')
+    setNow(Date.now())
+    onLocateLiveLocation?.()
   }
 
   return (
@@ -403,12 +449,18 @@ export default function MapPanel({
           attribution={MAP_THEMES[mapTheme].attribution}
           maxZoom={20}
         />
-        <TileLayer
-          url={RAILWAY_TILES}
-          attribution='&copy; OpenRailwayMap &copy; OpenStreetMap contributors'
-          maxZoom={20}
-          opacity={0.9}
-        />
+        {/* Keep railway tiles above either opaque basemap, regardless of
+            the order in which theme tiles are mounted or finish loading.
+            Nest in tilePane so leaflet-rotate transforms both tile sources
+            together; vector overlays and markers retain their higher panes. */}
+        <Pane name="railway-overlay" pane="tilePane" style={{ zIndex: 250, pointerEvents: 'none' }}>
+          <TileLayer
+            url={RAILWAY_TILES}
+            attribution='&copy; OpenRailwayMap &copy; OpenStreetMap contributors'
+            maxZoom={20}
+            opacity={0.9}
+          />
+        </Pane>
 
         {routeFitPoints.length > 0 && <RouteFit points={routeFitPoints} />}
         {route?.originStation && route?.destinationStation && (
@@ -451,7 +503,7 @@ export default function MapPanel({
             }
             return segmentsToRender.map((positions, i) => (
               <Polyline
-                key={`${mapTheme}-${name}-${i}`}
+                key={`${name}-${i}`}
                 positions={positions}
                 pathOptions={{
                   color,
@@ -464,10 +516,10 @@ export default function MapPanel({
 
         {liveLocation && (
           <>
-            <MapInteractionWatcher onUserDrag={() => setFollowSuspended(true)} />
+            <MapInteractionWatcher onUserDrag={suspendFollow} />
             <LiveFollow lat={liveLocation.lat} lng={liveLocation.lng} suspended={followSuspended} />
             <HeadingUp location={liveLocation} suspended={followSuspended} />
-            <LiveDirectionMarker location={liveLocation} />
+            <LiveDirectionMarker location={liveLocation} stale={!reliable} />
           </>
         )}
 
@@ -560,13 +612,12 @@ export default function MapPanel({
         </button>
         <button
           type="button"
-          aria-label={liveLocationPending ? 'Finding your location' : 'Locate Me'}
+          aria-label={followMode === 'following' ? 'Turn live following off' : 'Follow my location'}
+          aria-pressed={followMode === 'following' && reliable}
           aria-busy={liveLocationPending}
           title={liveLocationError ? 'Retry locating me' : 'Locate me'}
-          aria-describedby={liveLocationError ? 'map-location-status' : undefined}
-          disabled={liveLocationPending}
           onClick={handleLocate}
-          className={`w-12 h-12 ${liveLocation && !liveLocationError ? 'bg-yellow-400 hover:bg-yellow-300' : 'bg-white'} text-brand-ink shadow-sm rounded-xl flex items-center justify-center disabled:cursor-wait focus-visible:outline-2 focus-visible:outline-offset-2`}
+          className={`w-12 h-12 ${followMode === 'following' && reliable ? 'bg-yellow-400 hover:bg-yellow-300' : 'bg-white'} text-brand-ink shadow-sm rounded-xl flex items-center justify-center disabled:cursor-wait focus-visible:outline-2 focus-visible:outline-offset-2`}
         >
           <LocateFixed size={22} />
         </button>
@@ -591,12 +642,9 @@ export default function MapPanel({
         </button>
         </div>
       </div>
-      {liveLocationError && (
-        <div id="map-location-status" role="status" aria-live="polite" className="absolute left-3 right-[76px] top-[68px] z-[1000] rounded-lg bg-white p-3 text-xs text-slate-700 shadow-sm">
-            <p>{liveLocationError}</p>
-            <p className="mt-1">Tap Locate me to retry.</p>
-        </div>
-      )}
+      <div role="status" aria-live="polite" aria-atomic="true" className="map-location-toast">
+        {locationToast && <span key={locationToast} style={{ animationDuration: locationToast.startsWith('Following paused') ? '3s' : '2s' }}>{locationToast}</span>}
+      </div>
 
       {/* <div className="hidden sm:block absolute bottom-24 left-3 z-[1000] bg-white shadow-sm rounded-xl px-4 py-3 text-xs text-slate-600">
         <p className="font-bold tracking-widest text-[10px] text-slate-400 mb-2">LEGEND</p>

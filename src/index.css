@@ -907,3 +907,33 @@ button:disabled,
 @media (max-width: 360px) {
   .report-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+.map-location-toast {
+  position: absolute;
+  left: max(12px, env(safe-area-inset-left));
+  right: max(76px, env(safe-area-inset-right));
+  bottom: calc(32px + env(safe-area-inset-bottom, 0px));
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+.map-location-toast span {
+  background: white;
+  color: #334155;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 12px;
+  text-align: center;
+  box-shadow: 0 2px 8px #0002;
+  animation: location-toast-fade 2s both;
+}
+.map-location-toast span:where(:last-child) { max-width: 100%; }
+@keyframes location-toast-fade {
+  0% { opacity: 0; }
+  10%, 85% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .map-location-toast span { animation: none; }
+}
