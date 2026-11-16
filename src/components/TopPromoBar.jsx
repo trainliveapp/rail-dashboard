@@ -136,11 +136,23 @@ export default function TopPromoBar() {
 
   return (
     <div className="relative z-[1200] bg-yellow-400 text-brand-ink text-sm py-2.5 flex items-center gap-3">
+      <button
+        type="button"
+        onClick={() => setTrendingOpen((open) => !open)}
+        aria-expanded={trendingOpen}
+        aria-controls="live-updates-panel"
+        className="ml-3 flex shrink-0 items-center gap-2 border-r border-brand-ink/30 pr-3 font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-ink sm:ml-4"
+      >
+        <span aria-hidden="true" className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-red-600 bg-white">
+          <span className="h-3 w-3 rounded-full bg-red-600" />
+        </span>
+        <span>Live Updates</span>
+      </button>
       {/* min-w-0 is the important part here: without it, a flex child is never
           allowed to shrink below its content size, so the wide scrolling
           track underneath would force this whole bar (and the page) wider
           than the screen on mobile. This is what broke last time. */}
-      <div className="flex-1 min-w-0 overflow-hidden pl-4">
+      <div className="flex-1 min-w-0 overflow-hidden">
         <div className="flex gap-8 marquee-track w-max whitespace-nowrap">
           {track.length > 0 ? track.concat(track).map((item, i) => {
             const Icon = feedIcons[item.icon] || AlertTriangle
@@ -160,7 +172,7 @@ export default function TopPromoBar() {
       </div>
 
       {trendingOpen && (
-        <div className="absolute right-4 top-12 z-[2100] w-[min(380px,calc(100vw-2rem))] rounded-xl border border-slate-200 bg-white p-4 text-slate-800 shadow-xl">
+        <div id="live-updates-panel" className="absolute left-4 top-full mt-2 z-[2100] w-[min(380px,calc(100vw-2rem))] rounded-xl border border-slate-200 bg-white p-4 text-slate-800 shadow-xl">
           <div className="mb-3 flex items-center justify-between">
             <div>
               <h2 className="text-sm font-bold">Trending updates</h2>

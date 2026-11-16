@@ -23,8 +23,9 @@ export default function NavBar({ mapTheme = 'dark', onMapThemeChange = null }) {
   return (
     <div className="relative bg-blue-700 border-b border-blue-800 text-white">
       <div className="flex min-w-0 items-center justify-between gap-3 px-3 py-3 sm:px-4">
-        <div className="flex min-w-0 items-center gap-2">
-          <BrandLogo className="h-[60px] w-auto max-w-[160px] object-left sm:h-12 sm:max-w-[200px]" />
+        <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
+          <BrandLogo className="h-auto w-16 shrink-0 object-left min-[380px]:w-[100px] sm:w-[120px]" />
+          <span className="translate-y-1 whitespace-nowrap text-base font-semibold min-[380px]:text-xl sm:text-2xl">StationLive</span>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <div className="flex items-center gap-1 rounded-lg border border-white/15 bg-white/10 p-1" role="group" aria-label="Map theme">
