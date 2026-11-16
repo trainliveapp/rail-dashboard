@@ -1,13 +1,8 @@
-import { AlertTriangle, Megaphone, Users, Wrench, X } from 'lucide-react'
+import { AlertTriangle, Megaphone, Users, Wrench } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabase'
 
 const feedIcons = { AlertTriangle, Users, Wrench, Megaphone }
-
-const iconByKind = {
-  chat: Users,
-  report: AlertTriangle,
-}
 
 const TFL_SYNC_INTERVAL = 24 * 60 * 60 * 1000
 const TFL_SYNC_STORAGE_KEY = 'trainlive-tfl-last-sync'
@@ -23,10 +18,7 @@ function formatAge(createdAt) {
 }
 
 export default function TopPromoBar() {
-  const [trendingOpen, setTrendingOpen] = useState(false)
   const [trending, setTrending] = useState([])
-  const [trendingLoading, setTrendingLoading] = useState(false)
-  const [trendingError, setTrendingError] = useState('')
 
   useEffect(() => {
     let active = true
@@ -52,9 +44,6 @@ export default function TopPromoBar() {
     }
 
     const loadTrending = async ({ includeTfL = false } = {}) => {
-      setTrendingLoading(true)
-      setTrendingError('')
-
       try {
         const { data, error } = await supabase
           .from('station_updates')
@@ -82,9 +71,7 @@ export default function TopPromoBar() {
         }
 
         if (!active) return
-        if (error || (includeTfL && tflError)) {
-          setTrendingError('Trending is temporarily unavailable.')
-        } else {
+        if (!error && !(includeTfL && tflError)) {
           const official = (tflData || []).map((item) => ({
             id: `tfl-${item.source_key}`,
             kind: 'tfl',
@@ -97,9 +84,7 @@ export default function TopPromoBar() {
           setTrending([...(includeTfL ? official : []), ...(data || [])].slice(0, 6))
         }
       } catch {
-        if (active) setTrendingError('Trending is temporarily unavailable.')
-      } finally {
-        if (active) setTrendingLoading(false)
+        // Keep the current ticker updates if a refresh fails.
       }
     }
 
@@ -136,18 +121,14 @@ export default function TopPromoBar() {
 
   return (
     <div className="relative z-[1200] bg-yellow-400 text-brand-ink text-sm py-2.5 flex items-center gap-3">
-      <button
-        type="button"
-        onClick={() => setTrendingOpen((open) => !open)}
-        aria-expanded={trendingOpen}
-        aria-controls="live-updates-panel"
-        className="ml-3 flex shrink-0 items-center gap-2 border-r border-brand-ink/30 pr-3 font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-ink sm:ml-4"
+      <div
+        className="ml-3 flex shrink-0 items-center gap-2 border-r border-brand-ink/30 pr-3 font-bold sm:ml-4"
       >
         <span aria-hidden="true" className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-red-600 bg-white">
           <span className="h-3 w-3 rounded-full bg-red-600" />
         </span>
         <span>Live Updates</span>
-      </button>
+      </div>
       {/* min-w-0 is the important part here: without it, a flex child is never
           allowed to shrink below its content size, so the wide scrolling
           track underneath would force this whole bar (and the page) wider
@@ -171,42 +152,6 @@ export default function TopPromoBar() {
         </div>
       </div>
 
-      {trendingOpen && (
-        <div id="live-updates-panel" className="absolute left-4 top-full mt-2 z-[2100] w-[min(380px,calc(100vw-2rem))] rounded-xl border border-slate-200 bg-white p-4 text-slate-800 shadow-xl">
-          <div className="mb-3 flex items-center justify-between">
-            <div>
-              <h2 className="text-sm font-bold">Trending updates</h2>
-              <p className="text-xs text-slate-400">Official TfL disruptions and community reports</p>
-            </div>
-            <button type="button" onClick={() => setTrendingOpen(false)} aria-label="Close trending updates" className="text-slate-400 hover:text-slate-700">
-              <X size={16} />
-            </button>
-          </div>
-
-          {trendingLoading && <p className="py-4 text-center text-sm text-slate-500">Loading updates...</p>}
-          {!trendingLoading && trendingError && <p className="py-4 text-center text-sm text-amber-700">{trendingError}</p>}
-          {!trendingLoading && !trendingError && trending.length === 0 && (
-            <p className="py-4 text-center text-sm text-slate-500">No active network updates yet.</p>
-          )}
-          {!trendingLoading && !trendingError && trending.length > 0 && (
-            <div className="space-y-2">
-              {trending.map((item) => {
-                const Icon = iconByKind[item.kind] || AlertTriangle
-                return (
-                  <div key={item.id} className="flex gap-3 rounded-lg bg-slate-50 p-3">
-                    <Icon size={16} className="mt-0.5 shrink-0 text-blue-600" />
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold">{item.station_name || 'Network update'}</p>
-                      <p className="text-sm text-slate-600">{item.message || item.label || 'Travel update'}</p>
-                      <p className="mt-1 text-xs text-slate-400">{item.kind === 'tfl' ? 'Official TfL update' : `${item.confirms || 0} confirmations`} · {formatAge(item.created_at)}</p>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
-      )}
     </div>
   )
 }
