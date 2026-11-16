@@ -1,8 +1,25 @@
 # Chatter cleanup release gate
 
-Production deletion is not implemented or scheduled yet. The supplied brief explicitly
-requires live schema inspection, a dry run, cost confirmation, and founder approval.
+The backend is implemented locally; hosted deletion is not activated. Follow
+`docs/chatter-online-supabase-setup.md` for the online SQL Editor and Edge Function
+steps. The new migration defaults to disabled and the schedule script creates an
+inactive job. The release requirements and earlier design notes below still apply.
 No Supabase management connector or Supabase CLI is available in this session.
+
+Validated on 16 November 2026: JavaScript suite 70 passed / 5 environment-dependent
+tests skipped; cleanup worker 9 tests passed; isolated PostgreSQL 17 migration and
+synthetic checks passed (`tests/chatCleanupDatabase.sql`). The database checks cover
+23h59m/24h01m boundaries, dry runs, disabled cleanup, transactional queue persistence,
+report preservation, encoded shared references, retired-reference rejection,
+interrupted claims, fail-closed schema guards, private permissions, trusted client
+timestamps and worker overlap. Production build passes; lint exits successfully
+with existing warnings. Actual hosted schema, Storage API behavior and usage/cost
+remain unverified. No reporting rows were deleted in the hosted project.
+Mobile Chrome emulation at 390x844 also passed: latest message on open, green own
+bubble, stable header during history scrolling, 44px jump-to-latest, arrow hiding
+after the jump, and restoration of body scrolling after closing. Screenshots are
+`tmp/chatter-latest.png` and `tmp/chatter-reading-history.png` (synthetic intercepted
+responses only; no sample conversations were inserted into hosted data).
 
 Repository evidence: chat_messages uses created_at (timestamptz), image_url and
 video_url. The client uploads to chat-images and chat-videos. Reactions cascade on
@@ -58,5 +75,5 @@ the composer visible. Close Chatter and confirm normal page/map gestures return.
 The second attachment includes section 04's exact text rules, now implemented:
 green/right outgoing bubbles, off-white/left incoming bubbles, dark 16px body text,
 85% maximum width, visible incoming sender names, Like/Reply and a Save/Share menu.
-No embedded sketch image was included in the text attachment. Visual matching and
-Android/iPhone screen recordings are not yet verified or delivered.
+The updated PDF includes the approved sketch on page 5, now inspected visually.
+Physical Android/iPhone screen recordings are not yet verified or delivered.

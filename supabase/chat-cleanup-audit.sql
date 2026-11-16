@@ -10,6 +10,19 @@ select id, name, public, file_size_limit, allowed_mime_types
 from storage.buckets where id in ('chat-images', 'chat-videos');
 
 select extname from pg_extension where extname in ('pg_cron', 'pg_net');
+-- Policies and custom triggers must be reviewed before installing cleanup.
+select schemaname, tablename, policyname, roles, cmd, qual, with_check
+from pg_policies where schemaname in ('public','storage') order by tablename, policyname;
+select event_object_table, trigger_name, action_timing, event_manipulation, action_statement
+from information_schema.triggers where trigger_schema='public' order by event_object_table, trigger_name;
+-- Inspect cascades: deletion must never cascade into reporting/history tables.
+select conrelid::regclass as referencing_table, confrelid::regclass as referenced_table,
+  pg_get_constraintdef(oid) as definition
+from pg_constraint where contype='f' and confrelid='public.chat_messages'::regclass;
+-- Find ALL public tables/columns that may hold other attachment references.
+select table_name, column_name, data_type from information_schema.columns
+where table_schema='public' and data_type in ('text','character varying','json','jsonb','ARRAY')
+order by table_name, ordinal_position;
 -- Run separately only if pg_cron is installed; do not share job commands/secrets.
 -- select jobid, schedule, active from cron.job;
 

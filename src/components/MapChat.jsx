@@ -1791,7 +1791,9 @@ export default function MapChat({ launcherTarget = null }) {
         "created_at",
         new Date(Date.now() - CHAT_VISIBILITY_WINDOW_MS).toISOString()
       )
-      .order("created_at", { ascending: true });
+      // Supabase caps rows: fetch the newest end of a busy channel first.
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false });
 
     if (error) {
       console.error("Could not load chat messages:", error);
@@ -1799,7 +1801,7 @@ export default function MapChat({ launcherTarget = null }) {
     }
 
     if (generation !== messageGenerationRef.current) return [];
-    const nextMessages = data || [];
+    const nextMessages = (data || []).slice().reverse();
     setMessages(nextMessages);
     messagesRef.current = nextMessages;
     await loadReactions(nextMessages.map((message) => message.id));
