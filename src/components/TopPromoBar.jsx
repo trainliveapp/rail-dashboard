@@ -127,7 +127,7 @@ export default function TopPromoBar() {
         <span aria-hidden="true" className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-red-600 bg-white">
           <span className="h-3 w-3 rounded-full bg-red-600" />
         </span>
-        <span>Live Updates</span>
+        <span>Live </span>
       </div>
       {/* min-w-0 is the important part here: without it, a flex child is never
           allowed to shrink below its content size, so the wide scrolling
