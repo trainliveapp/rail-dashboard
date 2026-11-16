@@ -1417,7 +1417,7 @@
 // }
 
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   MessageCircle,
@@ -1431,7 +1431,8 @@ import {
   Smile,
   Heart,
   Bookmark,
-  UserRound,
+  ArrowDown,
+  MoreHorizontal,
 } from "lucide-react";
 import { supabase } from "../supabase";
 import { readChatSelection, saveChatSelection } from "../lib/chatSelection";
@@ -1520,6 +1521,73 @@ export default function MapChat({ launcherTarget = null }) {
     } catch { return []; }
   });
   const [actionNotice, setActionNotice] = useState("");
+  const [ownMessageIds, setOwnMessageIds] = useState(() => {
+    try {
+      const ids = JSON.parse(localStorage.getItem("stationlive-own-chat-messages") || "[]");
+      return Array.isArray(ids) ? ids.filter((id) => typeof id === "string") : [];
+    } catch { return []; }
+  });
+  const [showJumpToLatest, setShowJumpToLatest] = useState(false);
+  const feedRef = useRef(null);
+  const feedContentRef = useRef(null);
+  const followLatestRef = useRef(true);
+
+  function jumpToLatest() {
+    const feed = feedRef.current;
+    if (!feed) return;
+    followLatestRef.current = true;
+    feed.scrollTo({ top: feed.scrollHeight, behavior: "instant" });
+    setShowJumpToLatest(false);
+  }
+
+  function trackFeedScroll() {
+    const feed = feedRef.current;
+    if (!feed) return;
+    const nearBottom = feed.scrollHeight - feed.scrollTop - feed.clientHeight < 80;
+    followLatestRef.current = nearBottom;
+    setShowJumpToLatest(!nearBottom);
+  }
+
+  useLayoutEffect(() => {
+    followLatestRef.current = true;
+    setShowJumpToLatest(false);
+    if (open) jumpToLatest();
+  }, [open, channelId]);
+
+  useLayoutEffect(() => {
+    if (!messages.length || followLatestRef.current) jumpToLatest();
+  }, [messages]);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const observer = new ResizeObserver(() => {
+      if (followLatestRef.current) jumpToLatest();
+    });
+    if (feedRef.current) observer.observe(feedRef.current);
+    if (feedContentRef.current) observer.observe(feedContentRef.current);
+    return () => observer.disconnect();
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const viewport = window.visualViewport;
+    const updateViewport = () => {
+      const panel = chatPanelRef.current;
+      if (!panel || !viewport) return;
+      panel.style.maxHeight = `${Math.max(0, viewport.height - 24)}px`;
+      panel.style.bottom = `${Math.max(12, window.innerHeight - viewport.offsetTop - viewport.height + 12)}px`;
+    };
+    updateViewport();
+    viewport?.addEventListener("resize", updateViewport);
+    viewport?.addEventListener("scroll", updateViewport);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      viewport?.removeEventListener("resize", updateViewport);
+      viewport?.removeEventListener("scroll", updateViewport);
+    };
+  }, [open, channelMenuOpen]);
 
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
@@ -1598,9 +1666,6 @@ export default function MapChat({ launcherTarget = null }) {
 
   useEffect(() => {
     if (!open || !channelMenuOpen) return undefined;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
     const handleMenuDismiss = (event) => {
       if (event.key === "Escape") {
         if (!channelId) setOpen(false);
@@ -1617,7 +1682,6 @@ export default function MapChat({ launcherTarget = null }) {
     window.addEventListener("keydown", handleMenuDismiss);
     window.addEventListener("pointerdown", handleMenuDismiss);
     return () => {
-      document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleMenuDismiss);
       window.removeEventListener("pointerdown", handleMenuDismiss);
     };
@@ -1885,6 +1949,15 @@ export default function MapChat({ launcherTarget = null }) {
     if (!open || !channelId) return undefined;
 
     let cancelled = false;
+    const expiryTimer = window.setInterval(() => {
+      const cutoff = Date.now() - CHAT_VISIBILITY_WINDOW_MS;
+      setMessages((current) => {
+        const retained = current.filter((message) => new Date(message.created_at).getTime() >= cutoff);
+        if (retained.length === current.length) return current;
+        messagesRef.current = retained;
+        return retained;
+      });
+    }, 60_000);
 
     const messagesChannel = supabase
       .channel(`chat-messages-${channelId}`)
@@ -1926,6 +1999,8 @@ export default function MapChat({ launcherTarget = null }) {
 
     return () => {
       cancelled = true;
+      messageGenerationRef.current += 1;
+      window.clearInterval(expiryTimer);
       supabase.removeChannel(messagesChannel);
       supabase.removeChannel(reactionsChannel);
     };
@@ -1976,7 +2051,7 @@ export default function MapChat({ launcherTarget = null }) {
 
       const user = await getCurrentUser();
       const payload = {
-        username: user ? "TrainLive User" : "TrainLive Guest",
+        username: user ? "Station Live User" : "Station Live Guest",
         message: text.trim(),
         line: channelId,
         channel_id: channelId,
@@ -1991,6 +2066,14 @@ export default function MapChat({ launcherTarget = null }) {
         .single();
 
       if (error) throw error;
+
+      if (data) {
+        setOwnMessageIds((current) => {
+          const next = [...new Set([...current, data.id])].slice(-2000);
+          try { localStorage.setItem("stationlive-own-chat-messages", JSON.stringify(next)); } catch { /* Session ownership still works. */ }
+          return next;
+        });
+      }
 
       if (data && generation === messageGenerationRef.current) {
         setMessages((prev) => {
@@ -2203,34 +2286,37 @@ export default function MapChat({ launcherTarget = null }) {
 
       <div className="relative min-h-0 flex-1 isolate">
       <div
+        ref={feedRef}
+        onScroll={trackFeedScroll}
         inert={!channelId || channelMenuOpen}
         role="region"
         aria-label="Chat messages"
         tabIndex={channelId && !channelMenuOpen ? 0 : -1}
-        className="chat-messages relative z-10 h-full min-h-0 overflow-y-auto overscroll-contain px-4 py-3 [scrollbar-width:thin]"
+        className="chat-messages relative z-10 h-full min-h-0 overflow-y-auto overscroll-contain px-3 pt-3 pb-16 [scrollbar-width:thin]"
       >
+        <div ref={feedContentRef}>
         {messages.map((message, index) => {
             const reactionState = reactions[message.id] || { counts: {}, myReaction: null };
             const heartCount = (reactionState.counts[HEART_REACTION] || 0) + (reactionState.counts["\u2764"] || 0);
             const liked = reactionState.myReaction === HEART_REACTION || reactionState.myReaction === "\u2764";
             const saved = savedMessages.includes(message.id);
+            const own = ownMessageIds.includes(message.id);
+            const sender = !message.username || message.username === "TrainLive Guest"
+              ? "Station Live Guest" : message.username === "TrainLive User" ? "Station Live User" : message.username;
 
             return (
-              <div key={message.id || index} className="mb-5 flex w-full items-start gap-3">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/40 bg-white/25 text-white backdrop-blur-sm" aria-hidden="true">
-                  <UserRound size={25} fill="currentColor" strokeWidth={1.5} />
-                </span>
-                <div className="group relative min-w-0 flex-1">
-                  <div className="chat-message relative rounded-xl bg-black/75 px-3 py-2 text-white">
+              <div key={message.id || index} className={`mb-3 flex w-full items-start ${own ? "justify-end" : "justify-start"}`}>
+                <div className="group relative min-w-0 max-w-[85%]">
+                  <div className={`chat-message relative w-fit max-w-full rounded-2xl px-3 py-2.5 text-[#202020] shadow-sm ${own ? "ml-auto bg-[#DCF6C7]" : "bg-[#F7F5F0]"}`}>
                     <div className="mb-0.5 flex flex-wrap items-baseline gap-x-2">
-                      <p className="text-xs font-bold">{message.username || "TrainLive Guest"}</p>
-                      <span className="text-[11px] text-white/75">{formatMessageTime(message.created_at)}</span>
+                      {!own && <p className="text-xs font-bold">{sender}</p>}
+                      <span className="text-[11px] text-[#202020]/70">{formatMessageTime(message.created_at)}</span>
                     </div>
 
                     <div className="relative">
                       <div>
                         {message.message && (
-                          <p className="break-words [overflow-wrap:anywhere] whitespace-pre-wrap pr-1 text-[15px] leading-6 text-white">
+                          <p className="break-words [overflow-wrap:anywhere] whitespace-pre-wrap text-base leading-6 text-[#202020]">
                             {message.message}
                           </p>
                         )}
@@ -2251,6 +2337,8 @@ export default function MapChat({ launcherTarget = null }) {
                         {message.video_url && (
                           <video
                             src={message.video_url}
+                            width={640}
+                            height={480}
                             controls
                             className="mt-1.5 max-h-64 w-full rounded-lg"
                           />
@@ -2258,50 +2346,63 @@ export default function MapChat({ launcherTarget = null }) {
                       </div>
                     </div>
 
-                    <div className="chat-message-actions mt-1 flex max-w-[200px] items-center justify-between gap-1" role="group" aria-label="Message actions">
+                  </div>
+                    <div className={`chat-message-actions relative mt-0.5 flex w-fit items-center gap-0.5 rounded-full bg-[#F7F5F0]/95 px-1 text-[#202020] ${own ? "ml-auto" : ""}`} role="group" aria-label="Message actions">
                       <button
                         type="button"
                         onClick={() => toggleReaction(message.id, liked ? reactionState.myReaction : HEART_REACTION)}
                         aria-label={liked ? "Unlike message" : "Like message"}
                         aria-pressed={liked}
-                        className={`flex h-9 shrink-0 items-center gap-1 rounded-lg transition hover:bg-white/15 focus-visible:ring-2 focus-visible:ring-rose-300 ${liked ? 'text-red-400' : 'text-white'}`}
+                        className={`flex h-11 min-w-11 shrink-0 items-center justify-center gap-1 rounded-full focus-visible:ring-2 focus-visible:ring-rose-500 ${liked ? 'text-red-600' : 'text-[#202020]'}`}
                       >
                         <Heart size={22} fill={liked ? 'currentColor' : 'none'} strokeWidth={1.8} />
-                        <span className="text-xs text-white/90">{heartCount}</span>
+                        {heartCount > 0 && <span className="text-xs">{heartCount}</span>}
                       </button>
                       <button
                         type="button"
                         onClick={() => commentOnMessage(message)}
-                        aria-label="Comment on message"
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-300"
+                        aria-label="Reply to message"
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-slate-600 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-500"
                       >
                         <MessageCircle size={18} strokeWidth={1.8} />
                       </button>
+                      <details className="relative" onKeyDown={(event) => { if (event.key === "Escape") { event.currentTarget.open = false; event.currentTarget.querySelector("summary")?.focus(); } }}>
+                        <summary aria-label="More message actions" className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-full text-slate-600 hover:bg-slate-100 [&::-webkit-details-marker]:hidden"><MoreHorizontal size={20} /></summary>
+                        <div className={`absolute bottom-full z-30 mb-1 w-44 rounded-xl border border-slate-200 bg-[#F7F5F0] p-1 shadow-lg ${own ? "right-0" : "left-0"}`}>
                       <button
                         type="button"
                         onClick={() => toggleSavedMessage(message.id)}
                         aria-label={saved ? "Remove bookmark" : "Bookmark message on this device"}
                         aria-pressed={saved}
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-300"
+                        className="flex min-h-11 w-full items-center gap-2 rounded-lg px-2 text-sm text-slate-700 hover:bg-slate-200 focus-visible:ring-2 focus-visible:ring-blue-500"
                       >
                         <Bookmark size={18} strokeWidth={1.8} fill={saved ? "currentColor" : "none"} />
+                        {saved ? "Remove bookmark" : "Save"}
                       </button>
                       <button
                         type="button"
                         onClick={() => shareMessage(message)}
                         aria-label="Share message"
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-300"
+                        className="flex min-h-11 w-full items-center gap-2 rounded-lg px-2 text-sm text-slate-700 hover:bg-slate-200 focus-visible:ring-2 focus-visible:ring-blue-500"
                       >
                         <Share2 size={18} strokeWidth={1.8} />
+                        Share
                       </button>
+                        </div>
+                      </details>
                     </div>
-                  </div>
                 </div>
               </div>
             );
           })}
+        </div>
       </div>
-
+      {showJumpToLatest && messages.length > 0 && channelId && !channelMenuOpen && (
+        <button type="button" onClick={jumpToLatest} aria-label="Jump to latest message"
+          className="absolute bottom-3 right-4 z-20 flex h-11 w-11 items-center justify-center rounded-full border border-black/15 bg-yellow-400 text-brand-ink shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
+          <ArrowDown size={22} aria-hidden="true" />
+        </button>
+      )}
       </div>
 
       <div className="pointer-events-none absolute inset-x-0 bottom-[76px] z-40 h-56 overflow-hidden" aria-hidden="true">

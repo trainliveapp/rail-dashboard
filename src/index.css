@@ -79,23 +79,22 @@ body {
 .chat-messages {
   scrollbar-color: rgb(255 255 255 / 40%) transparent;
 }
-.chat-message,
 .chat-channel label {
   text-shadow: 0 1px 4px rgb(0 0 0 / 85%);
 }
 .chat-message-actions button {
-  color: white;
+  color: #202020;
 }
 .chat-message-actions button[aria-label="Unlike message"] {
-  color: #fb7185;
+  color: #dc2626;
 }
 .chat-message-actions button:hover {
-  background: rgb(255 255 255 / 15%);
+  background: rgb(0 0 0 / 7%);
 }
 .chat-message-actions svg {
   width: 22px;
   height: 22px;
-  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 60%));
+  filter: none;
 }
 .chat-compose-field button {
   width: 34px;
