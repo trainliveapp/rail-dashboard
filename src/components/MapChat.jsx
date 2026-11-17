@@ -1252,7 +1252,7 @@
 //             value={text}
 //             onChange={(e) => setText(e.target.value)}
 //             onKeyDown={(e) => {
-//               if (e.key === "Enter" && !e.shiftKey) {
+//               if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
 //                 e.preventDefault();
 //                 sendMessage();
 //               }
@@ -1433,6 +1433,9 @@ import {
   Bookmark,
   ArrowDown,
   MoreHorizontal,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { supabase } from "../supabase";
 import { readChatSelection, saveChatSelection } from "../lib/chatSelection";
@@ -1539,6 +1542,18 @@ export default function MapChat({ launcherTarget = null }) {
     feed.scrollTo({ top: feed.scrollHeight, behavior: "instant" });
     setShowJumpToLatest(false);
   }
+
+  // Dismiss message menus when pressing outside their controls.
+  useEffect(() => {
+    if (!open) return;
+    const dismiss = (event) => {
+      chatPanelRef.current?.querySelectorAll('details[open]').forEach((menu) => {
+        if (!menu.contains(event.target)) menu.open = false;
+      });
+    };
+    document.addEventListener("click", dismiss);
+    return () => document.removeEventListener("click", dismiss);
+  }, [open]);
 
   function trackFeedScroll() {
     const feed = feedRef.current;
@@ -2113,6 +2128,7 @@ export default function MapChat({ launcherTarget = null }) {
         {channelId && !channelMenuOpen && CHAT_LINE_BACKGROUNDS[selectedChannel.backgroundKey] && (
           <ImageBackground key={channelId} {...CHAT_LINE_BACKGROUNDS[selectedChannel.backgroundKey]} sizes="(max-width: 639px) calc(100vw - 24px), 400px" fit="cover" />
         )}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 bg-black/20" />
       <div className="chat-panel-header relative z-30 m-2 mb-0 flex h-[52px] shrink-0 items-center justify-between rounded-xl bg-yellow-400 px-4 text-brand-ink">
         <div className="flex min-w-0 items-center gap-3">
           <span className="text-xl font-black text-brand-ink">chatter</span>
@@ -2158,7 +2174,7 @@ export default function MapChat({ launcherTarget = null }) {
             className="flex min-h-11 w-full items-center justify-between rounded-xl px-3 pr-24 text-left text-base font-semibold text-white outline-none focus-visible:outline-2 focus-visible:outline-offset-2"
           >
             <span className="min-w-0 truncate">{selectedChannel.displayName}</span>
-            <span aria-hidden="true" className="absolute right-3 text-lg leading-none">⌄</span>
+            <ChevronDown aria-hidden="true" className="absolute right-3 h-5 w-5" />
           </button>
 
           {channelMenuOpen && (
@@ -2204,7 +2220,7 @@ export default function MapChat({ launcherTarget = null }) {
                     }}
                     className="flex min-h-14 w-full items-center border-b border-white/10 px-3 text-left text-[18px] font-semibold hover:bg-white/10 focus-visible:bg-white/10 focus-visible:outline-none"
                   >
-                    <span aria-hidden="true" className="mr-2 text-lg">‹</span> Back to London channels
+                    <ChevronLeft aria-hidden="true" className="mr-2 h-5 w-5 shrink-0" /> Back to London channels
                   </button>
                 )}
               </div>
@@ -2230,7 +2246,7 @@ export default function MapChat({ launcherTarget = null }) {
                     className="flex min-h-14 w-full items-center justify-between gap-3 border-b border-white/10 px-3 py-3 text-left text-[18px] font-semibold hover:bg-white/10 focus-visible:bg-white/10 focus-visible:outline-none"
                   >
                     <span>Browse National Rail operators</span>
-                    <span aria-hidden="true" className="text-lg">›</span>
+                    <ChevronRight aria-hidden="true" className="h-5 w-5 shrink-0" />
                   </button>
                 )}
                 <div role="group" aria-label={searchingChannels ? "Channel search results" : channelView === "main" ? "London channels" : "National Rail operators"}>
@@ -2309,16 +2325,17 @@ export default function MapChat({ launcherTarget = null }) {
             return (
               <div key={message.id || index} className={`mb-3 flex w-full items-start ${own ? "justify-end" : "justify-start"}`}>
                 <div className="group relative min-w-0 max-w-[85%]">
-                  <div className={`chat-message relative w-fit max-w-full rounded-2xl px-3 py-2.5 text-[#202020] shadow-sm ${own ? "ml-auto bg-[#DCF6C7]" : "bg-[#F7F5F0]"}`}>
+                  <div data-own={own}
+                    className={`chat-message relative w-fit max-w-full rounded-2xl px-3 py-2.5 text-white shadow-sm ${own ? "ml-auto" : ""}`}>
                     <div className="mb-0.5 flex flex-wrap items-baseline gap-x-2">
                       {!own && <p className="text-xs font-bold">{sender}</p>}
-                      <span className="text-[11px] text-[#202020]/70">{formatMessageTime(message.created_at)}</span>
+                      <span className="text-[11px] text-white/70">{formatMessageTime(message.created_at)}</span>
                     </div>
 
                     <div className="relative">
                       <div>
                         {message.message && (
-                          <p className="break-words [overflow-wrap:anywhere] whitespace-pre-wrap text-base leading-6 text-[#202020]">
+                          <p className="break-words [overflow-wrap:anywhere] whitespace-pre-wrap text-base leading-6 text-white">
                             {message.message}
                           </p>
                         )}
@@ -2349,7 +2366,7 @@ export default function MapChat({ launcherTarget = null }) {
                     </div>
 
                   </div>
-                    <div className={`chat-message-actions relative mt-0.5 flex w-fit items-center gap-0.5 rounded-full bg-[#F7F5F0]/95 px-1 text-[#202020] ${own ? "ml-auto" : ""}`} role="group" aria-label="Message actions">
+                    <div className={`chat-message-actions relative mt-0.5 flex w-fit items-start gap-0.5 rounded-full bg-transparent px-1 text-[#202020] ${own ? "ml-auto" : ""}`} role="group" aria-label="Message actions">
                       <button
                         type="button"
                         onClick={() => toggleReaction(message.id, liked ? reactionState.myReaction : HEART_REACTION)}
@@ -2368,12 +2385,20 @@ export default function MapChat({ launcherTarget = null }) {
                       >
                         <MessageCircle size={18} strokeWidth={1.8} />
                       </button>
-                      <details className="relative" onKeyDown={(event) => { if (event.key === "Escape") { event.currentTarget.open = false; event.currentTarget.querySelector("summary")?.focus(); } }}>
-                        <summary aria-label="More message actions" className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-full text-slate-600 hover:bg-slate-100 [&::-webkit-details-marker]:hidden"><MoreHorizontal size={20} /></summary>
-                        <div className={`absolute bottom-full z-30 mb-1 w-44 rounded-xl border border-slate-200 bg-[#F7F5F0] p-1 shadow-lg ${own ? "right-0" : "left-0"}`}>
+                      <details name="chatter-message-actions" onToggle={(event) => {
+                        if (!event.currentTarget.open) return;
+                        const feed = feedRef.current;
+                        const options = event.currentTarget.querySelector(".chat-message-menu-options");
+                        if (feed && options) {
+                          const overflow = options.getBoundingClientRect().bottom - feed.getBoundingClientRect().bottom + 8;
+                          if (overflow > 0) feed.scrollTop += overflow;
+                        }
+                      }} className="chat-message-menu relative w-11 shrink-0" onKeyDown={(event) => { if (event.key === "Escape") { event.currentTarget.open = false; event.currentTarget.querySelector("summary")?.focus(); } }}>
+                        <summary onClick={() => { followLatestRef.current = false; }} aria-label="More message actions" className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-full text-slate-600 hover:bg-slate-100 [&::-webkit-details-marker]:hidden"><MoreHorizontal size={20} /></summary>
+                        <div className="chat-message-menu-options -ml-24 mt-1 w-[140px] rounded-xl border border-white/40 bg-transparent p-1 shadow-sm">
                       <button
                         type="button"
-                        onClick={() => toggleSavedMessage(message.id)}
+                        onClick={(event) => { toggleSavedMessage(message.id); event.currentTarget.closest("details").open = false; }}
                         aria-label={saved ? "Remove bookmark" : "Bookmark message on this device"}
                         aria-pressed={saved}
                         className="flex min-h-11 w-full items-center gap-2 rounded-lg px-2 text-sm text-slate-700 hover:bg-slate-200 focus-visible:ring-2 focus-visible:ring-blue-500"
@@ -2383,7 +2408,7 @@ export default function MapChat({ launcherTarget = null }) {
                       </button>
                       <button
                         type="button"
-                        onClick={() => shareMessage(message)}
+                        onClick={(event) => { event.currentTarget.closest("details").open = false; shareMessage(message); }}
                         aria-label="Share message"
                         className="flex min-h-11 w-full items-center gap-2 rounded-lg px-2 text-sm text-slate-700 hover:bg-slate-200 focus-visible:ring-2 focus-visible:ring-blue-500"
                       >
@@ -2456,7 +2481,7 @@ export default function MapChat({ launcherTarget = null }) {
 
         <>
           <div className="flex items-center gap-2">
-          <div className="chat-compose-field flex min-w-0 flex-1 items-center gap-0.5 rounded-full border border-white/50 bg-black/30 p-1 pl-1.5 backdrop-blur-sm focus-within:border-yellow-300 focus-within:ring-2 focus-within:ring-yellow-300/25">
+          <div className="chat-compose-field flex min-w-0 flex-1 items-center gap-0.5 rounded-full border border-white/50 bg-transparent p-1 pl-1.5 focus-within:border-yellow-300 focus-within:ring-2 focus-within:ring-yellow-300/25">
             <div className="relative shrink-0">
               <button
                 type="button"
