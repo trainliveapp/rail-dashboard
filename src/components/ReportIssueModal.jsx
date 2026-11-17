@@ -112,14 +112,16 @@ export default function ReportIssueModal({ initialStation = null, onClose, onRep
                 key={cat.key}
                 disabled={submitting}
                 onClick={() => {
-                  setCategory(cat.key)
+                  setCategory(active ? '' : cat.key)
                   setSaved(false)
                   setError('')
                 }}
                 aria-pressed={active}
                 className={`report-option flex flex-col items-center justify-center text-center gap-2 rounded-xl border px-3 py-4 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue ${active ? 'border-brand-blue bg-blue-50 text-brand-blue' : 'border-brand-line bg-white text-brand-slate hover:border-brand-blue hover:bg-blue-50'}`}
               >
-                <ReportCategoryImage category={cat.key} className="report-category-image" />
+                <span className="report-image-slot" aria-hidden="true">
+                  <ReportCategoryImage category={cat.key} className="report-category-image" />
+                </span>
                 {cat.label}
                 {cooldown.canUndo(matchedStation?.name, cat.key) && <span className="text-xs text-emerald-700">Reported</span>}
               </button>

@@ -93,11 +93,13 @@ export default function StationQuickReportModal({ station, onClose, onReportSubm
                 type="button"
                 disabled={submitting}
                 key={cat.key}
-                onClick={() => setSelected(cat)}
+                onClick={() => setSelected(isSelected ? null : cat)}
                 aria-pressed={isSelected}
                 className={`report-option relative flex min-w-0 flex-col items-center justify-center gap-2 rounded-xl border px-3 py-4 text-center text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue ${isSelected ? 'border-brand-blue bg-blue-50 text-brand-blue' : 'border-brand-line bg-white text-brand-slate hover:border-brand-blue hover:bg-blue-50'}`}
               >
-                <ReportCategoryImage category={cat.key} className="report-category-image" />
+                <span className="report-image-slot" aria-hidden="true">
+                  <ReportCategoryImage category={cat.key} className="report-category-image" />
+                </span>
                 <span className="flex min-h-10 items-center break-words leading-tight">{cat.label}</span>
                 <span className="text-xs text-slate-400">{counts[cat.key] ?? 0} reported</span>
                 {cooldown.canUndo(station.name, cat.key) && <span className="text-xs text-emerald-700">Reported</span>}

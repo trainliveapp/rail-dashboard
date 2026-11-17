@@ -917,14 +917,34 @@ button:disabled,
   gap: 8px;
 }
 .report-option {
+  --report-original-image-size: clamp(30px, 9vw, 48px);
   min-width: 0;
   min-height: 44px;
   padding: 10px 6px;
   font-size: clamp(12px, 3vw, 14px);
 }
+.report-image-slot {
+  /* Reserve the selected diameter so selection never shifts the label or grid. */
+  display: grid;
+  place-items: center;
+  width: min(100%, calc(var(--report-original-image-size) * 1.4));
+  aspect-ratio: 1;
+  flex-shrink: 0;
+}
 .report-option .report-category-image {
-  width: clamp(30px, 9vw, 48px);
+  /* Both sizes use the original responsive diameter, before enlargement. */
+  width: min(100%, calc(var(--report-original-image-size) * 1.25));
   height: auto;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  object-fit: cover;
+  transition: width 200ms ease, opacity 300ms ease;
+}
+.report-option[aria-pressed="true"] .report-category-image {
+  width: min(100%, calc(var(--report-original-image-size) * 1.4));
+}
+@media (prefers-reduced-motion: reduce) {
+  .report-option .report-category-image { transition: none; }
 }
 .report-option svg { width: clamp(22px, 6vw, 30px); height: auto; }
 .report-option > span { max-width: 100%; }
@@ -949,17 +969,14 @@ button:disabled,
     font-size: 13px;
     line-height: 1.35;
   }
-  .report-issue-panel .report-category-image { width: 44px; height: 44px; object-fit: cover; }
+  .report-issue-panel .report-option { --report-original-image-size: 44px; }
 }
 @media (max-width: 640px) {
   .report-option {
+    --report-original-image-size: clamp(56px, 17vw, 72px);
     min-height: 132px;
     padding: 12px 6px;
     font-size: clamp(14px, 3.8vw, 16px);
-  }
-  .report-option .report-category-image {
-    width: clamp(56px, 17vw, 72px);
-    height: clamp(56px, 17vw, 72px);
   }
   .report-overlay {
     align-items: flex-end;
@@ -969,9 +986,6 @@ button:disabled,
   .report-panel {
     max-height: min(75dvh, 650px, calc(var(--visible-height) - 100px - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
   }
-}
-@media (max-width: 360px) {
-  .report-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 .map-location-toast {
