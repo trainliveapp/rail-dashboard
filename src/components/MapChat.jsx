@@ -1432,7 +1432,7 @@ import {
   Heart,
   Bookmark,
   ArrowDown,
-  MoreHorizontal,
+  UserRound,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -1542,18 +1542,6 @@ export default function MapChat({ launcherTarget = null }) {
     feed.scrollTo({ top: feed.scrollHeight, behavior: "instant" });
     setShowJumpToLatest(false);
   }
-
-  // Dismiss message menus when pressing outside their controls.
-  useEffect(() => {
-    if (!open) return;
-    const dismiss = (event) => {
-      chatPanelRef.current?.querySelectorAll('details[open]').forEach((menu) => {
-        if (!menu.contains(event.target)) menu.open = false;
-      });
-    };
-    document.addEventListener("click", dismiss);
-    return () => document.removeEventListener("click", dismiss);
-  }, [open]);
 
   function trackFeedScroll() {
     const feed = feedRef.current;
@@ -2323,13 +2311,16 @@ export default function MapChat({ launcherTarget = null }) {
               ? "Station Live Guest" : message.username === "TrainLive User" ? "Station Live User" : message.username;
 
             return (
-              <div key={message.id || index} className={`mb-3 flex w-full items-start ${own ? "justify-end" : "justify-start"}`}>
-                <div className="group relative min-w-0 max-w-[85%]">
+              <div key={message.id || index} className="chat-message-row mb-6 flex w-full items-start gap-3">
+                <span className="chat-message-avatar flex h-10 w-10 shrink-0 items-center justify-center rounded-full" aria-hidden="true">
+                  <UserRound size={25} fill="white" strokeWidth={1.5} />
+                </span>
+                <div className="min-w-0 flex-1">
                   <div data-own={own}
-                    className={`chat-message relative w-fit max-w-full rounded-2xl px-3 py-2.5 text-white shadow-sm ${own ? "ml-auto" : ""}`}>
+                    className="chat-message relative max-w-full text-white">
                     <div className="mb-0.5 flex flex-wrap items-baseline gap-x-2">
-                      {!own && <p className="text-xs font-bold">{sender}</p>}
-                      <span className="text-[11px] text-white/70">{formatMessageTime(message.created_at)}</span>
+                      <p className="text-sm font-bold">{sender}</p>
+                      <span className="text-xs text-white/75">{formatMessageTime(message.created_at)}</span>
                     </div>
 
                     <div className="relative">
@@ -2366,7 +2357,7 @@ export default function MapChat({ launcherTarget = null }) {
                     </div>
 
                   </div>
-                    <div className={`chat-message-actions relative mt-0.5 flex w-fit items-start gap-0.5 rounded-full bg-transparent px-1 text-[#202020] ${own ? "ml-auto" : ""}`} role="group" aria-label="Message actions">
+                    <div className="chat-message-actions mt-2 flex w-full max-w-[230px] items-center justify-between gap-1" role="group" aria-label="Message actions">
                       <button
                         type="button"
                         onClick={() => toggleReaction(message.id, liked ? reactionState.myReaction : HEART_REACTION)}
@@ -2375,7 +2366,7 @@ export default function MapChat({ launcherTarget = null }) {
                         className={`flex h-11 min-w-11 shrink-0 items-center justify-center gap-1 rounded-full focus-visible:ring-2 focus-visible:ring-rose-500 ${liked ? 'text-red-600' : 'text-[#202020]'}`}
                       >
                         <Heart size={22} fill={liked ? 'currentColor' : 'none'} strokeWidth={1.8} />
-                        {heartCount > 0 && <span className="text-xs">{heartCount}</span>}
+                        <span className="text-xs">{heartCount}</span>
                       </button>
                       <button
                         type="button"
@@ -2385,38 +2376,23 @@ export default function MapChat({ launcherTarget = null }) {
                       >
                         <MessageCircle size={18} strokeWidth={1.8} />
                       </button>
-                      <details name="chatter-message-actions" onToggle={(event) => {
-                        if (!event.currentTarget.open) return;
-                        const feed = feedRef.current;
-                        const options = event.currentTarget.querySelector(".chat-message-menu-options");
-                        if (feed && options) {
-                          const overflow = options.getBoundingClientRect().bottom - feed.getBoundingClientRect().bottom + 8;
-                          if (overflow > 0) feed.scrollTop += overflow;
-                        }
-                      }} className="chat-message-menu relative w-11 shrink-0" onKeyDown={(event) => { if (event.key === "Escape") { event.currentTarget.open = false; event.currentTarget.querySelector("summary")?.focus(); } }}>
-                        <summary onClick={() => { followLatestRef.current = false; }} aria-label="More message actions" className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-full text-slate-600 hover:bg-slate-100 [&::-webkit-details-marker]:hidden"><MoreHorizontal size={20} /></summary>
-                        <div className="chat-message-menu-options -ml-24 mt-1 w-[140px] rounded-xl border border-white/40 bg-transparent p-1 shadow-sm">
                       <button
                         type="button"
-                        onClick={(event) => { toggleSavedMessage(message.id); event.currentTarget.closest("details").open = false; }}
+                        onClick={() => toggleSavedMessage(message.id)}
                         aria-label={saved ? "Remove bookmark" : "Bookmark message on this device"}
                         aria-pressed={saved}
-                        className="flex min-h-11 w-full items-center gap-2 rounded-lg px-2 text-sm text-slate-700 hover:bg-slate-200 focus-visible:ring-2 focus-visible:ring-blue-500"
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full focus-visible:ring-2 focus-visible:ring-white"
                       >
-                        <Bookmark size={18} strokeWidth={1.8} fill={saved ? "currentColor" : "none"} />
-                        {saved ? "Remove bookmark" : "Save"}
+                        <Bookmark size={22} strokeWidth={1.8} fill={saved ? "currentColor" : "none"} />
                       </button>
                       <button
                         type="button"
-                        onClick={(event) => { event.currentTarget.closest("details").open = false; shareMessage(message); }}
+                        onClick={() => shareMessage(message)}
                         aria-label="Share message"
-                        className="flex min-h-11 w-full items-center gap-2 rounded-lg px-2 text-sm text-slate-700 hover:bg-slate-200 focus-visible:ring-2 focus-visible:ring-blue-500"
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full focus-visible:ring-2 focus-visible:ring-white"
                       >
-                        <Share2 size={18} strokeWidth={1.8} />
-                        Share
+                        <Share2 size={22} strokeWidth={1.8} />
                       </button>
-                        </div>
-                      </details>
                     </div>
                 </div>
               </div>
