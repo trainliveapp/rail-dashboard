@@ -89,6 +89,15 @@ body {
   opacity: .5;
 }
 
+/* Own posts mirror the passenger layout while keeping the photo visible. */
+.chat-message-row[data-own="true"] {
+  margin-left: auto;
+  flex-direction: row-reverse;
+}
+.chat-message-row[data-own="true"] .chat-message { text-align: right; }
+.chat-message-row[data-own="true"] .chat-message-meta { justify-content: flex-end; }
+.chat-message-row[data-own="true"] .chat-message-actions { margin-left: auto; }
+
 /* Reference layout: messages and actions sit directly on the photograph. */
 .chat-message,
 .chat-message-actions {

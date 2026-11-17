@@ -2311,14 +2311,14 @@ export default function MapChat({ launcherTarget = null }) {
               ? "Station Live Guest" : message.username === "TrainLive User" ? "Station Live User" : message.username;
 
             return (
-              <div key={message.id || index} className="chat-message-row mb-6 flex w-full items-start gap-3">
+              <div key={message.id || index} data-own={own} className="chat-message-row mb-6 flex w-full max-w-[90%] items-start gap-3">
                 <span className="chat-message-avatar flex h-10 w-10 shrink-0 items-center justify-center rounded-full" aria-hidden="true">
                   <UserRound size={25} fill="white" strokeWidth={1.5} />
                 </span>
                 <div className="min-w-0 flex-1">
                   <div data-own={own}
                     className="chat-message relative max-w-full text-white">
-                    <div className="mb-0.5 flex flex-wrap items-baseline gap-x-2">
+                    <div className="chat-message-meta mb-0.5 flex flex-wrap items-baseline gap-x-2">
                       <p className="text-sm font-bold">{sender}</p>
                       <span className="text-xs text-white/75">{formatMessageTime(message.created_at)}</span>
                     </div>
