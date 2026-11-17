@@ -821,10 +821,12 @@ button:disabled,
   padding: 7px 5px;
   font-size: 0.7rem;
 }
-.station-summary--mobile .station-report-tile > img {
-  width: 38px;
-  height: 38px;
-  border-radius: 9999px;
+.station-report-tile { --report-original-image-size: 40px; }
+@media (min-width: 430px) {
+  .station-report-tile { --report-original-image-size: 48px; }
+}
+.station-summary--mobile .station-report-tile {
+  --report-original-image-size: 64px;
 }
 .station-summary--mobile .station-report-tile > span:last-child {
   min-height: 0;
@@ -931,7 +933,8 @@ button:disabled,
   aspect-ratio: 1;
   flex-shrink: 0;
 }
-.report-option .report-category-image {
+.report-option .report-category-image,
+.station-report-tile .report-category-image {
   /* Both sizes use the original responsive diameter, before enlargement. */
   width: min(100%, calc(var(--report-original-image-size) * 1.25));
   height: auto;
@@ -940,11 +943,13 @@ button:disabled,
   object-fit: cover;
   transition: width 200ms ease, opacity 300ms ease;
 }
-.report-option[aria-pressed="true"] .report-category-image {
+.report-option[aria-pressed="true"] .report-category-image,
+.station-report-tile[aria-pressed="true"] .report-category-image {
   width: min(100%, calc(var(--report-original-image-size) * 1.4));
 }
 @media (prefers-reduced-motion: reduce) {
-  .report-option .report-category-image { transition: none; }
+  .report-option .report-category-image,
+  .station-report-tile .report-category-image { transition: none; }
 }
 .report-option svg { width: clamp(22px, 6vw, 30px); height: auto; }
 .report-option > span { max-width: 100%; }
