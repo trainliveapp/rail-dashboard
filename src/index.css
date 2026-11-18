@@ -811,7 +811,7 @@ button:disabled,
   color: #89838e;
 }
 .station-summary--mobile .station-summary-body [aria-busy="true"] {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
 }
 .station-summary--mobile .station-report-tile {
@@ -935,17 +935,18 @@ button:disabled,
 }
 .report-option .report-category-image,
 .station-report-tile .report-category-image {
-  /* Both sizes use the original responsive diameter, before enlargement. */
-  width: min(100%, calc(var(--report-original-image-size) * 1.25));
+  /* Scale both endpoints together when the selected diameter must fit a
+     narrow card. Otherwise both widths can hit the same cap, hiding growth. */
+  width: calc(100% * 1.25 / 1.4);
   height: auto;
   aspect-ratio: 1;
   border-radius: 50%;
   object-fit: cover;
-  transition: width 200ms ease, opacity 300ms ease;
+  transition: width 200ms ease, opacity 200ms ease;
 }
 .report-option[aria-pressed="true"] .report-category-image,
 .station-report-tile[aria-pressed="true"] .report-category-image {
-  width: min(100%, calc(var(--report-original-image-size) * 1.4));
+  width: 100%;
 }
 @media (prefers-reduced-motion: reduce) {
   .report-option .report-category-image,
