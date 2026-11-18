@@ -1,6 +1,18 @@
 import { AlertTriangle, Megaphone, Users, Wrench } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabase'
+import LiveTickerPreferences from './LiveTickerPreferences'
+import { ALL_UPDATES, LIVE_PREFERENCES_KEY, validatePreferences, matchesPreference, enrichUpdates, safeLineColor, resolveOperatorLines } from '../lib/liveTicker'
+
+async function readAll(table, columns, order = 'id') {
+  const rows = []
+  for (let offset = 0; ; offset += 1000) {
+    const { data, error } = await supabase.from(table).select(columns).order(order).order(order === 'station_id' ? 'line_id' : order).range(offset, offset + 999)
+    if (error) throw error
+    rows.push(...data)
+    if (data.length < 1000) return rows
+  }
+}
 
 const feedIcons = { AlertTriangle, Users, Wrench, Megaphone }
 
@@ -19,6 +31,24 @@ function formatAge(createdAt) {
 
 export default function TopPromoBar() {
   const [trending, setTrending] = useState([])
+  const [metadata, setMetadata] = useState({ stations: [], lines: [], links: [] })
+  const [preference, setPreference] = useState(ALL_UPDATES)
+  const [preferencesOpen, setPreferencesOpen] = useState(false)
+  const [metadataReady, setMetadataReady] = useState(false)
+  const [feedError, setFeedError] = useState(false)
+  useEffect(() => {
+    let active = true
+    Promise.all([readAll('stations', 'id, name'), readAll('lines', 'id, name, colour'),
+      readAll('station_lines', 'station_id, line_id, valid_from, valid_to', 'station_id')]).then(([stations, lines, links]) => {
+      if (!active) return
+      const today = new Date().toISOString().slice(0, 10)
+      const next = { stations: stations.sort((a, b) => a.name.localeCompare(b.name)), lines: lines.sort((a, b) => a.name.localeCompare(b.name)), links: links.filter(l => (!l.valid_from || l.valid_from <= today) && (!l.valid_to || l.valid_to >= today)) }
+      setMetadata(next)
+      try { setPreference(validatePreferences(JSON.parse(localStorage.getItem(LIVE_PREFERENCES_KEY)), next)) } catch { /* Use All updates if storage is unavailable. */ }
+      setMetadataReady(true)
+    }).catch(() => { /* The live feed remains available without metadata. */ })
+    return () => { active = false }
+  }, [])
 
   useEffect(() => {
     let active = true
@@ -45,15 +75,18 @@ export default function TopPromoBar() {
 
     const loadTrending = async ({ includeTfL = false } = {}) => {
       try {
-        const { data, error } = await supabase
-          .from('station_updates')
-          .select('id, station_name, kind, message, label, confirms, created_at, status')
-          .in('status', ['ACTIVE', 'CONFIRMED'])
-          .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-          .order('confirms', { ascending: false })
-          .order('created_at', { ascending: false })
-          .limit(6)
-
+        const data = []
+        const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+        for (let offset = 0; ; offset += 500) {
+          const result = await supabase.from('station_updates')
+            .select('id, station_name, kind, message, label, confirms, created_at, status')
+            .in('status', ['ACTIVE', 'CONFIRMED']).gte('created_at', since)
+            .order('confirms', { ascending: false }).order('created_at', { ascending: false }).order('id')
+            .range(offset, offset + 499)
+          if (result.error) throw result.error
+          data.push(...result.data)
+          if (result.data.length < 500) break
+        }
         let tflData = []
         let tflError = null
         if (includeTfL) {
@@ -65,13 +98,20 @@ export default function TopPromoBar() {
             .gte('last_seen_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
             .order('severity', { ascending: true })
             .order('last_seen_at', { ascending: false })
-            .limit(6)
+            .limit(1000)
           tflData = result.data || []
           tflError = result.error
         }
 
+        const reportRows = []
+        const reportIds = (data || []).filter(row => row.kind !== 'chat').map(row => row.id)
+        for (let offset = 0; offset < reportIds.length; offset += 100) {
+          const result = await supabase.from('reports').select('id, station_id, report_lines(line_id)')
+            .in('id', reportIds.slice(offset, offset + 100))
+          if (!result.error) reportRows.push(...result.data)
+        }
         if (!active) return
-        if (!error && !(includeTfL && tflError)) {
+        if (!(includeTfL && tflError)) {
           const official = (tflData || []).map((item) => ({
             id: `tfl-${item.source_key}`,
             kind: 'tfl',
@@ -80,10 +120,14 @@ export default function TopPromoBar() {
             label: item.status_description,
             confirms: null,
             created_at: item.last_seen_at,
+            lineIds: resolveOperatorLines(item.line_names, metadata.lines),
           }))
-          setTrending([...(includeTfL ? official : []), ...(data || [])].slice(0, 6))
-        }
+          const community = enrichUpdates(data || [], metadata, reportRows)
+          setTrending(current => [...(includeTfL ? official : current.filter(item => item.kind === 'tfl')), ...community])
+          setFeedError(false)
+        } else { setFeedError(true) }
       } catch {
+        if (active) setFeedError(true)
         // Keep the current ticker updates if a refresh fails.
       }
     }
@@ -107,14 +151,16 @@ export default function TopPromoBar() {
       window.clearInterval(refreshTimer)
       supabase.removeChannel(channel)
     }
-  }, [])
+  }, [metadata])
 
   const track = trending.length > 0
-    ? trending.slice(0, 4).map((item) => ({
+    ? trending.filter(item => matchesPreference(item, preference)).map((item) => ({
+      color: item.lineIds?.length === 1 ? safeLineColor(metadata.lines.find(line => line.id === item.lineIds[0])?.colour) : '#17233f',
+      details: item.kind === 'tfl' ? `TfL operator information: ${item.message}` : `Passenger report (unverified). Lines: ${(item.lineIds || []).map(id => metadata.lines.find(line => line.id === id)?.name || id).join(', ') || 'Unknown'}`,
       icon: item.kind === 'chat' ? 'Users' : 'AlertTriangle',
       text: item.kind === 'tfl'
         ? `TfL ${item.station_name}: ${item.label || 'Service disruption'}`
-        : `${item.station_name}: ${item.message || item.label || 'Travel update'}`,
+        : `Passenger report - ${item.station_name}${item.lineIds?.length ? ' (' + item.lineIds.map(id => metadata.lines.find(line => line.id === id)?.name || id).join(', ') + ')' : ''}: ${item.message || item.label || 'Travel update'}`,
       time: formatAge(item.created_at),
     }))
     : []
@@ -133,25 +179,34 @@ export default function TopPromoBar() {
           allowed to shrink below its content size, so the wide scrolling
           track underneath would force this whole bar (and the page) wider
           than the screen on mobile. This is what broke last time. */}
-      <div className="flex-1 min-w-0 overflow-hidden">
-        <div className="flex gap-8 marquee-track w-max whitespace-nowrap">
+      <div className="live-ticker-viewport flex-1 min-w-0 overflow-hidden" tabIndex={0} aria-label="Live travel updates">
+        <div className="live-ticker-track flex gap-8 marquee-track w-max whitespace-nowrap">
           {track.length > 0 ? track.concat(track).map((item, i) => {
             const Icon = feedIcons[item.icon] || AlertTriangle
             return (
-            <span key={i} className="flex items-center gap-2 shrink-0">
+            <span key={i} title={item.details} aria-hidden={i >= track.length ? true : undefined} className="flex items-center gap-2 shrink-0">
               <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-ink/10">
                 <Icon size={12} />
               </span>
-              <span className="font-semibold">{item.text}</span>
+              <span className="font-semibold" style={{ color: item.color }}>{item.text}<span className="sr-only">. {item.details}</span></span>
               <span className="text-brand-ink/60">{item.time}</span>
             </span>
             )
           }) : (
-            <span className="shrink-0 font-semibold">Live travel updates from the community</span>
+            <span className="shrink-0 font-semibold">{feedError ? 'Live updates temporarily unavailable' : preference.mode === 'all' ? 'Live travel updates from the community' : 'No matching updates for your selection'}</span>
           )}
         </div>
       </div>
-
+      <button type="button" aria-label="Personalise LIVE updates" aria-haspopup="dialog" aria-expanded={preferencesOpen} onClick={() => setPreferencesOpen(true)} className="relative -my-2.5 mr-1 flex h-11 w-11 shrink-0 items-center justify-center text-black focus-visible:outline-2 focus-visible:outline-offset-[-3px]">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M3 7h5m6 0h7M3 17h11m6 0h1" /><circle cx="11" cy="7" r="3" /><circle cx="17" cy="17" r="3" /></svg>
+      </button>
+      {preferencesOpen && <LiveTickerPreferences preference={preference} metadata={metadata} onClose={() => setPreferencesOpen(false)} onApply={next => {
+        const validated = validatePreferences(next, metadata)
+        setPreference(validated)
+        try { localStorage.setItem(LIVE_PREFERENCES_KEY, JSON.stringify(validated)) } catch { /* Apply for this visit. */ }
+        setPreferencesOpen(false)
+      }} />}
+      {!metadataReady && <span className="sr-only">Personalisation metadata is loading or unavailable.</span>}
     </div>
   )
 }
