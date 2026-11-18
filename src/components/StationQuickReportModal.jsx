@@ -66,7 +66,7 @@ export default function StationQuickReportModal({ station, onClose, onReportSubm
           </div>
           <div className="min-w-0">
             <h2 id="quick-report-title" className="text-lg font-bold text-slate-900 truncate">Report — {station.name}</h2>
-            <p className="text-sm text-slate-400 flex items-center gap-1">
+            <p className="min-h-10 text-sm text-slate-400 flex items-center gap-1">
               {selected ? (
                 <>
                   <ReportCategoryImage category={selected.key} className="h-5 w-5" /> {selected.label} selected

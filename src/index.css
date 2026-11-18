@@ -821,12 +821,16 @@ button:disabled,
   padding: 7px 5px;
   font-size: 0.7rem;
 }
-.station-report-tile { --report-original-image-size: 40px; }
+.station-report-tile {
+  --report-original-image-size: 40px;
+  --report-image-inline-space: 24px;
+}
 @media (min-width: 430px) {
   .station-report-tile { --report-original-image-size: 48px; }
 }
 .station-summary--mobile .station-report-tile {
   --report-original-image-size: 64px;
+  --report-image-inline-space: 10px;
 }
 .station-summary--mobile .station-report-tile > span:last-child {
   min-height: 0;
@@ -920,24 +924,27 @@ button:disabled,
 }
 .report-option {
   --report-original-image-size: clamp(30px, 9vw, 48px);
+  --report-image-inline-space: 12px;
   min-width: 0;
   min-height: 44px;
   padding: 10px 6px;
   font-size: clamp(12px, 3vw, 14px);
+  overflow-wrap: normal;
 }
 .report-image-slot {
   /* Reserve the selected diameter so selection never shifts the label or grid. */
   display: grid;
   place-items: center;
-  width: min(100%, calc(var(--report-original-image-size) * 1.4));
+  /* The photo may use the card's horizontal padding, but stays inside its border. */
+  width: min(calc(100% + var(--report-image-inline-space)), calc(var(--report-original-image-size) * 1.4));
   aspect-ratio: 1;
   flex-shrink: 0;
 }
 .report-option .report-category-image,
 .station-report-tile .report-category-image {
-  /* Scale both endpoints together when the selected diameter must fit a
-     narrow card. Otherwise both widths can hit the same cap, hiding growth. */
-  width: calc(100% * 1.25 / 1.4);
+  /* Measure both endpoints against the original photograph, capping only
+     when the card's available inner width is smaller than that endpoint. */
+  width: min(100%, calc(var(--report-original-image-size) * 1.25));
   height: auto;
   aspect-ratio: 1;
   border-radius: 50%;
@@ -954,6 +961,7 @@ button:disabled,
 }
 .report-option svg { width: clamp(22px, 6vw, 30px); height: auto; }
 .report-option > span { max-width: 100%; }
+.report-option > .report-image-slot { max-width: none; }
 @media (min-width: 768px) {
   .report-panel.report-issue-panel {
     width: min(600px, calc(var(--visible-width) - 64px));
