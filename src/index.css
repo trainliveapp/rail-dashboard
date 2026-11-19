@@ -95,10 +95,12 @@ body {
   flex-direction: row-reverse;
 }
 .chat-message-row[data-own="true"] .chat-message { text-align: right; }
+.chat-message { width: fit-content; max-width: 100%; }
+.chat-message-row[data-own="true"] .chat-message { margin-left: auto; }
 .chat-message-row[data-own="true"] .chat-message-meta { justify-content: flex-end; }
 .chat-message-row[data-own="true"] .chat-message-actions { margin-left: auto; }
 
-/* Reference layout: messages and actions sit directly on the photograph. */
+/* Metadata and actions retain the existing treatment on the photograph. */
 .chat-message,
 .chat-message-actions {
   background: transparent;
@@ -107,6 +109,19 @@ body {
   color: #fff;
   text-shadow: 0 1px 4px rgb(0 0 0 / 75%);
 }
+/* The surface wraps only message content; metadata and actions stay outside. */
+.chat-message-bubble {
+  width: fit-content;
+  max-width: 100%;
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: rgb(255 255 255 / 96%);
+  color: #17212b;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 16%);
+  text-shadow: none;
+  overflow-wrap: anywhere;
+}
+.chat-message-row[data-own="true"] .chat-message-bubble { margin-left: auto; }
 .chat-message-avatar {
   color: white;
   border: 1px solid rgb(255 255 255 / 65%);

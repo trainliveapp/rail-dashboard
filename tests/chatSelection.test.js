@@ -1,13 +1,39 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
-import { CHAT_SELECTION_KEY, readChatSelection, saveChatSelection } from '../src/lib/chatSelection.js'
+import { CHAT_SELECTION_KEY, readChatSelection, saveChatSelection, CHAT_FAVOURITES_KEY, readChatFavourites, saveChatFavourites } from '../src/lib/chatSelection.js'
 import { CHAT_CHANNELS, NATIONAL_RAIL_CHANNELS, getChatChannel, searchChatChannels } from '../src/data/chatChannels.js'
 
 function storage() {
   const entries = new Map()
   return { getItem: key => entries.get(key) ?? null, setItem: (key, value) => entries.set(key, String(value)) }
 }
+
+test('favourites persist stable line and operator IDs independently of selection', () => {
+  const saved = storage()
+  const ids = ['underground_northern', 'national_rail_northern']
+  saveChatSelection(saved, 'underground_central')
+  saveChatFavourites(saved, ids)
+  assert.deepEqual(readChatFavourites(saved), ids)
+  assert.equal(readChatSelection(saved), 'underground_central')
+  saveChatFavourites(saved, ids.slice(1))
+  assert.deepEqual(readChatFavourites(saved), ids.slice(1))
+  saveChatFavourites(saved, [])
+  assert.deepEqual(readChatFavourites(saved), [])
+})
+
+test('favourites discard stale IDs, duplicates, malformed data and tolerate blocked storage', () => {
+  const saved = storage()
+  for (const value of ['broken', '{}', 'null', '42']) {
+    saved.setItem(CHAT_FAVOURITES_KEY, value)
+    assert.deepEqual(readChatFavourites(saved), [])
+  }
+  saved.setItem(CHAT_FAVOURITES_KEY, JSON.stringify(['underground_central', 'Central Line', 'underground_central', null, 'retired']))
+  assert.deepEqual(readChatFavourites(saved), ['underground_central'])
+  const blocked = { getItem() { throw Error('blocked') }, setItem() { throw Error('blocked') } }
+  assert.deepEqual(readChatFavourites(blocked), [])
+  assert.doesNotThrow(() => saveChatFavourites(blocked, ['underground_central']))
+})
 
 test('first use and invalid persisted selections open without a channel', () => {
   const saved = storage()

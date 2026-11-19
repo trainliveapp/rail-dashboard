@@ -1436,9 +1436,10 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Star,
 } from "lucide-react";
 import { supabase } from "../supabase";
-import { readChatSelection, saveChatSelection } from "../lib/chatSelection";
+import { readChatSelection, saveChatSelection, readChatFavourites, saveChatFavourites } from "../lib/chatSelection";
 import { getChatVisitorId } from "../lib/chatIdentity";
 import { images } from "../data/optimizedImages";
 import ImageBackground from "./ImageBackground";
@@ -1450,6 +1451,7 @@ import SmoothImage from "./SmoothImage";
 import { getChannelReportBreakdown, getChannelReportSummary, subscribeToCanonicalReports } from "../lib/canonicalReports";
 import {
   MAIN_CHAT_CHANNELS,
+  CHAT_CHANNELS,
   NATIONAL_RAIL_CHANNELS,
   getChatChannel,
   searchChatChannels,
@@ -1502,6 +1504,17 @@ export default function MapChat({ launcherTarget = null }) {
   const [channelMenuOpen, setChannelMenuOpen] = useState(() => !channelId);
   const [channelView, setChannelView] = useState("main");
   const [channelQuery, setChannelQuery] = useState("");
+  const [favouriteChannels, setFavouriteChannels] = useState(() => {
+    try { return readChatFavourites(window.localStorage); } catch { return []; }
+  });
+
+  function toggleFavourite(id) {
+    const next = favouriteChannels.includes(id)
+      ? favouriteChannels.filter((item) => item !== id)
+      : [...favouriteChannels, id];
+    setFavouriteChannels(next);
+    try { saveChatFavourites(window.localStorage, next); } catch { /* Keep session favourites. */ }
+  }
   const [channelListHeight, setChannelListHeight] = useState(0);
   const [channelViewport, setChannelViewport] = useState(null);
   const [reportCount, setReportCount] = useState(0);
@@ -1607,9 +1620,12 @@ export default function MapChat({ launcherTarget = null }) {
   const mainChannelScrollTopRef = useRef(0);
   const selectedChannel = channelId ? getChatChannel(channelId) : { displayName: "Choose a channel", themeColour: "#29292e" };
   const searchingChannels = Boolean(normalizeChannelSearch(channelQuery));
+  const favourites = CHAT_CHANNELS.filter((channel) => favouriteChannels.includes(channel.id));
+  const showFavourites = !searchingChannels && channelView === "main";
   const visibleChannels = searchingChannels
     ? searchChatChannels(channelQuery, channelView === "nationalRail" ? NATIONAL_RAIL_CHANNELS : undefined)
-    : channelView === "nationalRail" ? NATIONAL_RAIL_CHANNELS : MAIN_CHAT_CHANNELS;
+    : channelView === "nationalRail" ? NATIONAL_RAIL_CHANNELS
+      : [...favourites, ...MAIN_CHAT_CHANNELS.filter((channel) => !favouriteChannels.includes(channel.id))];
 
   useEffect(() => {
     if (!open || !channelMenuOpen) return;
@@ -2212,7 +2228,7 @@ export default function MapChat({ launcherTarget = null }) {
                   </button>
                 )}
               </div>
-              <div ref={mainChannelListRef} className="chat-channel-list min-h-0 overflow-x-hidden overflow-y-auto overscroll-contain py-1"
+              <div ref={mainChannelListRef} className="chat-channel-list min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain py-1"
                 onKeyDown={(event) => {
                   const buttons = [...event.currentTarget.querySelectorAll("button")];
                   const index = buttons.indexOf(document.activeElement);
@@ -2223,24 +2239,14 @@ export default function MapChat({ launcherTarget = null }) {
                   if (event.key === "End") next = buttons.length - 1;
                   if (next !== undefined) { event.preventDefault(); buttons[next]?.focus(); }
                 }}>
-                {!searchingChannels && channelView === "main" && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      mainChannelScrollTopRef.current = mainChannelListRef.current?.scrollTop || 0;
-                      setChannelView("nationalRail");
-                      window.requestAnimationFrame(() => mainChannelListRef.current?.querySelector("button")?.focus({ preventScroll: true }));
-                    }}
-                    className="flex min-h-14 w-full items-center justify-between gap-3 border-b border-white/10 px-3 py-3 text-left text-[18px] font-semibold hover:bg-white/10 focus-visible:bg-white/10 focus-visible:outline-none"
-                  >
-                    <span>Browse National Rail operators</span>
-                    <ChevronRight aria-hidden="true" className="h-5 w-5 shrink-0" />
-                  </button>
-                )}
-                <div role="group" aria-label={searchingChannels ? "Channel search results" : channelView === "main" ? "London channels" : "National Rail operators"}>
-                {visibleChannels.map((channel) => (
+                <div role="group" aria-label={searchingChannels ? "Channel search results" : channelView === "main" ? "London channels and favourites" : "National Rail operators"}>
+                {visibleChannels.map((channel, index) => (
+                  <div key={channel.id}>
+                    {showFavourites && favourites.length > 0 && (index === 0 || index === favourites.length) && (
+                      <p className="px-3 pt-3 pb-1 text-xs font-semibold text-white/60">{index === 0 ? "Favourites" : "London channels"}</p>
+                    )}
+                    <div className="flex items-center border-b border-white/10">
                     <button
-                      key={channel.id}
                       type="button"
                       aria-pressed={channel.id === channelId}
                       onClick={() => {
@@ -2260,14 +2266,37 @@ export default function MapChat({ launcherTarget = null }) {
 
                         setChannelView("main");
                       }}
-                      className="flex min-h-14 w-full items-center gap-3 border-b border-white/10 px-3 py-3 text-left text-[18px] font-medium leading-6 transition last:border-b-0 hover:bg-white/10 focus-visible:bg-white/10 focus-visible:outline-none"
+                      className="flex min-h-14 min-w-0 flex-1 items-center gap-3 px-3 py-3 text-left text-[18px] font-medium leading-6 transition hover:bg-white/10 focus-visible:bg-white/10 focus-visible:outline-none"
                     >
                       <span aria-hidden="true" className="h-7 w-1 shrink-0 rounded-sm ring-1 ring-white/25" style={{ backgroundColor: channel.themeColour }} />
                       <span className="min-w-0 break-words">{channel.displayName}</span>
                     </button>
+                    <button type="button" aria-label={`${favouriteChannels.includes(channel.id) ? "Remove" : "Add"} ${channel.displayName} ${favouriteChannels.includes(channel.id) ? "from" : "to"} favourites`}
+                      aria-pressed={favouriteChannels.includes(channel.id)}
+                      onClick={() => toggleFavourite(channel.id)}
+                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-yellow-300 hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-white">
+                      <Star size={20} aria-hidden="true" fill={favouriteChannels.includes(channel.id) ? "currentColor" : "none"} />
+                    </button>
+                    </div>
+                  </div>
                 ))}
 
                 </div>
+                {!searchingChannels && channelView === "main" && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      mainChannelScrollTopRef.current = mainChannelListRef.current?.scrollTop || 0;
+                      setChannelView("nationalRail");
+                      window.requestAnimationFrame(() => mainChannelListRef.current?.querySelector("button")?.focus({ preventScroll: true }));
+                    }}
+                    className="flex min-h-14 w-full items-center justify-between gap-3 border-b border-white/10 px-3 py-3 text-left text-[18px] font-semibold hover:bg-white/10 focus-visible:bg-white/10 focus-visible:outline-none"
+                  >
+                    <span>Browse National Rail operators</span>
+                    <ChevronRight aria-hidden="true" className="h-5 w-5 shrink-0" />
+                  </button>
+                )}
+
                 {!visibleChannels.length && <p className="px-3 py-5 text-sm text-white/70">No channels found.</p>}
               </div>
             </div>
@@ -2323,10 +2352,10 @@ export default function MapChat({ launcherTarget = null }) {
                       <span className="text-xs text-white/75">{formatMessageTime(message.created_at)}</span>
                     </div>
 
-                    <div className="relative">
+                    <div className="chat-message-bubble">
                       <div>
                         {message.message && (
-                          <p className="break-words [overflow-wrap:anywhere] whitespace-pre-wrap text-base leading-6 text-white">
+                          <p className="break-words [overflow-wrap:anywhere] whitespace-pre-wrap text-base leading-6">
                             {message.message}
                           </p>
                         )}

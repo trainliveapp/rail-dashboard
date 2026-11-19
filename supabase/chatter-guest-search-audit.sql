@@ -2,9 +2,7 @@
 -- Export the result sets for review before preparing/applying the feature migration.
 -- This does not return message text, attachment URLs, credentials or JWTs.
 begin transaction read only;
-
 select current_database() as database_name, current_timestamp as audited_at;
-
 select table_name, ordinal_position, column_name, data_type, udt_name,
        is_nullable, column_default
 from information_schema.columns
