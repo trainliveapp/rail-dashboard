@@ -1,29 +1,111 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { ALL_UPDATES } from '../lib/liveTicker'
+import { ALL_UPDATES, toggleStationSelection } from '../lib/liveTicker'
 
-export default function LiveTickerPreferences({ preference, metadata, onApply, onClose }) {
+const EMPTY_STATIONS = []
+
+export default function LiveTickerPreferences({ preference, metadata, metadataReady, onApply, onClose }) {
   const dialog = useRef(null)
-  const [draft, setDraft] = useState(preference)
+  const searchInput = useRef(null)
+  const [selectedIds, setSelectedIds] = useState(() => preference.mode === 'stations' ? preference.ids : [])
   const [search, setSearch] = useState('')
+  const stations = metadata?.stations || EMPTY_STATIONS
+  const options = useMemo(() => {
+    const query = search.trim().toLowerCase()
+    return stations.filter(station => station.name.toLowerCase().includes(query))
+  }, [search, stations])
+
   useEffect(() => {
+    const element = dialog.current
     const previous = document.activeElement
-    dialog.current.showModal()
-    return () => { previous?.focus() }
+    element?.showModal()
+    searchInput.current?.focus({ preventScroll: true })
+
+    const updateVisibleBounds = () => {
+      const viewport = window.visualViewport
+      if (!element || !viewport) return
+      const height = Math.max(150, viewport.height - 24)
+      element.style.top = `${Math.max(0, viewport.offsetTop + 12)}px`
+      element.style.height = `${height}px`
+      element.style.maxHeight = `${height}px`
+    }
+    updateVisibleBounds()
+    window.visualViewport?.addEventListener('resize', updateVisibleBounds)
+    window.visualViewport?.addEventListener('scroll', updateVisibleBounds)
+    window.addEventListener('resize', updateVisibleBounds)
+    return () => {
+      window.visualViewport?.removeEventListener('resize', updateVisibleBounds)
+      window.visualViewport?.removeEventListener('scroll', updateVisibleBounds)
+      window.removeEventListener('resize', updateVisibleBounds)
+      previous?.focus?.()
+    }
   }, [])
-  const options = draft.mode === 'all' ? [] : metadata[draft.mode].filter(item => item.name.toLowerCase().includes(search.toLowerCase()))
-  function toggle(id) {
-    setDraft(current => ({ ...current, ids: current.ids.includes(id) ? current.ids.filter(value => value !== id) : current.ids.length < 3 ? [...current.ids, id] : current.ids }))
+
+  function apply() {
+    onApply(selectedIds.length ? { mode: 'stations', ids: selectedIds } : ALL_UPDATES)
   }
-  return createPortal(<dialog ref={dialog} onCancel={onClose} aria-labelledby="live-preferences-title" className="live-preferences">
-    <div className="flex items-center justify-between gap-4"><h2 id="live-preferences-title" className="text-lg font-bold">Personalise LIVE updates</h2><button type="button" onClick={onClose} className="min-h-11 px-2">Close</button></div>
-    <fieldset className="mt-3"><legend className="font-semibold">Show updates for</legend><div className="mt-2 flex flex-wrap gap-3">{[['all', 'All updates'], ['lines', 'Railway lines'], ['stations', 'Stations']].map(([mode, label]) => <label key={mode} className="flex min-h-11 items-center gap-2"><input type="radio" name="live-mode" checked={draft.mode === mode} onChange={() => { setDraft({ mode, ids: [] }); setSearch('') }} />{label}</label>)}</div></fieldset>
-    {draft.mode !== 'all' && <>
-      <p className="my-2" aria-live="polite">{draft.ids.length} of 3 selected</p>
-      <label className="block">Search {draft.mode}<input className="mt-1 w-full rounded border border-slate-400 p-2" value={search} onChange={e => setSearch(e.target.value)} /></label>
-      <div className="my-3 max-h-[35vh] overflow-y-auto">{options.map(item => <label key={item.id} className="flex min-h-11 items-center gap-3 border-b border-slate-100 py-2"><input type="checkbox" checked={draft.ids.includes(item.id)} disabled={!draft.ids.includes(item.id) && draft.ids.length >= 3} onChange={() => toggle(item.id)} />{item.name}</label>)}{!options.length && <p>No matching {draft.mode}.</p>}</div>
-    </>}
-    <p className="my-3 text-sm text-slate-600">TfL notices and updates without a reliable location stay visible in every mode.</p>
-    <div className="flex justify-between gap-3"><button type="button" className="min-h-11 px-3 underline" onClick={() => { setDraft(ALL_UPDATES); setSearch('') }}>Reset to All updates</button><button type="button" disabled={draft.mode !== 'all' && !draft.ids.length} className="min-h-11 rounded bg-slate-900 px-5 text-white disabled:opacity-40" onClick={() => onApply(draft)}>Apply</button></div>
-  </dialog>, document.body)
+
+  return createPortal(
+    <dialog
+      ref={dialog}
+      onCancel={onClose}
+      onClick={event => { if (event.target === dialog.current) onClose() }}
+      aria-labelledby="live-preferences-title"
+      aria-describedby="live-preferences-subtitle"
+      className="live-preferences"
+    >
+      <div className="live-preferences-layout">
+        <header className="live-preferences-header">
+          <div>
+            <h2 id="live-preferences-title" className="text-xl font-bold">Personalise</h2>
+            <p id="live-preferences-subtitle" className="mt-1 text-sm text-slate-600">Choose up to 3 stations</p>
+          </div>
+          <button type="button" onClick={onClose} className="live-preferences-close">Close</button>
+        </header>
+
+        <p className="live-preferences-count" aria-live="polite" aria-atomic="true">
+          {selectedIds.length} of 3 selected
+        </p>
+        <label htmlFor="live-station-search" className="sr-only">Search for a station</label>
+        <input
+          ref={searchInput}
+          id="live-station-search"
+          type="search"
+          value={search}
+          onChange={event => setSearch(event.target.value)}
+          placeholder="Search for a station..."
+          autoComplete="off"
+          className="live-preferences-search"
+        />
+
+        <div className="live-preferences-results" role="group" aria-label="Stations">
+          {options.map(station => {
+            const checked = selectedIds.includes(station.id)
+            return (
+              <label key={station.id} className="live-preferences-option">
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  disabled={!checked && selectedIds.length >= 3}
+                  onChange={() => setSelectedIds(ids => toggleStationSelection(ids, station.id))}
+                />
+                <span>{station.name}</span>
+              </label>
+            )
+          })}
+          {!options.length && (
+            <p className="live-preferences-empty" role="status">
+              {stations.length ? 'No matching stations.' : metadataReady ? 'Station list is unavailable right now.' : 'Loading stations…'}
+            </p>
+          )}
+        </div>
+
+        <footer className="live-preferences-actions">
+          <button type="button" onClick={() => setSelectedIds([])} className="live-preferences-clear">Clear</button>
+          <button type="button" onClick={apply} className="live-preferences-apply">Apply ({selectedIds.length}/3)</button>
+        </footer>
+      </div>
+    </dialog>,
+    document.body,
+  )
 }

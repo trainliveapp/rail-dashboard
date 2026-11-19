@@ -1,17 +1,35 @@
-export const LIVE_PREFERENCES_KEY = 'stationlive-live-preferences-v1'
+export const LIVE_PREFERENCES_KEY = 'stationlive-live-preferences-v2'
+const LEGACY_LIVE_PREFERENCES_KEY = 'stationlive-live-preferences-v1'
 export const ALL_UPDATES = { mode: 'all', ids: [] }
 export function validatePreferences(value, metadata) {
-  if (!value || !['lines', 'stations'].includes(value.mode)) return ALL_UPDATES
-  const valid = new Set(metadata[value.mode].map(item => item.id))
+  if (!value || value.mode !== 'stations') return ALL_UPDATES
+  const valid = new Set((metadata?.stations || []).map(item => item.id))
   const ids = [...new Set(Array.isArray(value.ids) ? value.ids : [])].filter(id => valid.has(id)).slice(0, 3)
-  return ids.length ? { mode: value.mode, ids } : ALL_UPDATES
+  return ids.length ? { mode: 'stations', ids } : ALL_UPDATES
 }
 export function matchesPreference(item, preference) {
-  // The source has no trustworthy network-safety classification. Keep operator
-  // notices and unattributed reports visible rather than infer safety from prose.
-  if (preference.mode === 'all' || item.kind === 'tfl' || !item.stationId) return true
-  return preference.mode === 'stations' ? preference.ids.includes(item.stationId)
-    : item.lineIds.length === 0 || item.lineIds.some(id => preference.ids.includes(id))
+  // Ticker sources currently have no explicit network-wide critical flag.
+  // In station mode, include only rows linked to a selected canonical station.
+  return !preference || preference.mode === 'all' || Boolean(item.stationId && preference.ids?.includes(item.stationId))
+}
+export function readPreferences(storage, metadata) {
+  try {
+    const current = storage.getItem(LIVE_PREFERENCES_KEY)
+    const saved = current ?? storage.getItem(LEGACY_LIVE_PREFERENCES_KEY)
+    return validatePreferences(saved ? JSON.parse(saved) : ALL_UPDATES, metadata)
+  } catch {
+    return ALL_UPDATES
+  }
+}
+export function savePreferences(storage, preference, metadata) {
+  const validated = validatePreferences(preference, metadata)
+  try { storage.setItem(LIVE_PREFERENCES_KEY, JSON.stringify(validated)) } catch { /* The current session still uses the selected stations. */ }
+  return validated
+}
+export function toggleStationSelection(ids, id) {
+  const selected = [...new Set(Array.isArray(ids) ? ids : [])]
+  return selected.includes(id) ? selected.filter(value => value !== id)
+    : selected.length < 3 ? [...selected, id] : selected
 }
 export function enrichUpdates(rows, metadata, reports) {
   const stations = new Map(metadata.stations.map(s => [s.name, s]))
@@ -28,7 +46,8 @@ export function safeLineColor(color) {
   if (!/^#[0-9a-f]{6}$/i.test(color || '')) return '#17233f'
   const rgb = color.slice(1).match(/../g).map(c => parseInt(c, 16))
   const luminance = channels => channels.map(v => v / 255).map(v => v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4).reduce((sum, v, i) => sum + v * [.2126, .7152, .0722][i], 0)
-  while ((luminance([255, 223, 61]) + .05) / (luminance(rgb) + .05) < 4.5) {
+  // The existing Tailwind bg-yellow-400 banner resolves to #facc15.
+  while ((luminance([250, 204, 21]) + .05) / (luminance(rgb) + .05) < 4.5) {
     for (let i = 0; i < 3; i++) rgb[i] = Math.floor(rgb[i] * .9)
   }
   return '#' + rgb.map(v => v.toString(16).padStart(2, '0')).join('')

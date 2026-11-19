@@ -10,14 +10,14 @@ Verified against Station_Live_Yellow_Banner_Developer_Instructions.docx.pdf on 1
 | Fixed black two-line Tune icon with circles and no white box | Pass | Browser checks confirm 44 x 44 CSS pixel target, stationary at all tested widths |
 | Only report text receives line colour | Pass | Inline text colour; single reliably attributed line only; neutral for multiple/unknown lines |
 | Contrast-safe dark variants; textual identification | Pass | Colour darkening targets 4.5:1 against actual yellow; line/station/source names retained |
-| All updates default; exclusive line/station modes | Pass | Native radio inputs, validated mode and IDs |
+| All updates default; station-only personalisation, maximum three stations | Pass | Canonical station IDs, validated versioned preference and selection cap |
 | Maximum three selections and count | Pass | Browser selection limit; pure validation tests |
 | Station search, Apply, Close, Reset and reopen | Pass | Browser interaction checks and component inspection |
 | Versioned localStorage, no account | Pass | Reload preserves selected IDs; no authentication dependency |
 | Actual station/line relationships, interchanges and deduplication | Pass with data caveat | Existing schema inspected; canonical reports/report_lines preferred; exact station-name fallback for legacy rows; unit tests |
 | Neutral empty state | Pass | Browser selects an unrelated station and verifies message |
 | Passenger and operator sources distinguished | Pass | Passenger report labels and unverified details; TfL operator details |
-| Critical notices bypass filters | Conservative fallback, not full classification | All TfL and unattributed updates remain visible. No trusted critical-network-wide flag exists in the source. Routine TfL notices therefore also bypass filters. A reliable agreed classifier remains outstanding. |
+| Critical notices bypass filters | No bypass source is implemented | The current source has no trusted network-wide critical flag. Station mode excludes TfL line-wide and unattributed updates because they lack an explicit selected-station relationship; All updates still includes them. |
 | Reduced motion; no flashing; scrolling text only | Pass | Browser computed animation disabled with reduced motion; Tune remains fixed; static red dot |
 | Slow speed requested after PDF | Pass | Computed animation duration is 224 seconds |
 | Narrow layouts, keyboard and focus | Pass | 320/375/768/1440 widths, no page overflow, Enter opens, Escape closes, focus returns to Tune |
@@ -46,4 +46,10 @@ src/components/TopPromoBar.jsx; src/components/LiveTickerPreferences.jsx; src/li
 
 Screenshots: ../tmp/live-ticker/default-mobile.png, ../tmp/live-ticker/filter-mobile.png, ../tmp/live-ticker/selected-mobile.png.
 
-Conclusion: the visual and preference requirements pass local verification. Full unconditional acceptance is not claimed: the PDF's agreed critical-notice classification and production database/end-to-end external-service checks remain unverified.
+## Station-only personalisation follow-up
+
+The selector now follows the station-only brief: title “Personalise,” subtitle “Choose up to 3 stations,” fixed search input, independently scrolling results, Clear and Apply (n/3). Preferences use `stationlive-live-preferences-v2`, validate against the current canonical station catalogue, and can migrate valid station IDs from the previous version. Clear and Apply with zero selections restores All updates.
+
+Station mode matches only explicit canonical `station_id` relationships from `reports` joined by the shared `station_updates.id`; older rows may match only by exact catalogue station name. It never broadens a station filter to a line. TfL line notices have no station IDs or trusted critical-network-wide flag in the current table and are excluded in station mode. No database change was made.
+
+The approved storyboard in the open Word document tab was reviewed as the visual reference. A local preview confirmed the panel appears over the current map and exposes its title, subtitle, search, Clear, Apply and Close controls. The ticker loaded reports, but the station catalogue request did not complete in that browser session; the specific remote query error was not captured. Metadata tables now load independently so a line metadata failure does not hide a successful station catalogue. The isolated fixture browser harness points to a removed Playwright runtime path, so no browser interaction run is claimed for this follow-up. Physical mobile keyboards and assistive screen readers were not tested.

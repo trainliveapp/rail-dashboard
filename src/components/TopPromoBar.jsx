@@ -1,8 +1,9 @@
 import { AlertTriangle, Megaphone, Users, Wrench } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabase'
+import { stations as bundledStations } from '../data/mockData'
 import LiveTickerPreferences from './LiveTickerPreferences'
-import { ALL_UPDATES, LIVE_PREFERENCES_KEY, validatePreferences, matchesPreference, enrichUpdates, safeLineColor, resolveOperatorLines } from '../lib/liveTicker'
+import { ALL_UPDATES, matchesPreference, enrichUpdates, safeLineColor, resolveOperatorLines, readPreferences, savePreferences, validatePreferences } from '../lib/liveTicker'
 
 async function readAll(table, columns, order = 'id') {
   const rows = []
@@ -31,20 +32,37 @@ function formatAge(createdAt) {
 
 export default function TopPromoBar() {
   const [trending, setTrending] = useState([])
-  const [metadata, setMetadata] = useState({ stations: [], lines: [], links: [] })
+  const [metadata, setMetadata] = useState({
+    stations: bundledStations.map(({ id, name }) => ({ id, name })),
+    lines: [],
+    links: [],
+  })
   const [preference, setPreference] = useState(ALL_UPDATES)
   const [preferencesOpen, setPreferencesOpen] = useState(false)
   const [metadataReady, setMetadataReady] = useState(false)
   const [feedError, setFeedError] = useState(false)
   useEffect(() => {
     let active = true
-    Promise.all([readAll('stations', 'id, name'), readAll('lines', 'id, name, colour'),
-      readAll('station_lines', 'station_id, line_id, valid_from, valid_to', 'station_id')]).then(([stations, lines, links]) => {
+    Promise.allSettled([readAll('stations', 'id, name'), readAll('lines', 'id, name, colour'),
+      readAll('station_lines', 'station_id, line_id, valid_from, valid_to', 'station_id')]).then(([stationResult, lineResult, linkResult]) => {
       if (!active) return
+      // The map already ships with the canonical TfL station catalogue. Keep
+      // that list available in the preferences panel if the metadata endpoint
+      // is offline or its public read policy is misconfigured, then overlay
+      // database rows so newly added canonical stations appear as well.
+      const stationsById = new Map(bundledStations.map(({ id, name }) => [id, { id, name }]))
+      if (stationResult.status === 'fulfilled') {
+        stationResult.value.forEach(station => {
+          if (station?.id && station?.name) stationsById.set(station.id, station)
+        })
+      }
+      const stations = [...stationsById.values()]
+      const lines = lineResult.status === 'fulfilled' ? lineResult.value : []
+      const links = linkResult.status === 'fulfilled' ? linkResult.value : []
       const today = new Date().toISOString().slice(0, 10)
       const next = { stations: stations.sort((a, b) => a.name.localeCompare(b.name)), lines: lines.sort((a, b) => a.name.localeCompare(b.name)), links: links.filter(l => (!l.valid_from || l.valid_from <= today) && (!l.valid_to || l.valid_to >= today)) }
       setMetadata(next)
-      try { setPreference(validatePreferences(JSON.parse(localStorage.getItem(LIVE_PREFERENCES_KEY)), next)) } catch { /* Use All updates if storage is unavailable. */ }
+      try { setPreference(readPreferences(window.localStorage, next)) } catch { /* Use All updates if storage is unavailable. */ }
       setMetadataReady(true)
     }).catch(() => { /* The live feed remains available without metadata. */ })
     return () => { active = false }
@@ -155,12 +173,14 @@ export default function TopPromoBar() {
 
   const track = trending.length > 0
     ? trending.filter(item => matchesPreference(item, preference)).map((item) => ({
-      color: item.lineIds?.length === 1 ? safeLineColor(metadata.lines.find(line => line.id === item.lineIds[0])?.colour) : '#17233f',
-      details: item.kind === 'tfl' ? `TfL operator information: ${item.message}` : `Passenger report (unverified). Lines: ${(item.lineIds || []).map(id => metadata.lines.find(line => line.id === id)?.name || id).join(', ') || 'Unknown'}`,
+      color: item.kind === 'report' && item.lineIds?.length === 1 ? safeLineColor(metadata.lines.find(line => line.id === item.lineIds[0])?.colour) : '#17233f',
+      details: item.kind === 'tfl' ? `TfL operator information: ${item.message}` : item.kind === 'chat' ? 'Community message (unverified).' : `Passenger report (unverified). Lines: ${(item.lineIds || []).map(id => metadata.lines.find(line => line.id === id)?.name || id).join(', ') || 'Unknown'}`,
       icon: item.kind === 'chat' ? 'Users' : 'AlertTriangle',
       text: item.kind === 'tfl'
         ? `TfL ${item.station_name}: ${item.label || 'Service disruption'}`
-        : `Passenger report - ${item.station_name}${item.lineIds?.length ? ' (' + item.lineIds.map(id => metadata.lines.find(line => line.id === id)?.name || id).join(', ') + ')' : ''}: ${item.message || item.label || 'Travel update'}`,
+        : item.kind === 'chat'
+          ? `Community message - ${item.station_name}: ${item.message || 'Travel update'}`
+          : `Passenger report - ${item.station_name}${item.lineIds?.length ? ' (' + item.lineIds.map(id => metadata.lines.find(line => line.id === id)?.name || id).join(', ') + ')' : ''}: ${item.message || item.label || 'Travel update'}`,
       time: formatAge(item.created_at),
     }))
     : []
@@ -202,10 +222,10 @@ export default function TopPromoBar() {
       </button>
       {preferencesOpen && <LiveTickerPreferences preference={preference} metadata={metadata} onClose={() => setPreferencesOpen(false)} onApply={next => {
         const validated = validatePreferences(next, metadata)
+        try { savePreferences(window.localStorage, validated, metadata) } catch { /* Keep current-session preferences when storage is blocked. */ }
         setPreference(validated)
-        try { localStorage.setItem(LIVE_PREFERENCES_KEY, JSON.stringify(validated)) } catch { /* Apply for this visit. */ }
         setPreferencesOpen(false)
-      }} />}
+      }} metadataReady={metadataReady} />}
       {!metadataReady && <span className="sr-only">Personalisation metadata is loading or unavailable.</span>}
     </div>
   )
