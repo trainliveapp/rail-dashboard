@@ -31,12 +31,23 @@ export function toggleStationSelection(ids, id) {
   return selected.includes(id) ? selected.filter(value => value !== id)
     : selected.length < 3 ? [...selected, id] : selected
 }
+function normalizeStationName(name) {
+  return String(name || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '')
+}
 export function enrichUpdates(rows, metadata, reports) {
-  const stations = new Map(metadata.stations.map(s => [s.name, s]))
+  // Prefer a canonical station ID when legacy metadata has the same name.
+  const canonicalIds = new Set((metadata.stations || []).filter(s => !String(s.id).startsWith('legacy-')).map(s => s.id))
+  const sortedStations = [...(metadata.stations || [])].sort((a, b) =>
+    Number(canonicalIds.has(b.id)) - Number(canonicalIds.has(a.id)) || a.name.localeCompare(b.name))
+  const stations = new Map()
+  for (const station of sortedStations) {
+    const key = normalizeStationName(station.name)
+    if (key && !stations.has(key)) stations.set(key, station)
+  }
   const canonical = new Map(reports.map(r => [r.id, r]))
   return [...new Map(rows.map(row => {
     const report = canonical.get(row.id)
-    const stationId = report?.station_id || stations.get(row.station_name)?.id
+    const stationId = report?.station_id || stations.get(normalizeStationName(row.station_name))?.id
     const lineIds = report ? report.report_lines.map(l => l.line_id)
       : metadata.links.filter(l => l.station_id === stationId).map(l => l.line_id)
     return [row.id, { ...row, stationId, lineIds: [...new Set(lineIds)] }]

@@ -74,6 +74,20 @@ test('station mode includes genuine station-linked reports across operators only
   assert.ok(!matchesPreference(report, { mode: 'stations', ids: ['central'] }))
 })
 
+test('legacy station names with punctuation differences resolve to canonical station IDs', () => {
+  const stationMetadata = {
+    ...metadata,
+    stations: [{ id: 'kings-cross', name: "King's Cross St Pancras" }, { id: 'legacy-old-kings-cross', name: "King's Cross St Pancras" }],
+  }
+  const [legacyReport] = enrichUpdates(
+    [{ id: 'legacy-report', station_name: 'Kings Cross St Pancras' }],
+    stationMetadata,
+    [],
+  )
+  assert.equal(legacyReport.stationId, 'kings-cross')
+  assert.ok(matchesPreference(legacyReport, { mode: 'stations', ids: ['kings-cross'] }))
+})
+
 test('no station match, missing canonical relationship and line-wide TfL notices stay out of station mode', () => {
   const selected = { mode: 'stations', ids: ['interchange'] }
   const [renamed] = enrichUpdates([{ id: 'old', station_name: 'Old Interchange Name' }], metadata, [{ id: 'old', station_id: 'retired-interchange', report_lines: [] }])

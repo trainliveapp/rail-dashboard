@@ -213,7 +213,7 @@ export default function TopPromoBar() {
             </span>
             )
           }) : (
-            <span className="shrink-0 font-semibold">{feedError ? 'Live updates temporarily unavailable' : preference.mode === 'all' ? 'Live travel updates from the community' : 'No matching updates for your selection'}</span>
+            <span className="shrink-0 font-semibold">{feedError ? 'Live updates temporarily unavailable' : preference.mode === 'all' ? 'Live travel updates from the community' : 'No reports for your selected stations right now'}</span>
           )}
         </div>
       </div>
