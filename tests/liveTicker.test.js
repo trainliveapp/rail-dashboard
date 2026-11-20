@@ -65,6 +65,25 @@ test('selection supports zero through three stations, rejects a fourth and preve
   assert.deepEqual(toggleStationSelection([], 'a'), ['a'])
 })
 
+test('draft selection can be cleared or cancelled without changing saved preferences', () => {
+  const saved = storage()
+  const original = { mode: 'stations', ids: ['interchange', 'central'] }
+  savePreferences(saved, original, metadata)
+  let draft = [...readPreferences(saved, metadata).ids]
+  draft = toggleStationSelection(draft, 'interchange')
+  assert.deepEqual(draft, ['central'])
+  assert.deepEqual(readPreferences(saved, metadata), original)
+  draft = [] // Clear remains a draft action until Apply.
+  assert.deepEqual(readPreferences(saved, metadata), original)
+  assert.equal(draft.length, 0)
+})
+
+test('search keeps selected stations visible and does not alter selection IDs', async () => {
+  const component = await readFile(new URL('../src/components/LiveTickerPreferences.jsx', import.meta.url), 'utf8')
+  assert.match(component, /selected: ordered\.filter\(station => selectedIds\.includes\(station\.id\) && matches\(station\)\)/)
+  assert.match(component, /available: ordered\.filter\(station => !selectedIds\.includes\(station\.id\) && matches\(station\)\)/)
+})
+
 test('station mode includes genuine station-linked reports across operators only', () => {
   const row = { id: 'report-1', station_name: 'Interchange' }
   const [report] = enrichUpdates([row], metadata, [{ id: row.id, station_id: 'interchange', report_lines: [{ line_id: 'line-a' }, { line_id: 'line-b' }] }])
@@ -72,6 +91,18 @@ test('station mode includes genuine station-linked reports across operators only
   assert.deepEqual(report.lineIds, ['line-a', 'line-b'])
   assert.ok(matchesPreference(report, { mode: 'stations', ids: ['interchange'] }))
   assert.ok(!matchesPreference(report, { mode: 'stations', ids: ['central'] }))
+})
+
+test('station mode matches exactly one or two saved station IDs', () => {
+  const reports = [
+    { stationId: 'interchange' },
+    { stationId: 'central' },
+    { stationId: 'outside-selection' },
+  ]
+  const one = reports.filter(report => matchesPreference(report, { mode: 'stations', ids: ['interchange'] }))
+  const two = reports.filter(report => matchesPreference(report, { mode: 'stations', ids: ['interchange', 'central'] }))
+  assert.deepEqual(one.map(report => report.stationId), ['interchange'])
+  assert.deepEqual(two.map(report => report.stationId), ['interchange', 'central'])
 })
 
 test('legacy station names with punctuation differences resolve to canonical station IDs', () => {
@@ -133,9 +164,11 @@ test('search panel has the approved station-only labels and reduced motion disab
   ])
   assert.match(component, /Personalise/)
   assert.match(component, /Choose up to 3 stations/)
-  assert.match(component, /Search for a station\.\.\./)
+  assert.match(component, /Search for a station…/)
   assert.match(component, /Apply \(\{selectedIds\.length\}\/3\)/)
   assert.doesNotMatch(component, /Railway lines|location-pin|train icon/i)
   assert.match(css, /prefers-reduced-motion: reduce[\s\S]*?\.live-ticker-track \{ animation: none; \}/)
   assert.match(css, /\.live-preferences-results \{[^}]*overflow-y: auto/)
+  assert.match(css, /--color-brand-live-blue: #0864C7/)
+  assert.match(css, /env\(safe-area-inset-bottom\)/)
 })
