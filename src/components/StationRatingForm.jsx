@@ -3,13 +3,17 @@ import { ArrowLeft, ChevronRight, Send, Star, Check } from 'lucide-react'
 import { getMyStationReview, submitStationRating, ratingCategories } from '../lib/stationRatings'
 import { useAuth } from '../lib/AuthContext'
 import { REVIEW_MAX_LENGTH } from '../lib/reviewRules'
+import ReviewCategoryIcon from './ReviewCategoryIcon'
 
 const CATEGORIES = ratingCategories
 
-function StarRow({ label, value, onChange, disabled }) {
+function StarRow({ category, label, value, onChange, disabled }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 py-2.5">
-      <span className="text-xs text-slate-700 sm:text-sm">{label}</span>
+      <span className="flex min-w-0 items-center gap-2 text-xs text-slate-700 sm:text-sm">
+        <ReviewCategoryIcon category={category} size={24} />
+        <span>{label}</span>
+      </span>
       <div className="flex shrink-0" role="group" aria-label={label}>
         {[1, 2, 3, 4, 5].map((n) => (
           <button
@@ -123,6 +127,7 @@ export default function StationRatingForm({ stationName, stationId, onSubmitted,
         {CATEGORIES.map((cat) => (
           <StarRow
             key={cat.key}
+            category={cat.key}
             label={cat.label}
             value={values[cat.key]}
             disabled={submitting}

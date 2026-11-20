@@ -1,12 +1,7 @@
 import { Star } from 'lucide-react'
+import ReviewCategoryIcon from './ReviewCategoryIcon'
 
-const CATEGORY_LABELS = {
-  staffFriendliness: 'Friendliness',
-  accessibility: 'Accessibility',
-  staffVisibility: 'Staff visibility',
-  cleanliness: 'Cleanliness',
-  facilities: 'Facilities',
-}
+import { ratingCategories } from '../lib/stationRatings'
 
 export default function StationStandardPlaque({ stationName, score, ratingCount, categoryScores }) {
   const isUnrated = ratingCount === 0 || score === null
@@ -28,12 +23,12 @@ export default function StationStandardPlaque({ stationName, score, ratingCount,
 
           {categoryScores && (
             <div className="space-y-1.5">
-              {Object.entries(CATEGORY_LABELS).map(([key, label]) => {
+              {ratingCategories.map(({ key, label }) => {
                 const value = categoryScores[key]
                 if (value === null || value === undefined) return null
                 return (
                   <div key={key} className="flex items-center justify-between text-xs">
-                    <span className="text-slate-500">{label}</span>
+                    <span className="flex min-w-0 items-center gap-2 text-slate-500"><ReviewCategoryIcon category={key} size={20} />{label}</span>
                     <span className="font-medium text-slate-700">{value.toFixed(1)}</span>
                   </div>
                 )
