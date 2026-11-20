@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
-import { ChevronRight, Loader2, Star } from 'lucide-react'
+import { FileText, Loader2, Star } from 'lucide-react'
 import ReportCategoryImage from './ReportCategoryImage'
 import { stationReportCategories, lines } from '../data/mockData'
 import { lineColorFor } from './lineColors'
 import { getStationUpdates, postReport, undoReport, subscribeToStationUpdates, UPDATE_VISIBILITY_WINDOW_MS } from '../lib/stationUpdates'
 import useReportCooldown from '../lib/useReportCooldown'
-import { getStationScore, subscribeToStationReviews, ratingCategories } from '../lib/stationRatings'
+import { getStationScore, subscribeToStationReviews } from '../lib/stationRatings'
+import StationReviewSummaryCard from './StationReviewSummaryCard'
+import StationReviewCategoryList from './StationReviewCategoryList'
 
 const lineIdFor = (line) => {
   const rawName = typeof line === 'string' ? line : line?.id || line?.name
@@ -24,15 +26,6 @@ const lineIdFor = (line) => {
 }
 
 const lineOrder = new Map(lines.map((line, index) => [lineIdFor(line.name), index]))
-
-export function RatingStars({ value, size = 14 }) {
-  return <span className="inline-flex shrink-0" aria-label={value == null ? 'Not rated' : `${Number(value).toFixed(1)} out of 5 stars`}>
-    {[1, 2, 3, 4, 5].map((n) => <span key={n} className="relative inline-flex">
-      <Star size={size} className="text-slate-300" />
-      <span className="absolute inset-0 overflow-hidden" style={{ width: `${Math.max(0, Math.min(1, (value || 0) - n + 1)) * 100}%` }}><Star size={size} className="fill-amber-400 text-amber-400" /></span>
-    </span>)}
-  </span>
-}
 
 export default function StationReportSummary({ station, onRate, onViewReviews, reviewView, reviewContent, mobile = false }) {
   const [reports, setReports] = useState([])
@@ -132,7 +125,6 @@ export default function StationReportSummary({ station, onRate, onViewReviews, r
     return [id, { id, name: source.name, color: source.color || lineColorFor(source.name) || '#777' }]
   }).filter(Boolean)).values()]
     .sort((a, b) => (lineOrder.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (lineOrder.get(b.id) ?? Number.MAX_SAFE_INTEGER) || a.name.localeCompare(b.name, 'en-GB'))
-  const scoreLabel = score == null ? 'Loading…' : score.overallScore == null ? 'Not rated yet' : Number(score.overallScore).toFixed(1)
   const reviewActionClass = 'flex min-h-11 min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-2.5 text-xs font-semibold transition-colors [&>svg]:shrink-0 focus-visible:outline-2 focus-visible:outline-blue-600'
 
   return <div className={`station-summary ${mobile ? 'station-summary--mobile' : 'w-[min(27.5rem,calc(100vw-3rem))]'} overflow-hidden rounded-xl bg-white text-slate-900 shadow-xl`}>
@@ -147,11 +139,6 @@ export default function StationReportSummary({ station, onRate, onViewReviews, r
       </div>}
     </header>
     <div ref={bodyRef} className={`station-summary-body relative min-h-0 overflow-y-auto overscroll-contain ${mobile ? 'p-2.5' : 'max-h-[min(65dvh,560px)] p-3'}`}>
-      <div className="mb-2 grid grid-cols-1 gap-2">
-        <button type="button" onClick={onViewReviews} className="station-summary-review flex items-center gap-2 rounded-lg bg-slate-50 px-2.5 py-2 text-left">
-          <Star size={27} className="shrink-0 fill-amber-400 text-amber-400" /><span className="min-w-0 flex-1"><strong className={`block leading-tight ${score?.overallScore == null ? 'text-sm' : 'text-xl'}`}>{scoreError ? '—' : scoreLabel}{score?.overallScore != null && <span className="text-sm font-normal">/5</span>}</strong><span className="block text-[11px] text-slate-500">{scoreError ? 'Reviews unavailable' : 'Station reviews'}</span></span><ChevronRight size={16} />
-        </button>
-      </div>
       <h4 className="mb-1 text-sm font-bold">Seen Something?</h4>
       <p className="!mt-0 !mb-3 text-xs text-slate-600">Tap an issue to report it across the whole station; tap again to deselect. Each issue counts once per person within 30 minutes. Use the detailed report form to choose specific lines.</p>
       {submitNotice && <p role="status" className="!my-2 rounded-lg bg-emerald-50 p-3 text-xs text-emerald-800">{submitNotice}</p>}
@@ -167,12 +154,11 @@ export default function StationReportSummary({ station, onRate, onViewReviews, r
       <div ref={reviewRef}>
       {reviewContent || <>
       <h4 className="mb-1 text-xs font-bold">Station reviews</h4>
-      <p className="!my-1 text-[11px] text-slate-500">Passenger ratings and experiences.</p>
-      {scoreError ? <p role="alert" className="!my-2 text-xs text-slate-500">Reviews could not be loaded. <button type="button" onClick={() => setRevision((n) => n + 1)} className="font-semibold text-blue-700">Try again</button></p> : <div className="mb-3 grid grid-cols-1 gap-3">
-        <div className="border-b border-slate-200 pb-2"><div className={`${score?.overallScore == null ? 'text-base' : 'text-3xl'} font-bold leading-tight`}>{scoreLabel}{score?.overallScore != null && <span className="text-lg font-normal">/5</span>}</div><RatingStars value={score?.overallScore} size={22} /><p className="!my-1 text-xs leading-snug text-slate-500">{score == null ? 'Loading reviews…' : score.ratingCount ? `Based on ${score.ratingCount} passenger reviews` : 'Be the first to review this station'}</p></div>
-        <div className="min-w-0 space-y-2">{ratingCategories.map((cat) => { const value = score?.categoryScores?.[cat.key]; return <div key={cat.key} className="flex items-center justify-between gap-2 text-xs"><span className="min-w-0 flex-1 break-words">{cat.label}</span><RatingStars value={value} size={14} /><span className="w-5 shrink-0 text-right tabular-nums">{value == null ? '—' : Number(value).toFixed(1)}</span></div> })}</div>
+      {scoreError ? <p role="alert" className="!my-2 text-center text-xs text-slate-500">Reviews could not be loaded. <button type="button" onClick={() => setRevision((n) => n + 1)} className="font-semibold text-blue-700">Try again</button></p> : <div className="station-review-presentation">
+        <StationReviewSummaryCard score={score} />
+        <StationReviewCategoryList categoryScores={score?.categoryScores} />
       </div>}
-      <div className="grid grid-cols-1 min-[400px]:grid-cols-2 gap-2"><button type="button" onClick={onViewReviews} className={`${reviewActionClass} border border-slate-300 hover:bg-slate-50`}><span className="flex-1 text-center">Read reviews</span><ChevronRight size={12} /></button><button type="button" onClick={onRate} className={`${reviewActionClass} bg-yellow-400 hover:bg-yellow-300`}><Star size={16} /><span className="flex-1 text-center">Write a review</span><ChevronRight size={12} /></button></div>
+      <div className="station-review-actions"><button type="button" onClick={onViewReviews} className={`${reviewActionClass} border border-slate-300 bg-white text-brand-blue hover:bg-slate-50`}><FileText size={16} /><span>Read Reviews</span></button><button type="button" onClick={onRate} className={`${reviewActionClass} bg-yellow-400 text-slate-900 hover:bg-yellow-300`}><Star size={16} /><span>Write a Review</span></button></div>
       </>}
       </div>
     </div>
