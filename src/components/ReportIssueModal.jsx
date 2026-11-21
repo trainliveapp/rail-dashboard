@@ -20,6 +20,7 @@ const categoryTone = {
   antisocial: 'amber',
   harassment_violence: 'amber',
   fare_dodgers: 'amber',
+  suspicious_behaviour: 'amber',
   safety: 'amber',
 }
 

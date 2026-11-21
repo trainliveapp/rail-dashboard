@@ -27,6 +27,10 @@ const iconAssets = {
     webp: new URL('../assets/Reporting icons/webp/fare-dodgers.webp', import.meta.url).href,
     png: new URL('../assets/Reporting icons/png/fare-dodgers.png', import.meta.url).href,
   },
+  suspicious_behaviour: {
+    webp: new URL('../assets/Reporting icons/webp/suspicious-behaviour.webp', import.meta.url).href,
+    png: new URL('../assets/Reporting icons/png/suspicious-behaviour.png', import.meta.url).href,
+  },
 }
 
 export default function ReportCategoryImage({ category, className = '' }) {

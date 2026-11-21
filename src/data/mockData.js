@@ -584,6 +584,7 @@ export const reportCategories = [
   { key: 'antisocial', label: 'Anti Social Behaviour', icon: 'ShieldAlert' },
   { key: 'harassment_violence', label: 'Harassment', icon: 'ShieldAlert' },
   { key: 'fare_dodgers', label: 'Fare Dodgers', icon: 'Ticket' },
+  { key: 'suspicious_behaviour', label: 'Suspicious Behaviour', icon: 'ShieldAlert' },
 ]
 
 export const savedJourneys = [
@@ -641,6 +642,7 @@ export const stationReportCategories = [
   { key: 'antisocial', label: 'Anti Social Behaviour', emoji: '\ud83d\udea8', tone: 'amber' },
   { key: 'harassment_violence', label: 'Harassment', emoji: '\ud83d\udee1\ufe0f', tone: 'amber' },
   { key: 'fare_dodgers', label: 'Fare Dodgers', emoji: '\ud83c\udfab', tone: 'amber' },
+  { key: 'suspicious_behaviour', label: 'Suspicious Behaviour', emoji: '\ud83d\udee1\ufe0f', tone: 'amber' },
 ]
 
 export const featureCards = [
