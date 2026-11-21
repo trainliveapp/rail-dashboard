@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { FileText, Loader2, Star } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import ReportCategoryImage from './ReportCategoryImage'
 import { stationReportCategories, lines } from '../data/mockData'
 import { lineColorFor } from './lineColors'
@@ -8,6 +8,8 @@ import useReportCooldown from '../lib/useReportCooldown'
 import { getStationScore, subscribeToStationReviews } from '../lib/stationRatings'
 import StationReviewSummaryCard from './StationReviewSummaryCard'
 import StationReviewCategoryList from './StationReviewCategoryList'
+import readReviewsIcon from '../assets/06_read_reviews.svg'
+import writeReviewIcon from '../assets/07_write_review.svg'
 
 const lineIdFor = (line) => {
   const rawName = typeof line === 'string' ? line : line?.id || line?.name
@@ -125,7 +127,7 @@ export default function StationReportSummary({ station, onRate, onViewReviews, r
     return [id, { id, name: source.name, color: source.color || lineColorFor(source.name) || '#777' }]
   }).filter(Boolean)).values()]
     .sort((a, b) => (lineOrder.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (lineOrder.get(b.id) ?? Number.MAX_SAFE_INTEGER) || a.name.localeCompare(b.name, 'en-GB'))
-  const reviewActionClass = 'flex min-h-11 min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-2.5 text-xs font-semibold transition-colors [&>svg]:shrink-0 focus-visible:outline-2 focus-visible:outline-blue-600'
+  const reviewActionClass = 'flex min-h-11 min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-2.5 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-blue-600'
 
   return <div className={`station-summary ${mobile ? 'station-summary--mobile' : 'w-[min(27.5rem,calc(100vw-3rem))]'} overflow-hidden rounded-xl bg-white text-slate-900 shadow-xl`}>
     <header className={`station-summary-header shrink-0 bg-gradient-to-r from-blue-900 to-blue-600 ${mobile ? 'px-3 py-2 pr-12' : 'px-4 py-3 pr-14'}`}>
@@ -158,7 +160,7 @@ export default function StationReportSummary({ station, onRate, onViewReviews, r
         <StationReviewSummaryCard score={score} />
         <StationReviewCategoryList categoryScores={score?.categoryScores} />
       </div>}
-      <div className="station-review-actions"><button type="button" onClick={onViewReviews} className={`${reviewActionClass} border border-slate-300 bg-white text-brand-blue hover:bg-slate-50`}><FileText size={16} /><span>Read Reviews</span></button><button type="button" onClick={onRate} className={`${reviewActionClass} bg-yellow-400 text-slate-900 hover:bg-yellow-300`}><Star size={16} /><span>Write a Review</span></button></div>
+      <div className="station-review-actions"><button type="button" onClick={onViewReviews} aria-label="Read reviews" className={`${reviewActionClass} border border-slate-300 bg-white text-brand-blue hover:bg-slate-50`}><img src={readReviewsIcon} alt="" aria-hidden="true" className="h-5 w-5 shrink-0" /><span>Read Reviews</span></button><button type="button" onClick={onRate} aria-label="Write a review" className={`${reviewActionClass} bg-yellow-400 text-slate-900 hover:bg-yellow-300`}><img src={writeReviewIcon} alt="" aria-hidden="true" className="h-5 w-5 shrink-0" /><span>Write a Review</span></button></div>
       </>}
       </div>
     </div>

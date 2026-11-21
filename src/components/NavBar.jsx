@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { LogOut, Sun, Moon } from 'lucide-react'
+import { LogOut } from 'lucide-react'
 import BrandLogo from './BrandLogo'
 import { useAuth } from '../lib/AuthContext'
+import lightModeIcon from '../assets/08_light_mode.svg'
+import darkModeIcon from '../assets/09_dark_mode.svg'
 
 export default function NavBar({ mapTheme = 'dark', onMapThemeChange = null }) {
   const [accountOpen, setAccountOpen] = useState(false)
@@ -37,7 +39,7 @@ export default function NavBar({ mapTheme = 'dark', onMapThemeChange = null }) {
               onClick={() => onMapThemeChange?.('light')}
               className={`flex h-[34px] w-7 items-center justify-center rounded-md transition-colors ${mapTheme === 'light' ? 'bg-yellow-400 text-brand-ink' : 'text-white/75 hover:bg-white/10 hover:text-white'}`}
             >
-              <Sun size={16} />
+              <img src={lightModeIcon} alt="" aria-hidden="true" className="h-5 w-5" />
             </button>
             <button
               type="button"
@@ -47,7 +49,7 @@ export default function NavBar({ mapTheme = 'dark', onMapThemeChange = null }) {
               onClick={() => onMapThemeChange?.('dark')}
               className={`flex h-[34px] w-7 items-center justify-center rounded-md transition-colors ${mapTheme === 'dark' ? 'bg-yellow-400 text-brand-ink' : 'text-white/75 hover:bg-white/10 hover:text-white'}`}
             >
-              <Moon size={16} />
+              <img src={darkModeIcon} alt="" aria-hidden="true" className="h-5 w-5" />
             </button>
           </div>
           {user ? (
