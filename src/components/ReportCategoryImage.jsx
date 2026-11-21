@@ -48,7 +48,7 @@ export default function ReportCategoryImage({ category, className = '' }) {
         draggable={false}
         width={80}
         height={80}
-        className={`shrink-0 rounded-full object-contain ${className}`}
+        className={`shrink-0 rounded-full object-contain ${category === 'harassment_violence' ? 'report-category-image--harassment' : ''} ${className}`}
       />
     </picture>
   )

@@ -838,14 +838,14 @@ button:disabled,
   font-size: 0.7rem;
 }
 .station-report-tile {
-  --report-original-image-size: 40px;
+  --report-original-image-size: 44px;
   --report-image-inline-space: 24px;
 }
 @media (min-width: 430px) {
-  .station-report-tile { --report-original-image-size: 48px; }
+  .station-report-tile { --report-original-image-size: 52px; }
 }
 .station-summary--mobile .station-report-tile {
-  --report-original-image-size: 64px;
+  --report-original-image-size: 68px;
   --report-image-inline-space: 10px;
 }
 .station-summary--mobile .station-report-tile > span:last-child {
@@ -939,7 +939,7 @@ button:disabled,
   gap: 8px;
 }
 .report-option {
-  --report-original-image-size: clamp(30px, 9vw, 48px);
+  --report-original-image-size: clamp(34px, 10vw, 52px);
   --report-image-inline-space: 12px;
   min-width: 0;
   min-height: 44px;
@@ -958,18 +958,21 @@ button:disabled,
 }
 .report-option .report-category-image,
 .station-report-tile .report-category-image {
-  /* Measure both endpoints against the original photograph, capping only
-     when the card's available inner width is smaller than that endpoint. */
-  width: min(100%, calc(var(--report-original-image-size) * 1.25));
-  height: auto;
+  /* Keep every category's circle identical, independent of selection state. */
+  width: var(--report-original-image-size);
+  height: var(--report-original-image-size);
+  max-width: 100%;
   aspect-ratio: 1;
   border-radius: 50%;
-  object-fit: cover;
-  transition: width 200ms ease, opacity 200ms ease;
+  object-fit: contain;
+}
+.report-option .report-category-image--harassment,
+.station-report-tile .report-category-image--harassment {
+  transform: scale(1.14);
 }
 .report-option[aria-pressed="true"] .report-category-image,
 .station-report-tile[aria-pressed="true"] .report-category-image {
-  width: 100%;
+  width: var(--report-original-image-size);
 }
 @media (prefers-reduced-motion: reduce) {
   .report-option .report-category-image,
@@ -999,11 +1002,11 @@ button:disabled,
     font-size: 13px;
     line-height: 1.35;
   }
-  .report-issue-panel .report-option { --report-original-image-size: 44px; }
+  .report-issue-panel .report-option { --report-original-image-size: 48px; }
 }
 @media (max-width: 640px) {
   .report-option {
-    --report-original-image-size: clamp(56px, 17vw, 72px);
+    --report-original-image-size: clamp(60px, 18vw, 76px);
     min-height: 132px;
     padding: 12px 6px;
     font-size: clamp(14px, 3.8vw, 16px);
