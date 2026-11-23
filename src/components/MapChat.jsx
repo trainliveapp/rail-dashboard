@@ -1428,7 +1428,6 @@ import {
   Camera,
   Loader2,
   Share2,
-  Smile,
   Heart,
   Bookmark,
   ArrowDown,
@@ -1481,8 +1480,6 @@ const CHAT_VISIBILITY_WINDOW_MS = 24 * 60 * 60 * 1000;
 const HEART_REACTION = "\u2764\ufe0f";
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
-const CHAT_EMOJIS = ["❤️", "😂", "😡", "😮", "👍", "🚀"];
-
 function formatMessageTime(value) {
   if (!value) return "";
   try {
@@ -1527,8 +1524,6 @@ export default function MapChat({ launcherTarget = null }) {
   const [imageError, setImageError] = useState("");
   const [selectedIsVideo, setSelectedIsVideo] = useState(false);
   const [sending, setSending] = useState(false);
-  const [emojiOpen, setEmojiOpen] = useState(false);
-  const [flyingEmojis, setFlyingEmojis] = useState([]);
   const [reactions, setReactions] = useState({});
   const [savedMessages, setSavedMessages] = useState(() => {
     try {
@@ -1788,18 +1783,6 @@ export default function MapChat({ launcherTarget = null }) {
     };
   }, [imagePreview]);
 
-  const insertEmoji = (emoji) => {
-    setText((current) => `${current}${emoji}`);
-    const id = `${Date.now()}-${Math.random()}`;
-    setFlyingEmojis((current) => [
-      ...current,
-      { id, emoji, left: 12 + Math.random() * 72 },
-    ]);
-    window.setTimeout(() => {
-      setFlyingEmojis((current) => current.filter((item) => item.id !== id));
-    }, 1800);
-  };
-
   async function loadMessages() {
     const generation = messageGenerationRef.current;
     const { data, error } = await supabase
@@ -1979,6 +1962,11 @@ export default function MapChat({ launcherTarget = null }) {
         return retained;
       });
     }, 60_000);
+    // Keep chat live even if the hosted project's Realtime publication is not
+    // enabled or its websocket temporarily drops. Realtime remains the fast path.
+    const refreshTimer = window.setInterval(() => {
+      if (document.visibilityState === "visible") loadMessages();
+    }, 4_000);
 
     const messagesChannel = supabase
       .channel(`chat-messages-${channelId}`)
@@ -1990,14 +1978,36 @@ export default function MapChat({ launcherTarget = null }) {
           table: "chat_messages",
           filter: `channel_id=eq.${channelId}`,
         },
-        async (payload) => {
+        (payload) => {
           if (cancelled) return;
           const changedMessage = payload.new || payload.old;
           if (!changedMessage || changedMessage.channel_id !== channelId) return;
-          await loadMessages();
+          if (payload.eventType === "DELETE") {
+            const nextMessages = messagesRef.current.filter((message) => message.id !== changedMessage.id);
+            messagesRef.current = nextMessages;
+            setMessages(nextMessages);
+            return;
+          }
+          if (payload.eventType === "INSERT") {
+            setMessages((current) => {
+              if (current.some((message) => message.id === changedMessage.id)) return current;
+              const next = [...current, changedMessage].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+              messagesRef.current = next;
+              return next;
+            });
+            loadReactions([...messagesRef.current.map((message) => message.id), changedMessage.id]);
+            return;
+          }
+          // Updates need a fresh row (the realtime payload may omit unchanged columns).
+          loadMessages();
         }
       )
-      .subscribe();
+      .subscribe((status, error) => {
+        if (status === "SUBSCRIBED") loadMessages();
+        else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          console.warn("Chat Realtime unavailable; using periodic refresh.", error || status);
+        }
+      });
 
     const reactionsChannel = supabase
       .channel(`chat-reactions-${channelId}`)
@@ -2022,6 +2032,7 @@ export default function MapChat({ launcherTarget = null }) {
       cancelled = true;
       messageGenerationRef.current += 1;
       window.clearInterval(expiryTimer);
+      window.clearInterval(refreshTimer);
       supabase.removeChannel(messagesChannel);
       supabase.removeChannel(reactionsChannel);
     };
@@ -2072,7 +2083,7 @@ export default function MapChat({ launcherTarget = null }) {
 
       const user = await getCurrentUser();
       const payload = {
-        username: user ? "Station Live User" : "Station Live Guest",
+        username: user ? "Station Live User" : `Guest ${getChatVisitorId().slice(0, 8)}`,
         message: text.trim(),
         line: channelId,
         channel_id: channelId,
@@ -2437,18 +2448,6 @@ export default function MapChat({ launcherTarget = null }) {
       )}
       </div>
 
-      <div className="pointer-events-none absolute inset-x-0 bottom-[76px] z-40 h-56 overflow-hidden" aria-hidden="true">
-        {flyingEmojis.map((item) => (
-          <span
-            key={item.id}
-            className="chat-flying-emoji absolute bottom-0 text-3xl"
-            style={{ left: `${item.left}%` }}
-          >
-            {item.emoji}
-          </span>
-        ))}
-      </div>
-
       {selectedImage && (
         <div className="relative z-50 flex shrink-0 items-center gap-3 border-t border-slate-200 bg-white px-3 py-2.5">
           {selectedIsVideo ? (
@@ -2487,19 +2486,6 @@ export default function MapChat({ launcherTarget = null }) {
         <>
           <div className="flex items-center gap-2">
           <div className="chat-compose-field flex min-w-0 flex-1 items-center gap-0.5 rounded-full border border-white/50 bg-transparent p-1 pl-1.5 focus-within:border-yellow-300 focus-within:ring-2 focus-within:ring-yellow-300/25">
-            <div className="relative shrink-0">
-              <button
-                type="button"
-                aria-label="Add emoji"
-                onClick={() => {
-                  setEmojiOpen((value) => !value);
-                }}
-                className={`flex h-11 w-11 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 ${emojiOpen ? "bg-slate-100 text-slate-800" : ""}`}
-              >
-                <Smile size={23} strokeWidth={1.8} />
-              </button>
-            </div>
-
             <input
               ref={fileInputRef}
               type="file"
@@ -2561,24 +2547,6 @@ export default function MapChat({ launcherTarget = null }) {
           </button>
           </div>
 
-          {emojiOpen && (
-            <div className="mt-2 flex items-center gap-1 overflow-x-auto rounded-xl border border-slate-200 bg-white p-2 shadow-lg">
-              {CHAT_EMOJIS.map((emoji) => (
-                <button
-                  key={emoji}
-                  type="button"
-                  onClick={() => {
-                    insertEmoji(emoji);
-                    setEmojiOpen(false);
-                  }}
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-xl hover:bg-slate-100"
-                  aria-label={`Use ${emoji}`}
-                >
-                  {emoji}
-                </button>
-              ))}
-            </div>
-          )}
 
 
         </>
