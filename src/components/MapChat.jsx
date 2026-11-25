@@ -1417,7 +1417,7 @@
 // }
 
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   MessageCircle,
@@ -1439,7 +1439,13 @@ import {
 } from "lucide-react";
 import { supabase } from "../supabase";
 import { readChatSelection, saveChatSelection, readChatFavourites, saveChatFavourites } from "../lib/chatSelection";
-import { getChatVisitorId } from "../lib/chatIdentity";
+import {
+  CHAT_TURNSTILE_SITE_KEY,
+  ensureChatIdentity,
+  getChatVisitorId,
+  updateChatDisplayName,
+} from "../lib/chatIdentity";
+import ChatTurnstile from "./ChatTurnstile";
 import { images } from "../data/optimizedImages";
 import ImageBackground from "./ImageBackground";
 import jubileeFullResolution from "../assets/jubilee-line.webp";
@@ -1456,6 +1462,12 @@ import {
   searchChatChannels,
   normalizeChannelSearch,
 } from "../data/chatChannels";
+import {
+  mergeChatMessages,
+  mergeChannelMessage,
+  publicChatMessage,
+  subscribeToChatMessages,
+} from "../lib/chatRealtime";
 
 // View the sharp photograph inside these padded sources without modifying the assets.
 const PADDED_PHOTO_VIEWPORT = { x: 0, y: 655, width: 1080, height: 610, sourceWidth: 1080, sourceHeight: 1920 };
@@ -1477,6 +1489,7 @@ const CHAT_LINE_BACKGROUNDS = {
 };
 
 const CHAT_VISIBILITY_WINDOW_MS = 24 * 60 * 60 * 1000;
+const CHAT_HISTORY_PAGE_SIZE = 500;
 const HEART_REACTION = "\u2764\ufe0f";
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
@@ -1519,6 +1532,16 @@ export default function MapChat({ launcherTarget = null }) {
   const [breakdownOpen, setBreakdownOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
+  const [chatProfile, setChatProfile] = useState(null);
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaResetKey, setCaptchaResetKey] = useState(0);
+  const [identityLoading, setIdentityLoading] = useState(false);
+  const [identityError, setIdentityError] = useState("");
+  const [identityRefresh, setIdentityRefresh] = useState(0);
+  const [profileEditorOpen, setProfileEditorOpen] = useState(false);
+  const [profileNameDraft, setProfileNameDraft] = useState("");
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [realtimeStatus, setRealtimeStatus] = useState("connecting");
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
   const [imageError, setImageError] = useState("");
@@ -1603,6 +1626,8 @@ export default function MapChat({ launcherTarget = null }) {
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
   const currentUserRef = useRef(null);
+  const profileUserIdRef = useRef(null);
+  const pendingSendRef = useRef(null);
   const messagesRef = useRef([]);
   const messageInputRef = useRef(null);
   const chatPanelRef = useRef(null);
@@ -1725,19 +1750,55 @@ export default function MapChat({ launcherTarget = null }) {
       unsubscribe();
     };
   }, [open, channelId]);
-  async function getCurrentUser() {
+  const getCurrentUser = useCallback(async () => {
     const { data } = await supabase.auth.getSession();
     const user = data?.session?.user || null;
     currentUserRef.current = user;
     return user;
-  }
+  }, []);
 
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-      currentUserRef.current = session?.user || null;
+      const user = session?.user || null;
+      currentUserRef.current = user;
+      if (profileUserIdRef.current !== (user?.id || null)) {
+        profileUserIdRef.current = user?.id || null;
+        setChatProfile(null);
+        setIdentityRefresh((current) => current + 1);
+      }
     });
     return () => data?.subscription?.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    let cancelled = false;
+    setIdentityLoading(true);
+    setIdentityError("");
+    ensureChatIdentity(supabase, captchaToken)
+      .then(({ user, profile }) => {
+        if (cancelled) return;
+        currentUserRef.current = user;
+        profileUserIdRef.current = user.id;
+        setChatProfile(profile);
+        setProfileNameDraft(profile.display_name);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        console.error("Could not establish Chatter identity:", error);
+        setIdentityError(error?.message || "Could not set up your guest identity.");
+        if (captchaToken) {
+          setCaptchaToken("");
+          setCaptchaResetKey((current) => current + 1);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setIdentityLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, captchaToken, identityRefresh]);
 
   const handleImageSelection = (event) => {
     const file = event.target.files?.[0];
@@ -1783,34 +1844,7 @@ export default function MapChat({ launcherTarget = null }) {
     };
   }, [imagePreview]);
 
-  async function loadMessages() {
-    const generation = messageGenerationRef.current;
-    const { data, error } = await supabase
-      .from("chat_messages")
-      .select("*")
-      .eq("channel_id", channelId)
-      .gte(
-        "created_at",
-        new Date(Date.now() - CHAT_VISIBILITY_WINDOW_MS).toISOString()
-      )
-      // Supabase caps rows: fetch the newest end of a busy channel first.
-      .order("created_at", { ascending: false })
-      .order("id", { ascending: false });
-
-    if (error) {
-      console.error("Could not load chat messages:", error);
-      return [];
-    }
-
-    if (generation !== messageGenerationRef.current) return [];
-    const nextMessages = (data || []).slice().reverse();
-    setMessages(nextMessages);
-    messagesRef.current = nextMessages;
-    await loadReactions(nextMessages.map((message) => message.id));
-    return nextMessages;
-  }
-
-  async function loadReactions(messageIds) {
+  const loadReactions = useCallback(async (messageIds) => {
     const generation = messageGenerationRef.current;
     if (!messageIds.length) {
       setReactions({});
@@ -1845,7 +1879,44 @@ export default function MapChat({ launcherTarget = null }) {
     }
 
     if (generation === messageGenerationRef.current) setReactions(next);
-  }
+  }, [getCurrentUser]);
+
+  const loadMessages = useCallback(async () => {
+    const generation = messageGenerationRef.current;
+    const requestedChannelId = channelId;
+    const cutoffIso = new Date(Date.now() - CHAT_VISIBILITY_WINDOW_MS).toISOString();
+    const history = [];
+    for (let offset = 0; ; offset += CHAT_HISTORY_PAGE_SIZE) {
+      const { data, error } = await supabase
+        .from("chat_messages")
+        .select("id,username,message,line,channel_id,image_url,video_url,created_at,author_handle")
+        .eq("channel_id", requestedChannelId)
+        .gte("created_at", cutoffIso)
+        .order("created_at", { ascending: true })
+        .order("id", { ascending: true })
+        .range(offset, offset + CHAT_HISTORY_PAGE_SIZE - 1);
+
+      if (error) {
+        console.error("Could not load chat messages:", error);
+        return [];
+      }
+      if (generation !== messageGenerationRef.current || requestedChannelId !== channelId) return [];
+      history.push(...(data || []));
+      if (!data || data.length < CHAT_HISTORY_PAGE_SIZE) break;
+    }
+
+    if (generation !== messageGenerationRef.current || requestedChannelId !== channelId) return [];
+    const cutoff = Date.now() - CHAT_VISIBILITY_WINDOW_MS;
+    const nextMessages = mergeChatMessages(messagesRef.current, history).filter(
+      (message) =>
+        message.channel_id === requestedChannelId &&
+        new Date(message.created_at).getTime() >= cutoff
+    );
+    setMessages(nextMessages);
+    messagesRef.current = nextMessages;
+    await loadReactions(nextMessages.map((message) => message.id));
+    return nextMessages;
+  }, [channelId, loadReactions]);
 
   function toggleSavedMessage(messageId) {
     const next = savedMessages.includes(messageId)
@@ -1889,10 +1960,22 @@ export default function MapChat({ launcherTarget = null }) {
   }, [actionNotice]);
 
   async function toggleReaction(messageId, reaction) {
-    const user = currentUserRef.current || (await getCurrentUser());
+    let user = currentUserRef.current;
+    if (!user) {
+      try {
+        const identity = await ensureChatIdentity(supabase, captchaToken);
+        user = identity.user;
+        currentUserRef.current = user;
+        setChatProfile(identity.profile);
+      } catch (error) {
+        console.error("Could not establish Chatter identity for reaction:", error);
+        setImageError(error?.message || "Could not save your reaction.");
+        return;
+      }
+    }
 
-    const identity = user ? { user_id: user.id } : { visitor_id: getChatVisitorId() };
-    const identityKey = user ? 'user_id' : 'visitor_id';
+    const identity = { user_id: user.id };
+    const identityKey = "user_id";
 
     const current = reactions[messageId] || { counts: {}, myReaction: null };
     const oldReaction = current.myReaction;
@@ -1962,52 +2045,37 @@ export default function MapChat({ launcherTarget = null }) {
         return retained;
       });
     }, 60_000);
-    // Keep chat live even if the hosted project's Realtime publication is not
-    // enabled or its websocket temporarily drops. Realtime remains the fast path.
-    const refreshTimer = window.setInterval(() => {
-      if (document.visibilityState === "visible") loadMessages();
-    }, 4_000);
+    setRealtimeStatus("connecting");
+    const unsubscribeMessages = subscribeToChatMessages(supabase, channelId, {
+      onMessage: (payload) => {
+        if (cancelled) return;
+        const changedMessage = payload.new;
+        if (!changedMessage) return;
+        setMessages((current) => {
+          const next = mergeChannelMessage(current, publicChatMessage(changedMessage), channelId);
+          messagesRef.current = next;
+          return next;
+        });
+        loadReactions([...messagesRef.current.map((message) => message.id), changedMessage.id]);
+      },
+      onSubscribed: () => {
+        setRealtimeStatus("connected");
+        loadMessages();
+      },
+      onStatus: (status, error) => {
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+          setRealtimeStatus("reconnecting");
+          console.warn("Chat Realtime unavailable; waiting for reconnect.", error || status);
+        }
+      },
+    });
 
-    const messagesChannel = supabase
-      .channel(`chat-messages-${channelId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "chat_messages",
-          filter: `channel_id=eq.${channelId}`,
-        },
-        (payload) => {
-          if (cancelled) return;
-          const changedMessage = payload.new || payload.old;
-          if (!changedMessage || changedMessage.channel_id !== channelId) return;
-          if (payload.eventType === "DELETE") {
-            const nextMessages = messagesRef.current.filter((message) => message.id !== changedMessage.id);
-            messagesRef.current = nextMessages;
-            setMessages(nextMessages);
-            return;
-          }
-          if (payload.eventType === "INSERT") {
-            setMessages((current) => {
-              if (current.some((message) => message.id === changedMessage.id)) return current;
-              const next = [...current, changedMessage].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-              messagesRef.current = next;
-              return next;
-            });
-            loadReactions([...messagesRef.current.map((message) => message.id), changedMessage.id]);
-            return;
-          }
-          // Updates need a fresh row (the realtime payload may omit unchanged columns).
-          loadMessages();
-        }
-      )
-      .subscribe((status, error) => {
-        if (status === "SUBSCRIBED") loadMessages();
-        else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
-          console.warn("Chat Realtime unavailable; using periodic refresh.", error || status);
-        }
-      });
+    // Load immediately; SUBSCRIBED also catches up after initial connect and reconnect.
+    loadMessages();
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") loadMessages();
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     const reactionsChannel = supabase
       .channel(`chat-reactions-${channelId}`)
@@ -2026,17 +2094,15 @@ export default function MapChat({ launcherTarget = null }) {
       )
       .subscribe();
 
-    loadMessages();
-
     return () => {
       cancelled = true;
       messageGenerationRef.current += 1;
       window.clearInterval(expiryTimer);
-      window.clearInterval(refreshTimer);
-      supabase.removeChannel(messagesChannel);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      unsubscribeMessages();
       supabase.removeChannel(reactionsChannel);
     };
-  }, [open, channelId]);
+  }, [open, channelId, loadMessages, loadReactions]);
 
   async function sendMessage() {
     if (!channelId) return;
@@ -2044,19 +2110,42 @@ export default function MapChat({ launcherTarget = null }) {
     if (!text.trim() && !selectedImage) return;
 
     const generation = messageGenerationRef.current;
+    const messageText = text.trim();
+    let pending = pendingSendRef.current;
+    if (
+      !pending ||
+      pending.channelId !== channelId ||
+      pending.message !== messageText ||
+      pending.file !== selectedImage
+    ) {
+      pending = {
+        clientMessageId: crypto.randomUUID(),
+        channelId,
+        message: messageText,
+        file: selectedImage,
+        imageUrl: null,
+        videoUrl: null,
+      };
+      pendingSendRef.current = pending;
+    }
+
     setSending(true);
     setImageError("");
 
     try {
-      let imageUrl = null;
-      let videoUrl = null;
+      const identity = await ensureChatIdentity(supabase, captchaToken);
+      currentUserRef.current = identity.user;
+      setChatProfile(identity.profile);
+      let imageUrl = pending.imageUrl;
+      let videoUrl = pending.videoUrl;
 
-      if (selectedImage) {
+      if (selectedImage && !imageUrl && !videoUrl) {
         const safeName = selectedImage.name
           .replace(/\s+/g, "-")
-          .replace(/[^a-zA-Z0-9._-]/g, "");
+          .replace(/[^a-zA-Z0-9._-]/g, "")
+          .slice(0, 120);
 
-        const fileName = `${Date.now()}_${safeName}`;
+        const fileName = `${pending.clientMessageId}_${safeName}`;
         const bucket = selectedImage.type.startsWith("video/")
           ? "chat-videos"
           : "chat-images";
@@ -2079,50 +2168,66 @@ export default function MapChat({ launcherTarget = null }) {
         } else {
           imageUrl = publicUrlData?.publicUrl || null;
         }
+        pending.imageUrl = imageUrl;
+        pending.videoUrl = videoUrl;
       }
 
-      const user = await getCurrentUser();
-      const payload = {
-        username: user ? "Station Live User" : `Guest ${getChatVisitorId().slice(0, 8)}`,
-        message: text.trim(),
-        line: channelId,
-        channel_id: channelId,
-        image_url: imageUrl,
-        ...(videoUrl ? { video_url: videoUrl } : {}),
-      };
-
-      const { data, error } = await supabase
-        .from("chat_messages")
-        .insert(payload)
-        .select()
-        .single();
+      const { data, error } = await supabase.rpc("send_chat_message", {
+        p_client_message_id: pending.clientMessageId,
+        p_message: pending.message,
+        p_line: selectedChannel.backgroundKey || selectedChannel.displayName.replace(/\s+Line$/i, "").toLowerCase(),
+        p_channel_id: pending.channelId,
+        p_image_url: imageUrl,
+        p_video_url: videoUrl,
+      });
 
       if (error) throw error;
+      const message = Array.isArray(data) ? data[0] : data;
+      if (!message?.id) throw new Error("Chat server did not confirm the message.");
 
-      if (data) {
+      if (message) {
         setOwnMessageIds((current) => {
-          const next = [...new Set([...current, data.id])].slice(-2000);
+          const next = [...new Set([...current, message.id])].slice(-2000);
           try { localStorage.setItem("stationlive-own-chat-messages", JSON.stringify(next)); } catch { /* Session ownership still works. */ }
           return next;
         });
       }
 
-      if (data && generation === messageGenerationRef.current) {
-        setMessages((prev) => {
-          if (prev.some((message) => message.id === data.id)) return prev;
-          const next = [...prev, data];
+      if (generation === messageGenerationRef.current) {
+        setMessages((current) => {
+          const next = mergeChatMessages(current, [publicChatMessage(message)]);
           messagesRef.current = next;
           return next;
         });
       }
 
+      pendingSendRef.current = null;
       setText("");
       clearSelectedImage();
     } catch (error) {
       console.error("Chat upload/send error:", error);
-      setImageError(error?.message || "Could not send your message.");
+      setImageError(error?.message?.includes("CHAT_RATE_LIMITED")
+        ? "Please wait a minute before sending another message."
+        : error?.message || "Could not send your message.");
     } finally {
       setSending(false);
+    }
+  }
+
+  async function saveChatProfile(event) {
+    event.preventDefault();
+    setProfileSaving(true);
+    setIdentityError("");
+    try {
+      const profile = await updateChatDisplayName(supabase, profileNameDraft);
+      setChatProfile(profile);
+      setProfileNameDraft(profile.display_name);
+      setProfileEditorOpen(false);
+    } catch (error) {
+      console.error("Could not update Chatter display name:", error);
+      setIdentityError(error?.message || "Could not update your display name.");
+    } finally {
+      setProfileSaving(false);
     }
   }
 
@@ -2147,6 +2252,29 @@ export default function MapChat({ launcherTarget = null }) {
       <div className="chat-panel-header relative z-30 m-2 mb-0 flex h-[52px] shrink-0 items-center justify-between rounded-xl bg-yellow-400 px-4 text-brand-ink">
         <div className="flex min-w-0 items-center gap-3">
           <span className="text-xl font-black text-brand-ink">chatter</span>
+          <button
+            type="button"
+            disabled={!chatProfile}
+            aria-label={chatProfile ? `Edit display name for @${chatProfile.handle}` : "Guest identity loading"}
+            aria-expanded={profileEditorOpen}
+            onClick={() => {
+              setProfileNameDraft(chatProfile?.display_name || "");
+              setProfileEditorOpen((current) => !current);
+            }}
+            className="flex min-w-0 flex-col items-start rounded-md px-1 text-left leading-tight disabled:opacity-60"
+          >
+            <span className="max-w-[145px] truncate text-xs font-semibold">
+              {chatProfile?.display_name || (identityLoading ? "Setting up guest" : "Guest unavailable")}
+            </span>
+            <span className="max-w-[145px] truncate text-[10px]">
+              {chatProfile ? `@${chatProfile.handle}` : identityError ? "Identity setup failed" : "Please wait"}
+            </span>
+          </button>
+          {channelId && realtimeStatus === "reconnecting" && (
+            <span role="status" className="max-w-[72px] truncate text-[10px] text-brand-ink/70">
+              Reconnecting…
+            </span>
+          )}
         </div>
         <button
           type="button"
@@ -2155,6 +2283,7 @@ export default function MapChat({ launcherTarget = null }) {
             setChannelMenuOpen(false);
             setChannelQuery("");
             setChannelView("main");
+            setProfileEditorOpen(false);
           }}
           aria-label="Close chatter"
           className="flex h-11 w-11 items-center justify-center rounded-full text-brand-ink/70 transition hover:bg-black/10 hover:text-brand-ink"
@@ -2162,6 +2291,47 @@ export default function MapChat({ launcherTarget = null }) {
           <X size={20} />
         </button>
       </div>
+
+      {!chatProfile && CHAT_TURNSTILE_SITE_KEY && (
+        <div className="relative z-50 flex shrink-0 justify-center border-b border-white/10 px-3 py-2">
+          <ChatTurnstile key={captchaResetKey} siteKey={CHAT_TURNSTILE_SITE_KEY} onToken={setCaptchaToken} />
+        </div>
+      )}
+      {identityError && !profileEditorOpen && (
+        <p role="alert" className="relative z-50 shrink-0 px-3 py-1 text-center text-xs text-amber-200">
+          {identityError}
+        </p>
+      )}
+
+      {profileEditorOpen && (
+        <div
+          role="dialog"
+          aria-label="Edit Chatter display name"
+          className="absolute left-3 right-3 top-[4.25rem] z-[100] rounded-xl border border-white/15 bg-[#29292e] p-4 text-white shadow-2xl"
+        >
+          <form onSubmit={saveChatProfile} className="flex flex-col gap-3">
+            <label htmlFor="chat-display-name" className="text-sm font-semibold">Your display name</label>
+            <input
+              id="chat-display-name"
+              type="text"
+              autoComplete="nickname"
+              maxLength={32}
+              minLength={2}
+              value={profileNameDraft}
+              onChange={(event) => setProfileNameDraft(event.target.value)}
+              className="min-h-11 rounded-lg border border-white/20 bg-white/10 px-3 text-base text-white outline-none focus:border-yellow-300 focus:ring-2 focus:ring-yellow-300/25"
+            />
+            <p className="text-xs text-white/70">Your fixed handle is @{chatProfile?.handle}. It keeps you recognisable if names match.</p>
+            {identityError && <p role="alert" className="text-xs text-amber-200">{identityError}</p>}
+            <div className="flex justify-end gap-2">
+              <button type="button" onClick={() => setProfileEditorOpen(false)} className="min-h-10 rounded-lg px-3 text-sm hover:bg-white/10">Cancel</button>
+              <button type="submit" disabled={profileSaving || !chatProfile} className="min-h-10 rounded-lg bg-yellow-400 px-4 text-sm font-semibold text-brand-ink disabled:opacity-60">
+                {profileSaving ? "Saving…" : "Save name"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       <div className="chat-channel relative z-[80] shrink-0 px-0 py-3">
         <label
@@ -2179,6 +2349,7 @@ export default function MapChat({ launcherTarget = null }) {
             aria-haspopup="dialog"
             aria-expanded={channelMenuOpen}
             onClick={() => {
+              setProfileEditorOpen(false);
               setChannelMenuOpen((isOpen) => {
                 if (isOpen) return false;
                 setChannelView("main");
@@ -2347,8 +2518,9 @@ export default function MapChat({ launcherTarget = null }) {
             const liked = reactionState.myReaction === HEART_REACTION || reactionState.myReaction === "\u2764";
             const saved = savedMessages.includes(message.id);
             const own = ownMessageIds.includes(message.id);
-            const sender = !message.username || message.username === "TrainLive Guest"
-              ? "Station Live Guest" : message.username === "TrainLive User" ? "Station Live User" : message.username;
+            const sender = message.author_handle
+              ? message.username || `Guest ${message.author_handle.slice(-4).toUpperCase()}`
+              : message.username ? `Legacy · ${message.username}` : "Legacy contributor";
 
             return (
               <div key={message.id || index} data-own={own} className="chat-message-row mb-6 flex w-full max-w-[90%] items-start gap-3">
@@ -2360,6 +2532,7 @@ export default function MapChat({ launcherTarget = null }) {
                     className="chat-message relative max-w-full text-white">
                     <div className="chat-message-meta mb-0.5 flex flex-wrap items-baseline gap-x-2">
                       <p className="text-sm font-bold">{sender}</p>
+                      {message.author_handle && <span className="text-xs text-white/75">@{message.author_handle}</span>}
                       <span className="text-xs text-white/75">{formatMessageTime(message.created_at)}</span>
                     </div>
 

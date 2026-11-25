@@ -32,6 +32,10 @@ function createNoopSupabaseClient() {
         data: { session: null },
         error: new Error(missingConfigMessage),
       }),
+      signInAnonymously: async () => ({
+        data: { session: null },
+        error: new Error(missingConfigMessage),
+      }),
       signInWithOAuth: async () => ({
         data: { provider: null, url: null },
         error: new Error(missingConfigMessage),
@@ -77,6 +81,9 @@ function createNoopSupabaseClient() {
       limit() {
         return this;
       },
+      range() {
+        return this;
+      },
       then(resolve) {
         return Promise.resolve({
           data: null,
@@ -103,6 +110,11 @@ function createNoopSupabaseClient() {
         error: new Error(missingConfigMessage),
       }),
     },
+
+    rpc: async () => ({
+      data: null,
+      error: new Error(missingConfigMessage),
+    }),
 
     channel: () => ({
       on() {
