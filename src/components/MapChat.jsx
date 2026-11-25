@@ -1468,7 +1468,6 @@ import {
 } from "../data/chatChannels";
 import {
   mergeChatMessages,
-  mergeChannelMessage,
   publicChatMessage,
   subscribeToChatMessages,
 } from "../lib/chatRealtime";
@@ -1493,7 +1492,9 @@ const CHAT_LINE_BACKGROUNDS = {
 };
 
 const CHAT_VISIBILITY_WINDOW_MS = 24 * 60 * 60 * 1000;
-const CHAT_HISTORY_PAGE_SIZE = 500;
+const CHAT_INITIAL_HISTORY_SIZE = 50;
+const CHAT_CATCH_UP_PAGE_SIZE = 200;
+const CHAT_CATCH_UP_OVERLAP_MS = 5_000;
 const HEART_REACTION = "\u2764\ufe0f";
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
@@ -1653,6 +1654,7 @@ export default function MapChat({ launcherTarget = null }) {
   const messageGenerationRef = useRef(0);
   const mainChannelScrollTopRef = useRef(0);
   const selectedChannel = channelId ? getChatChannel(channelId) : { displayName: "Choose a channel", themeColour: "#29292e" };
+  const chatIdentityReady = Boolean(chatProfile?.handle);
   const hasChannelArtwork = Boolean(CHAT_LINE_BACKGROUNDS[selectedChannel.backgroundKey]);
   const effectiveTheme = appearance === "artwork" && hasChannelArtwork && !artworkFailed
     ? "artwork"
@@ -1975,31 +1977,58 @@ export default function MapChat({ launcherTarget = null }) {
     if (generation === messageGenerationRef.current) setReactions(next);
   }, [getCurrentUser]);
 
-  const loadMessages = useCallback(async () => {
+  const loadMessages = useCallback(async (requestedChannelId = channelId, isCurrent = () => true) => {
     const generation = messageGenerationRef.current;
-    const requestedChannelId = channelId;
     const cutoffIso = new Date(Date.now() - CHAT_VISIBILITY_WINDOW_MS).toISOString();
     const history = [];
-    for (let offset = 0; ; offset += CHAT_HISTORY_PAGE_SIZE) {
+    const currentMessages = messagesRef.current.filter(
+      (message) => message.channel_id === requestedChannelId
+    );
+
+    if (currentMessages.length === 0) {
       const { data, error } = await supabase
         .from("chat_messages")
         .select("id,username,message,line,channel_id,image_url,video_url,created_at,author_handle")
         .eq("channel_id", requestedChannelId)
         .gte("created_at", cutoffIso)
-        .order("created_at", { ascending: true })
-        .order("id", { ascending: true })
-        .range(offset, offset + CHAT_HISTORY_PAGE_SIZE - 1);
+        .order("created_at", { ascending: false })
+        .order("id", { ascending: false })
+        .limit(CHAT_INITIAL_HISTORY_SIZE);
 
       if (error) {
         console.error("Could not load chat messages:", error);
-        return [];
+        return false;
       }
-      if (generation !== messageGenerationRef.current || requestedChannelId !== channelId) return [];
-      history.push(...(data || []));
-      if (!data || data.length < CHAT_HISTORY_PAGE_SIZE) break;
+      if (generation !== messageGenerationRef.current || requestedChannelId !== channelId || !isCurrent()) return false;
+      history.push(...(data || []).reverse());
+    } else {
+      const newest = currentMessages[currentMessages.length - 1];
+      const since = new Date(Math.max(
+        Date.parse(cutoffIso),
+        Date.parse(newest.created_at) - CHAT_CATCH_UP_OVERLAP_MS
+      )).toISOString();
+
+      for (let offset = 0; ; offset += CHAT_CATCH_UP_PAGE_SIZE) {
+        const { data, error } = await supabase
+          .from("chat_messages")
+          .select("id,username,message,line,channel_id,image_url,video_url,created_at,author_handle")
+          .eq("channel_id", requestedChannelId)
+          .gte("created_at", since)
+          .order("created_at", { ascending: true })
+          .order("id", { ascending: true })
+          .range(offset, offset + CHAT_CATCH_UP_PAGE_SIZE - 1);
+
+        if (error) {
+          console.error("Could not catch up chat messages:", error);
+          return false;
+        }
+        if (generation !== messageGenerationRef.current || requestedChannelId !== channelId || !isCurrent()) return false;
+        history.push(...(data || []));
+        if (!data || data.length < CHAT_CATCH_UP_PAGE_SIZE) break;
+      }
     }
 
-    if (generation !== messageGenerationRef.current || requestedChannelId !== channelId) return [];
+    if (generation !== messageGenerationRef.current || requestedChannelId !== channelId || !isCurrent()) return false;
     const cutoff = Date.now() - CHAT_VISIBILITY_WINDOW_MS;
     const nextMessages = mergeChatMessages(messagesRef.current, history).filter(
       (message) =>
@@ -2008,8 +2037,10 @@ export default function MapChat({ launcherTarget = null }) {
     );
     setMessages(nextMessages);
     messagesRef.current = nextMessages;
-    await loadReactions(nextMessages.map((message) => message.id));
-    return nextMessages;
+    if (history.length > 0) {
+      await loadReactions([...new Set(history.map((message) => message.id))]);
+    }
+    return generation === messageGenerationRef.current && requestedChannelId === channelId && isCurrent();
   }, [channelId, loadReactions]);
 
   function toggleSavedMessage(messageId) {
@@ -2127,9 +2158,145 @@ export default function MapChat({ launcherTarget = null }) {
   }
 
   useEffect(() => {
-    if (!open || !channelId) return undefined;
+    if (!open || !channelId || !chatIdentityReady) return undefined;
 
     let cancelled = false;
+    let channelConnected = false;
+    let subscriptionStarted = false;
+    let startingSubscription = false;
+    let channelNeedsRestart = false;
+    let recoveryAttempt = 0;
+    let recoveryTimer = null;
+    let unsubscribeMessages = () => {};
+    const selectedChannelId = channelId;
+    const generation = messageGenerationRef.current + 1;
+    messageGenerationRef.current = generation;
+    messagesRef.current = [];
+    setMessages([]);
+    setReactions({});
+
+    const isCurrent = () =>
+      !cancelled &&
+      generation === messageGenerationRef.current &&
+      channelId === selectedChannelId;
+
+    const reconcile = async () => {
+      let caughtUp = false;
+      try {
+        caughtUp = await loadMessages(selectedChannelId, isCurrent);
+      } catch (error) {
+        console.error("Could not reconcile Chatter messages:", error);
+      }
+      if (!isCurrent()) return false;
+      if (caughtUp && channelConnected) {
+        recoveryAttempt = 0;
+        setRealtimeStatus("connected");
+      } else if (!caughtUp) {
+        setRealtimeStatus("reconnecting");
+      }
+      return caughtUp;
+    };
+
+    const scheduleRecovery = () => {
+      const delays = [1000, 2000, 4000, 8000, 16000];
+      if (
+        !isCurrent() ||
+        recoveryTimer !== null ||
+        recoveryAttempt >= delays.length ||
+        document.visibilityState !== "visible" ||
+        !navigator.onLine
+      ) return;
+
+      const delay = delays[recoveryAttempt];
+      recoveryAttempt += 1;
+      recoveryTimer = window.setTimeout(async () => {
+        recoveryTimer = null;
+        if (!isCurrent() || document.visibilityState !== "visible" || !navigator.onLine) return;
+        if (channelNeedsRestart && subscriptionStarted) {
+          await unsubscribeMessages();
+          unsubscribeMessages = () => {};
+          subscriptionStarted = false;
+          channelNeedsRestart = false;
+        }
+        if (!subscriptionStarted) await startSubscription();
+        const caughtUp = await reconcile();
+        if (!caughtUp || !channelConnected) scheduleRecovery();
+      }, delay);
+    };
+
+    const handleMessageIds = async (ids) => {
+      const cutoffIso = new Date(Date.now() - CHAT_VISIBILITY_WINDOW_MS).toISOString();
+      const { data, error } = await supabase
+        .from("chat_messages")
+        .select("id,username,message,line,channel_id,image_url,video_url,created_at,author_handle")
+        .in("id", ids)
+        .eq("channel_id", selectedChannelId)
+        .gte("created_at", cutoffIso);
+
+      if (error) throw error;
+      if (!isCurrent() || !data?.length) return;
+
+      const cutoff = Date.now() - CHAT_VISIBILITY_WINDOW_MS;
+      const nextMessages = mergeChatMessages(
+        messagesRef.current,
+        data.map(publicChatMessage)
+      ).filter((message) =>
+        message.channel_id === selectedChannelId &&
+        new Date(message.created_at).getTime() >= cutoff
+      );
+      messagesRef.current = nextMessages;
+      setMessages(nextMessages);
+      await loadReactions(data.map((message) => message.id));
+    };
+
+    async function startSubscription() {
+      if (cancelled || subscriptionStarted || startingSubscription) return;
+      startingSubscription = true;
+      try {
+        await supabase.realtime.setAuth();
+        if (!isCurrent() || subscriptionStarted) return;
+        const unsubscribe = subscribeToChatMessages(supabase, selectedChannelId, {
+          onMessageIds: handleMessageIds,
+          onSubscribed: () => {
+            channelConnected = true;
+            recoveryAttempt = 0;
+            if (recoveryTimer !== null) {
+              window.clearTimeout(recoveryTimer);
+              recoveryTimer = null;
+            }
+            setRealtimeStatus("connected");
+            void reconcile().then((caughtUp) => {
+              if (!caughtUp) scheduleRecovery();
+            });
+          },
+          onStatus: (status, error) => {
+            if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+              channelConnected = false;
+              if (status === "CLOSED") channelNeedsRestart = true;
+              setRealtimeStatus("reconnecting");
+              console.warn("Chat Realtime unavailable; waiting for reconnect.", error || status);
+              scheduleRecovery();
+            } else if (status === "MESSAGE_FETCH_ERROR") {
+              console.error("Could not fetch a broadcast chat message:", error);
+              setRealtimeStatus("reconnecting");
+              void reconcile().then((caughtUp) => {
+                if (!caughtUp) scheduleRecovery();
+              });
+            }
+          },
+        });
+        unsubscribeMessages = unsubscribe;
+        subscriptionStarted = true;
+      } catch (error) {
+        if (!isCurrent()) return;
+        console.error("Could not authorize the Chatter Realtime channel:", error);
+        setRealtimeStatus("reconnecting");
+        scheduleRecovery();
+      } finally {
+        startingSubscription = false;
+      }
+    }
+
     const expiryTimer = window.setInterval(() => {
       const cutoff = Date.now() - CHAT_VISIBILITY_WINDOW_MS;
       setMessages((current) => {
@@ -2140,36 +2307,38 @@ export default function MapChat({ launcherTarget = null }) {
       });
     }, 60_000);
     setRealtimeStatus("connecting");
-    const unsubscribeMessages = subscribeToChatMessages(supabase, channelId, {
-      onMessage: (payload) => {
-        if (cancelled) return;
-        const changedMessage = payload.new;
-        if (!changedMessage) return;
-        setMessages((current) => {
-          const next = mergeChannelMessage(current, publicChatMessage(changedMessage), channelId);
-          messagesRef.current = next;
-          return next;
-        });
-        loadReactions([...messagesRef.current.map((message) => message.id), changedMessage.id]);
-      },
-      onSubscribed: () => {
-        setRealtimeStatus("connected");
-        loadMessages();
-      },
-      onStatus: (status, error) => {
-        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
-          setRealtimeStatus("reconnecting");
-          console.warn("Chat Realtime unavailable; waiting for reconnect.", error || status);
-        }
-      },
-    });
-
-    // Load immediately; SUBSCRIBED also catches up after initial connect and reconnect.
-    loadMessages();
+    void startSubscription();
     const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") loadMessages();
+      if (document.visibilityState === "visible") {
+        recoveryAttempt = 0;
+        if (recoveryTimer !== null) {
+          window.clearTimeout(recoveryTimer);
+          recoveryTimer = null;
+        }
+        void startSubscription();
+        void reconcile().then((caughtUp) => {
+          if (!caughtUp || !channelConnected) scheduleRecovery();
+        });
+      }
+    };
+    const handleOnline = () => {
+      recoveryAttempt = 0;
+      void startSubscription();
+      void reconcile().then((caughtUp) => {
+        if (!caughtUp || !channelConnected) scheduleRecovery();
+      });
+    };
+    const handleOffline = () => {
+      channelConnected = false;
+      setRealtimeStatus("reconnecting");
+      if (recoveryTimer !== null) {
+        window.clearTimeout(recoveryTimer);
+        recoveryTimer = null;
+      }
     };
     document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
 
     const reactionsChannel = supabase
       .channel(`chat-reactions-${channelId}`)
@@ -2192,11 +2361,14 @@ export default function MapChat({ launcherTarget = null }) {
       cancelled = true;
       messageGenerationRef.current += 1;
       window.clearInterval(expiryTimer);
+      if (recoveryTimer !== null) window.clearTimeout(recoveryTimer);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
       unsubscribeMessages();
       supabase.removeChannel(reactionsChannel);
     };
-  }, [open, channelId, loadMessages, loadReactions]);
+  }, [open, channelId, chatIdentityReady, loadMessages, loadReactions]);
 
   async function sendMessage() {
     if (!channelId) return;
@@ -2786,9 +2958,10 @@ export default function MapChat({ launcherTarget = null }) {
         </div>
       </div>
       {showJumpToLatest && messages.length > 0 && channelId && !channelMenuOpen && (
-        <button type="button" onClick={jumpToLatest} aria-label="Jump to latest message"
-          className="absolute bottom-3 right-4 z-20 flex h-11 w-11 items-center justify-center rounded-full border border-black/15 bg-yellow-400 text-brand-ink shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
-          <ArrowDown size={22} aria-hidden="true" />
+        <button type="button" onClick={jumpToLatest} aria-label="New messages - jump to latest"
+          className="absolute bottom-3 right-4 z-20 flex h-10 items-center gap-2 rounded-full border border-black/15 bg-yellow-400 px-3 text-xs font-semibold text-brand-ink shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
+          New messages
+          <ArrowDown size={18} aria-hidden="true" />
         </button>
       )}
       </div>

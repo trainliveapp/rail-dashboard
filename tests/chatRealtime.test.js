@@ -8,9 +8,10 @@ import {
 } from '../src/lib/chatRealtime.js'
 
 function fakeSupabase() {
-  const state = { name: null, filter: null, onMessage: null, onStatus: null, removed: [] }
+  const state = { name: null, options: null, event: null, filter: null, onMessage: null, onStatus: null, removed: [] }
   const channel = {
-    on(_type, filter, callback) {
+    on(event, filter, callback) {
+      state.event = event
       state.filter = filter
       state.onMessage = callback
       return this
@@ -22,8 +23,9 @@ function fakeSupabase() {
   }
   return {
     state,
-    channel(name) {
+    channel(name, options) {
       state.name = name
+      state.options = options
       return channel
     },
     removeChannel(removedChannel) {
@@ -79,45 +81,50 @@ test('public message data omits the internal author and idempotency IDs', () => 
   assert.equal('client_message_id' in visible, false)
 })
 
-test('the subscription scopes events and catches up on each subscribe after reconnect', () => {
+test('the private room subscription batches message IDs and catches up after reconnect', async () => {
   const client = fakeSupabase()
   const received = []
   let catchUps = 0
   const cleanup = subscribeToChatMessages(client, 'underground_central', {
-    onMessage: (payload) => received.push(payload.new),
+    onMessageIds: async (ids) => received.push(...ids),
     onSubscribed: () => { catchUps += 1 },
   })
 
-  assert.equal(client.state.name, 'chat-messages-underground_central')
-  assert.equal(client.state.filter.event, 'INSERT')
-  assert.equal(client.state.filter.filter, 'channel_id=eq.underground_central')
+  assert.equal(client.state.name, 'chatter:underground_central')
+  assert.deepEqual(client.state.options, { config: { private: true } })
+  assert.equal(client.state.event, 'broadcast')
+  assert.deepEqual(client.state.filter, { event: 'message_inserted' })
   client.state.onStatus('SUBSCRIBED')
   client.state.onStatus('CLOSED')
   client.state.onStatus('SUBSCRIBED')
-  client.state.onMessage({ eventType: 'INSERT', new: message('other', 'underground_jubilee') })
-  client.state.onMessage({ eventType: 'INSERT', new: message('current', 'underground_central') })
+  client.state.onMessage({ payload: { id: 'one', message: 'content is ignored' } })
+  client.state.onMessage({ payload: { id: 'two' } })
+  client.state.onMessage({ payload: { id: 'one' } })
+  await new Promise((resolve) => setTimeout(resolve, 60))
 
   assert.equal(catchUps, 2)
-  assert.deepEqual(received.map((item) => item.id), ['current'])
+  assert.deepEqual(received, ['one', 'two'])
   cleanup()
-  client.state.onMessage({ eventType: 'INSERT', new: message('late', 'underground_central') })
+  client.state.onMessage({ payload: { id: 'late' } })
   client.state.onStatus('SUBSCRIBED')
-  assert.equal(received.length, 1)
+  await new Promise((resolve) => setTimeout(resolve, 60))
+  assert.equal(received.length, 2)
   assert.equal(catchUps, 2)
   assert.equal(client.state.removed.length, 1)
 })
 
-test('messages from other channels are isolated', () => {
+test('broadcast callbacks expose only message IDs and stop after disposal', async () => {
   const client = fakeSupabase()
   const received = []
-  subscribeToChatMessages(client, 'underground_central', {
-    onMessage: (payload) => received.push(payload),
-    onSubscribed: () => {},
+  const cleanup = subscribeToChatMessages(client, 'underground_central', {
+    onMessageIds: async (ids) => received.push(...ids),
   })
-  client.state.onMessage({
-    eventType: 'INSERT',
-    new: message('foreign', 'underground_jubilee'),
-  })
+  client.state.onMessage({ payload: { id: 'current' } })
+  client.state.onMessage({ payload: { id: 'invalid', content: message('foreign', 'underground_jubilee') } })
+  await new Promise((resolve) => setTimeout(resolve, 60))
+  cleanup()
+  client.state.onMessage({ payload: { id: 'late' } })
+  await new Promise((resolve) => setTimeout(resolve, 60))
 
-  assert.deepEqual(received, [])
+  assert.deepEqual(received, ['current', 'invalid'])
 })
