@@ -2,17 +2,23 @@ import { useEffect, useState } from 'react'
 import { loadImage } from '../lib/imageLoading'
 
 // Keep the previous background visible until its replacement has decoded.
-export default function ImageBackground({ src, srcSet, sizes, enabled = true, shaded = false, fit = 'cover', imageStyle, photoViewport }) {
+export default function ImageBackground({ src, srcSet, sizes, enabled = true, shaded = false, fit = 'cover', imageStyle, photoViewport, onLoad, onError }) {
   const [images, setImages] = useState({ visible: null, previous: null })
   useEffect(() => {
     if (!enabled) return
     let cancelled = false
     loadImage(src, { srcSet, sizes }).then(() => {
       if (cancelled) return
-      setImages((current) => ({ visible: { src, srcSet, sizes, style: { ...imageStyle, objectFit: fit }, photoViewport }, previous: current.visible }))
-    }).catch(() => { /* Retain the current image or the panel's base colour. */ })
+      setImages((current) => ({
+        visible: { src, srcSet, sizes, style: { ...imageStyle, objectFit: fit }, photoViewport },
+        previous: current.visible?.src === src ? null : current.visible,
+      }))
+      onLoad?.()
+    }).catch((error) => {
+      if (!cancelled) onError?.(error)
+    })
     return () => { cancelled = true }
-  }, [src, srcSet, sizes, enabled, imageStyle, fit, photoViewport])
+  }, [src, srcSet, sizes, enabled, imageStyle, fit, photoViewport, onLoad, onError])
 
   useEffect(() => {
     const timer = setTimeout(() => setImages((current) => ({ ...current, previous: null })), 400)
@@ -31,7 +37,7 @@ export default function ImageBackground({ src, srcSet, sizes, enabled = true, sh
   }
 
   return <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
-    {renderImage(images.previous, 'absolute inset-0 h-full w-full object-cover')}
+    {images.previous?.src !== images.visible?.src && renderImage(images.previous, 'absolute inset-0 h-full w-full object-cover')}
     {renderImage(images.visible, 'image-background-reveal absolute inset-0 h-full w-full object-cover')}
     {shaded && <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-black/35" />}
   </div>

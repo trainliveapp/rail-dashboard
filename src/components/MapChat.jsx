@@ -1428,10 +1428,12 @@ import {
   Camera,
   Loader2,
   Share2,
+  Palette,
+  Check,
+  Ellipsis,
   Heart,
   Bookmark,
   ArrowDown,
-  UserRound,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -1439,6 +1441,8 @@ import {
 } from "lucide-react";
 import { supabase } from "../supabase";
 import { readChatSelection, saveChatSelection, readChatFavourites, saveChatFavourites } from "../lib/chatSelection";
+import { DEFAULT_CHAT_THEME, readChatTheme, saveChatTheme } from "../lib/chatTheme";
+import { getChatAvatar } from "../lib/chatAvatar";
 import {
   CHAT_TURNSTILE_SITE_KEY,
   ensureChatIdentity,
@@ -1508,6 +1512,11 @@ function formatMessageTime(value) {
 
 export default function MapChat({ launcherTarget = null }) {
   const [open, setOpen] = useState(false);
+  const [appearance, setAppearance] = useState(() => {
+    try { return readChatTheme(window.localStorage); } catch { return DEFAULT_CHAT_THEME; }
+  });
+  const [appearanceMenuOpen, setAppearanceMenuOpen] = useState(false);
+  const [artworkFailed, setArtworkFailed] = useState(false);
   const [channelId, setChannelId] = useState(() => {
     try { return readChatSelection(window.localStorage); } catch { return null; }
   });
@@ -1555,6 +1564,7 @@ export default function MapChat({ launcherTarget = null }) {
     } catch { return []; }
   });
   const [actionNotice, setActionNotice] = useState("");
+  const [messageMenuId, setMessageMenuId] = useState(null);
   const [ownMessageIds, setOwnMessageIds] = useState(() => {
     try {
       const ids = JSON.parse(localStorage.getItem("stationlive-own-chat-messages") || "[]");
@@ -1631,6 +1641,10 @@ export default function MapChat({ launcherTarget = null }) {
   const messagesRef = useRef([]);
   const messageInputRef = useRef(null);
   const chatPanelRef = useRef(null);
+  const appearanceTriggerRef = useRef(null);
+  const appearanceMenuRef = useRef(null);
+  const messageOverflowRef = useRef(null);
+  const messageMenuTriggerRefs = useRef({});
   const mainChannelListRef = useRef(null);
   const channelMenuRef = useRef(null);
   const chatComposerRef = useRef(null);
@@ -1639,6 +1653,10 @@ export default function MapChat({ launcherTarget = null }) {
   const messageGenerationRef = useRef(0);
   const mainChannelScrollTopRef = useRef(0);
   const selectedChannel = channelId ? getChatChannel(channelId) : { displayName: "Choose a channel", themeColour: "#29292e" };
+  const hasChannelArtwork = Boolean(CHAT_LINE_BACKGROUNDS[selectedChannel.backgroundKey]);
+  const effectiveTheme = appearance === "artwork" && hasChannelArtwork && !artworkFailed
+    ? "artwork"
+    : appearance === "dark" ? "dark" : "light";
   const searchingChannels = Boolean(normalizeChannelSearch(channelQuery));
   const favourites = CHAT_CHANNELS.filter((channel) => favouriteChannels.includes(channel.id));
   const showFavourites = !searchingChannels && channelView === "main";
@@ -1646,6 +1664,82 @@ export default function MapChat({ launcherTarget = null }) {
     ? searchChatChannels(channelQuery, channelView === "nationalRail" ? NATIONAL_RAIL_CHANNELS : undefined)
     : channelView === "nationalRail" ? NATIONAL_RAIL_CHANNELS
       : [...favourites, ...MAIN_CHAT_CHANNELS.filter((channel) => !favouriteChannels.includes(channel.id))];
+
+  const handleArtworkLoad = useCallback(() => setArtworkFailed(false), []);
+  const handleArtworkError = useCallback(() => setArtworkFailed(true), []);
+
+  useLayoutEffect(() => {
+    const input = messageInputRef.current;
+    if (!input) return;
+    input.style.height = "auto";
+    input.style.height = `${Math.min(input.scrollHeight, 96)}px`;
+  }, [text]);
+
+  useEffect(() => {
+    setArtworkFailed(false);
+  }, [appearance, channelId]);
+
+  useEffect(() => {
+    if (!appearanceMenuOpen) return undefined;
+    appearanceMenuRef.current?.querySelector('[aria-checked="true"]')?.focus();
+    const handleMenuKeyDown = (event) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setAppearanceMenuOpen(false);
+        appearanceTriggerRef.current?.focus();
+        return;
+      }
+
+      const options = [...(appearanceMenuRef.current?.querySelectorAll('[role="menuitemradio"]') || [])];
+      const index = options.indexOf(document.activeElement);
+      let nextIndex;
+      if (event.key === "ArrowDown") nextIndex = (index + 1) % options.length;
+      if (event.key === "ArrowUp") nextIndex = (index - 1 + options.length) % options.length;
+      if (event.key === "Home") nextIndex = 0;
+      if (event.key === "End") nextIndex = options.length - 1;
+      if (nextIndex !== undefined && options.length) {
+        event.preventDefault();
+        options[nextIndex]?.focus();
+      }
+    };
+    const handlePointerDown = (event) => {
+      if (!appearanceMenuRef.current?.contains(event.target) && !appearanceTriggerRef.current?.contains(event.target)) {
+        setAppearanceMenuOpen(false);
+      }
+    };
+    document.addEventListener("keydown", handleMenuKeyDown);
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => {
+      document.removeEventListener("keydown", handleMenuKeyDown);
+      document.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, [appearanceMenuOpen]);
+
+  useEffect(() => {
+    if (!messageMenuId) return undefined;
+    const handleMenuDismiss = (event) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setMessageMenuId(null);
+        messageMenuTriggerRefs.current[messageMenuId]?.focus();
+      } else if (event.type === "pointerdown" && !messageOverflowRef.current?.contains(event.target)) {
+        setMessageMenuId(null);
+      }
+    };
+    document.addEventListener("keydown", handleMenuDismiss);
+    document.addEventListener("pointerdown", handleMenuDismiss);
+    return () => {
+      document.removeEventListener("keydown", handleMenuDismiss);
+      document.removeEventListener("pointerdown", handleMenuDismiss);
+    };
+  }, [messageMenuId]);
+
+  function chooseAppearance(nextAppearance) {
+    setAppearance(nextAppearance);
+    try { saveChatTheme(window.localStorage, nextAppearance); } catch { /* The selected theme remains active for this session. */ }
+    setAppearanceMenuOpen(false);
+    window.requestAnimationFrame(() => appearanceTriggerRef.current?.focus());
+  }
 
   useEffect(() => {
     if (!open || !channelMenuOpen) return;
@@ -2234,7 +2328,8 @@ export default function MapChat({ launcherTarget = null }) {
   const panel = (
     <div
       ref={chatPanelRef}
-      className="trainlive-chat-panel fixed z-[2147483000] flex flex-col overflow-hidden rounded-2xl border border-white/20 bg-[#29292e] bg-cover bg-center text-white shadow-[0_20px_60px_rgba(15,23,42,0.28)]
+      data-theme={effectiveTheme}
+      className="trainlive-chat-panel fixed z-[2147483000] flex flex-col overflow-hidden rounded-2xl border shadow-[0_20px_60px_rgba(15,23,42,0.28)]
         left-3 right-3 bottom-3 h-[min(680px,calc(100dvh-24px))]
         sm:left-5 sm:right-auto sm:bottom-5 sm:w-[400px] sm:h-[min(680px,calc(100dvh-40px))]"
       style={{
@@ -2245,11 +2340,18 @@ export default function MapChat({ launcherTarget = null }) {
         } : {}),
       }}
     >
-        {channelId && !channelMenuOpen && CHAT_LINE_BACKGROUNDS[selectedChannel.backgroundKey] && (
-          <ImageBackground key={channelId} {...CHAT_LINE_BACKGROUNDS[selectedChannel.backgroundKey]} sizes="(max-width: 639px) calc(100vw - 24px), 400px" fit="cover" />
+        {effectiveTheme === "artwork" && (
+          <ImageBackground
+            key={channelId}
+            {...CHAT_LINE_BACKGROUNDS[selectedChannel.backgroundKey]}
+            sizes="(max-width: 639px) calc(100vw - 24px), 400px"
+            fit="cover"
+            onLoad={handleArtworkLoad}
+            onError={handleArtworkError}
+          />
         )}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 bg-black/20" />
-      <div className="chat-panel-header relative z-30 m-2 mb-0 flex h-[52px] shrink-0 items-center justify-between rounded-xl bg-yellow-400 px-4 text-brand-ink">
+      <div aria-hidden="true" className={`pointer-events-none absolute inset-0 z-0 ${effectiveTheme === "artwork" ? "bg-black/25" : "hidden"}`} />
+      <div className="chat-panel-header relative z-[100] m-2 mb-0 flex h-[52px] shrink-0 items-center justify-between rounded-xl bg-yellow-400 px-4 text-brand-ink">
         <div className="flex min-w-0 items-center gap-3">
           <span className="text-xl font-black text-brand-ink">chatter</span>
           <button
@@ -2276,20 +2378,65 @@ export default function MapChat({ launcherTarget = null }) {
             </span>
           )}
         </div>
-        <button
-          type="button"
-          onClick={() => {
-            setOpen(false);
-            setChannelMenuOpen(false);
-            setChannelQuery("");
-            setChannelView("main");
-            setProfileEditorOpen(false);
-          }}
-          aria-label="Close chatter"
-          className="flex h-11 w-11 items-center justify-center rounded-full text-brand-ink/70 transition hover:bg-black/10 hover:text-brand-ink"
-        >
-          <X size={20} />
-        </button>
+        <div className="flex shrink-0 items-center gap-1">
+          <div className="relative">
+            <button
+              ref={appearanceTriggerRef}
+              type="button"
+              onClick={() => {
+                if (channelMenuOpen) setChannelMenuOpen(false);
+                setAppearanceMenuOpen((isOpen) => !isOpen);
+              }}
+              aria-label="Chatter appearance"
+              aria-haspopup="menu"
+              aria-expanded={appearanceMenuOpen}
+              className="flex h-11 w-11 items-center justify-center rounded-full text-brand-ink/80 transition hover:bg-black/10 hover:text-brand-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-ink"
+            >
+              <Palette size={19} aria-hidden="true" />
+            </button>
+            {appearanceMenuOpen && (
+              <div
+                ref={appearanceMenuRef}
+                role="menu"
+                aria-label="Chatter appearance"
+                className="chat-appearance-menu absolute right-0 top-[calc(100%+8px)] z-[200] w-56 overflow-hidden rounded-xl border p-1 shadow-xl"
+              >
+                {[
+                  ["light", "Light"],
+                  ["dark", "Dark"],
+                  ["artwork", "Station Live artwork"],
+                ].map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    role="menuitemradio"
+                    aria-checked={appearance === value}
+                    onClick={() => chooseAppearance(value)}
+                    className="flex min-h-11 w-full items-center justify-between gap-3 rounded-lg px-3 text-left text-sm font-medium hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue-500"
+                  >
+                    <span>{label}</span>
+                    {appearance === value && <Check size={17} aria-hidden="true" />}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              setChannelMenuOpen(false);
+              setChannelQuery("");
+              setChannelView("main");
+              setProfileEditorOpen(false);
+              setAppearanceMenuOpen(false);
+            }}
+            aria-label="Close chatter"
+            className="flex h-11 w-11 items-center justify-center rounded-full text-brand-ink/70 transition hover:bg-black/10 hover:text-brand-ink"
+          >
+            <X size={20} />
+          </button>
+        </div>
       </div>
 
       {!chatProfile && CHAT_TURNSTILE_SITE_KEY && (
@@ -2350,6 +2497,7 @@ export default function MapChat({ launcherTarget = null }) {
             aria-expanded={channelMenuOpen}
             onClick={() => {
               setProfileEditorOpen(false);
+              setAppearanceMenuOpen(false);
               setChannelMenuOpen((isOpen) => {
                 if (isOpen) return false;
                 setChannelView("main");
@@ -2440,6 +2588,7 @@ export default function MapChat({ launcherTarget = null }) {
                           setMessages([]);
                           messagesRef.current = [];
                           setReactions({});
+                          setMessageMenuId(null);
                           setReportCount(0);
                           setChannelId(channel.id);
                         }
@@ -2521,11 +2670,16 @@ export default function MapChat({ launcherTarget = null }) {
             const sender = message.author_handle
               ? message.username || `Guest ${message.author_handle.slice(-4).toUpperCase()}`
               : message.username ? `Legacy · ${message.username}` : "Legacy contributor";
+            const avatar = getChatAvatar(sender, message.author_handle);
 
             return (
-              <div key={message.id || index} data-own={own} className="chat-message-row mb-6 flex w-full max-w-[90%] items-start gap-3">
-                <span className="chat-message-avatar flex h-10 w-10 shrink-0 items-center justify-center rounded-full" aria-hidden="true">
-                  <UserRound size={25} fill="white" strokeWidth={1.5} />
+              <div key={message.id || index} data-own={own} className="chat-message-row mb-5 flex w-full max-w-[94%] items-start gap-2.5">
+                <span
+                  className="chat-message-avatar flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[10px] font-bold tracking-tight"
+                  style={{ backgroundColor: avatar.backgroundColor, color: "#fff" }}
+                  aria-hidden="true"
+                >
+                  {avatar.initials}
                 </span>
                 <div className="min-w-0 flex-1">
                   <div data-own={own}
@@ -2570,7 +2724,8 @@ export default function MapChat({ launcherTarget = null }) {
                     </div>
 
                   </div>
-                    <div className="chat-message-actions mt-2 flex w-full max-w-[230px] items-center justify-between gap-1" role="group" aria-label="Message actions">
+                    <div className="relative w-full max-w-[190px]" ref={messageMenuId === message.id ? messageOverflowRef : null}>
+                    <div className="chat-message-actions mt-1 flex w-full items-center gap-1" role="group" aria-label="Message actions">
                       <button
                         type="button"
                         onClick={() => toggleReaction(message.id, liked ? reactionState.myReaction : HEART_REACTION)}
@@ -2578,8 +2733,8 @@ export default function MapChat({ launcherTarget = null }) {
                         aria-pressed={liked}
                         className={`flex h-11 min-w-11 shrink-0 items-center justify-center gap-1 rounded-full focus-visible:ring-2 focus-visible:ring-rose-500 ${liked ? 'text-red-600' : 'text-[#202020]'}`}
                       >
-                        <Heart size={22} fill={liked ? 'currentColor' : 'none'} strokeWidth={1.8} />
-                        <span className="text-xs">{heartCount}</span>
+                        <Heart size={18} fill={liked ? 'currentColor' : 'none'} strokeWidth={1.8} />
+                        {heartCount > 0 && <span className="text-xs">{heartCount}</span>}
                       </button>
                       <button
                         type="button"
@@ -2591,21 +2746,38 @@ export default function MapChat({ launcherTarget = null }) {
                       </button>
                       <button
                         type="button"
-                        onClick={() => toggleSavedMessage(message.id)}
-                        aria-label={saved ? "Remove bookmark" : "Bookmark message on this device"}
-                        aria-pressed={saved}
+                        ref={(element) => { messageMenuTriggerRefs.current[message.id] = element; }}
+                        onClick={() => setMessageMenuId((current) => current === message.id ? null : message.id)}
+                        aria-label="More message actions"
+                        aria-haspopup="menu"
+                        aria-expanded={messageMenuId === message.id}
                         className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full focus-visible:ring-2 focus-visible:ring-white"
                       >
-                        <Bookmark size={22} strokeWidth={1.8} fill={saved ? "currentColor" : "none"} />
+                        <Ellipsis size={19} strokeWidth={2} />
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => shareMessage(message)}
-                        aria-label="Share message"
-                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full focus-visible:ring-2 focus-visible:ring-white"
-                      >
-                        <Share2 size={22} strokeWidth={1.8} />
-                      </button>
+                    </div>
+                    {messageMenuId === message.id && (
+                      <div role="menu" aria-label="More message actions" className="chat-message-menu absolute left-0 top-full z-30 mt-1 min-w-48 rounded-xl border p-1 shadow-xl">
+                        <button
+                          type="button"
+                          role="menuitem"
+                          onClick={() => { toggleSavedMessage(message.id); setMessageMenuId(null); }}
+                          className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-sm hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-blue-500"
+                        >
+                          <Bookmark size={17} fill={saved ? "currentColor" : "none"} aria-hidden="true" />
+                          {saved ? "Remove bookmark" : "Bookmark on this device"}
+                        </button>
+                        <button
+                          type="button"
+                          role="menuitem"
+                          onClick={() => { setMessageMenuId(null); shareMessage(message); }}
+                          className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-sm hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-blue-500"
+                        >
+                          <Share2 size={17} aria-hidden="true" />
+                          Share message
+                        </button>
+                      </div>
+                    )}
                     </div>
                 </div>
               </div>
@@ -2693,19 +2865,20 @@ export default function MapChat({ launcherTarget = null }) {
               <Camera size={23} strokeWidth={1.8} />
             </button>
 
-            <input
+            <textarea
               ref={messageInputRef}
               aria-label="Chat message"
-              className="min-w-0 flex-1 bg-transparent px-1 py-2 text-[13px] text-slate-800 caret-blue-600 outline-none placeholder:text-slate-400 sm:text-[14px]"
+              rows={1}
+              className="chat-message-input min-w-0 flex-1 resize-none bg-transparent px-1 py-2 text-base outline-none"
               value={text}
               onChange={(e) => setText(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
+                if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
                   e.preventDefault();
                   sendMessage();
                 }
               }}
-              placeholder="Type a message..."
+              placeholder="Write a message…"
             />
 
           </div>
