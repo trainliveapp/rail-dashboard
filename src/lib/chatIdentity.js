@@ -60,7 +60,14 @@ export async function ensureChatIdentity(client, captchaToken = '') {
       const { data, error } = await client.auth.signInAnonymously(
         captchaToken ? { options: { captchaToken } } : undefined
       )
-      if (error) throw error
+      if (error) {
+        if (error.message?.toLowerCase().includes('no captcha_token found')) {
+          throw new Error(
+            'Supabase CAPTCHA is enabled, but this app has no public Turnstile site key. Set VITE_TURNSTILE_SITE_KEY to the Site Key for the widget configured in Supabase (not its Secret Key), then restart Vite.'
+          )
+        }
+        throw error
+      }
       session = data?.session
     }
     if (!session?.user) throw new Error('Could not establish a Chatter guest session.')

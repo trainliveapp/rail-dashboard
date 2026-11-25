@@ -34,6 +34,8 @@ project.
      repository.
    - Do not enable Supabase CAPTCHA until both sides are configured; otherwise
      new anonymous sessions will be rejected.
+   - For local development, copy `.env.example` to `.env.local`, set the public
+     `VITE_TURNSTILE_SITE_KEY`, and restart Vite. `.env.local` is gitignored.
 8. Build and deploy the frontend only after the migration and settings are
    approved and verified in the test project. The frontend and migration must
    roll out together because direct message inserts are intentionally revoked.

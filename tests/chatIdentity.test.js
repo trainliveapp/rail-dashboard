@@ -56,6 +56,19 @@ test('concurrent identity requests create only one anonymous session', async () 
   assert.equal(client.calls.filter((call) => call === 'signInAnonymously').length, 1)
 })
 
+test('missing Supabase CAPTCHA token explains the required public site-key configuration', async () => {
+  const client = fakeClient()
+  client.auth.signInAnonymously = async () => ({
+    data: { session: null },
+    error: new Error('captcha protection: request disallowed (no captcha_token found)'),
+  })
+
+  await assert.rejects(
+    ensureChatIdentity(client),
+    /VITE_TURNSTILE_SITE_KEY.*Site Key.*not its Secret Key/
+  )
+})
+
 test('display names allow duplicates but reject invalid and reserved names', () => {
   assert.equal(validateChatDisplayName('  London   Commuter  '), 'London Commuter')
   assert.equal(validateChatDisplayName('London Commuter'), validateChatDisplayName('London Commuter'))
