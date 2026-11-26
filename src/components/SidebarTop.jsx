@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  Search, Heart, Clock, ArrowUpDown, ArrowRight, Menu, X, Map, CalendarDays, Bell, HelpCircle, Plus,
+  Search, Heart, Clock, ArrowUpDown, ArrowRight, Menu, X, Map, CalendarDays, Bell, Settings, Plus,
 } from 'lucide-react'
 import { savedJourneys } from '../data/mockData'
 import BrandLogo from './BrandLogo'
@@ -12,8 +12,8 @@ const navItems = [
   { label: 'Calendar Sync', icon: CalendarDays },
   { label: 'Alerts & Reports', icon: Bell, href: '/alerts' },
   { divider: true },
-  { label: 'Settings', icon: HelpCircle },
-  { label: 'Help', icon: HelpCircle },
+  { label: 'Settings', icon: Settings },
+  { label: 'Help' },
 ]
 
 export default function SidebarTop({ className = '', onSearch }) {
@@ -62,7 +62,7 @@ export default function SidebarTop({ className = '', onSearch }) {
                       onClick={() => setMenuOpen(false)}
                       className="flex items-center gap-3 px-4 py-3 text-sm text-slate-700 active:bg-slate-50"
                     >
-                      <ItemIcon size={18} className="text-slate-500" />
+                      {ItemIcon && <ItemIcon size={18} className="text-slate-500" />}
                       {item.label}
                     </Link>
                   )
@@ -70,7 +70,7 @@ export default function SidebarTop({ className = '', onSearch }) {
                 return (
                   <div key={item.label} className="flex items-center justify-between gap-3 px-4 py-3 text-sm text-slate-300 cursor-not-allowed">
                     <span className="flex items-center gap-3">
-                      <ItemIcon size={18} />
+                      {ItemIcon && <ItemIcon size={18} />}
                       {item.label}
                     </span>
                     <span className="text-[10px] font-semibold tracking-wide bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded">SOON</span>

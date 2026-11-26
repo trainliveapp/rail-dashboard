@@ -1429,6 +1429,7 @@ import {
   Loader2,
   Share2,
   Palette,
+  Pencil,
   Check,
   Ellipsis,
   Heart,
@@ -1545,7 +1546,6 @@ export default function MapChat({ launcherTarget = null }) {
   const [chatProfile, setChatProfile] = useState(null);
   const [captchaToken, setCaptchaToken] = useState("");
   const [captchaResetKey, setCaptchaResetKey] = useState(0);
-  const [identityLoading, setIdentityLoading] = useState(false);
   const [identityError, setIdentityError] = useState("");
   const [identityRefresh, setIdentityRefresh] = useState(0);
   const [profileEditorOpen, setProfileEditorOpen] = useState(false);
@@ -1869,7 +1869,6 @@ export default function MapChat({ launcherTarget = null }) {
   useEffect(() => {
     if (!open) return undefined;
     let cancelled = false;
-    setIdentityLoading(true);
     setIdentityError("");
     ensureChatIdentity(supabase, captchaToken)
       .then(({ user, profile }) => {
@@ -1887,9 +1886,6 @@ export default function MapChat({ launcherTarget = null }) {
           setCaptchaToken("");
           setCaptchaResetKey((current) => current + 1);
         }
-      })
-      .finally(() => {
-        if (!cancelled) setIdentityLoading(false);
       });
     return () => {
       cancelled = true;
@@ -2535,14 +2531,10 @@ export default function MapChat({ launcherTarget = null }) {
               setProfileNameDraft(chatProfile?.display_name || "");
               setProfileEditorOpen((current) => !current);
             }}
-            className="flex min-w-0 flex-col items-start rounded-md px-1 text-left leading-tight disabled:opacity-60"
+            title="Edit display name"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md disabled:opacity-60"
           >
-            <span className="max-w-[145px] truncate text-xs font-semibold">
-              {chatProfile?.display_name || (identityLoading ? "Setting up guest" : "Guest unavailable")}
-            </span>
-            <span className="max-w-[145px] truncate text-[10px]">
-              {chatProfile ? `@${chatProfile.handle}` : identityError ? "Identity setup failed" : "Please wait"}
-            </span>
+            <Pencil size={15} aria-hidden="true" />
           </button>
           {channelId && realtimeStatus === "reconnecting" && (
             <span role="status" className="max-w-[72px] truncate text-[10px] text-brand-ink/70">

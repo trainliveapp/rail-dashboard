@@ -14,7 +14,7 @@ export default function NavBar({ mapTheme = 'dark', onMapThemeChange = null }) {
   const firstName = user?.user_metadata?.first_name?.trim()
   const lastName = user?.user_metadata?.last_name?.trim()
   const displayName = [firstName, lastName].filter(Boolean).join(' ') || user?.email || 'Account'
-  const initial = (firstName?.[0] || user?.email?.[0] || '?').toUpperCase()
+  const initial = displayName[0].toUpperCase()
 
   const handleSignOut = async () => {
     setAccountOpen(false)
@@ -23,14 +23,14 @@ export default function NavBar({ mapTheme = 'dark', onMapThemeChange = null }) {
   }
 
   return (
-    <div className="relative bg-blue-700 border-b border-blue-800 text-white">
-      <div className="flex min-w-0 items-center justify-between gap-3 px-3 py-3 sm:px-4">
-        <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
+    <div className="relative z-[1200] bg-blue-700 border-b border-blue-800 text-white">
+      <div className="flex min-w-0 items-center gap-2 px-3 py-3 sm:gap-3 sm:px-4">
+        <div className="flex min-w-0 flex-1 items-center gap-1.5 sm:gap-2">
           <BrandLogo className="h-auto w-24 shrink-0 object-left min-[380px]:w-[120px]" />
           <span className="translate-y-1 whitespace-nowrap text-xl font-semibold min-[380px]:text-2xl">StationLive</span>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <div className="flex items-center gap-1 rounded-lg border border-white/15 bg-white/10 p-1" role="group" aria-label="Map theme">
+        <div className="ml-auto flex shrink-0 items-center gap-2">
+          <div className="flex shrink-0 items-center gap-1 rounded-lg border border-white/15 bg-white/10 p-1" role="group" aria-label="Map theme">
             <button
               type="button"
               aria-label="Light map"
@@ -53,7 +53,7 @@ export default function NavBar({ mapTheme = 'dark', onMapThemeChange = null }) {
             </button>
           </div>
           {user ? (
-          <div className="relative">
+          <div className="relative hidden sm:block">
             <button
               type="button"
               onClick={() => setAccountOpen((o) => !o)}
