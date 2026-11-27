@@ -6,10 +6,11 @@ import path from 'node:path'
 const root = fileURLToPath(new URL('../', import.meta.url))
 const output = path.join(root, 'src/assets/optimized')
 const assets = {
-  ad1: ['1ad.png', [480, 960, 1440]],
-  ad2: ['2ad.png', [480, 960, 1440]],
-  ad3: ['3ad.png', [480, 960, 1440]],
-  ad4: ['4ad.png', [480, 960, 1440]],
+  ad1: ['StationLive_Revised_01_Departures.webp', [480, 768]],
+  ad2: ['StationLive_Revised_02_Community-4.webp', [480, 768]],
+  ad3: ['StationLive_Revised_03_Report-3.webp', [480, 768]],
+  ad4: ['StationLive_Parent_Heart_Final.webp', [480, 960, 1440]],
+  ad5: ['StationLive_Euston_Cancellations.webp', [480, 960, 1156]],
   featurePlatform: ['Cinematic Commuter Train Platform-1.png', [640, 1280]],
   featurePortrait: ['Friendly Cybernetic Portrait with Smartphone-2.png', [360, 720]],
   featurePhone: ['Kelly’s Personalized Travel Dashboard.png', [360, 720]],

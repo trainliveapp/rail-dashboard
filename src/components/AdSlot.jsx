@@ -6,7 +6,7 @@ import BrandLogo from './BrandLogo'
 
 const AD_SIZES = '(max-width: 960px) calc(100vw - 32px), 896px'
 
-const slides = [images.ad1, images.ad2, images.ad3, images.ad4].map(image => ({ image }))
+const slides = [images.ad1, images.ad2, images.ad3, images.ad4, images.ad5].map(image => ({ image }))
 
 export default function AdSlot({ size = 'leaderboard', className = '' }) {
   const [activeSlide, setActiveSlide] = useState(0)
