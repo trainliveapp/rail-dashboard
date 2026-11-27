@@ -1,8 +1,8 @@
-import cleanliness from '../assets/01_cleanliness.svg'
-import customerService from '../assets/02_customer_service.svg'
-import staffVisibility from '../assets/03_staff_visibility.svg'
-import accessibility from '../assets/04_accessibility.svg'
-import facilities from '../assets/Restroom and Bed Amenities Icons.png'
+import cleanliness from '../assets/review-cleanliness.webp'
+import customerService from '../assets/review-customer-service.webp'
+import staffVisibility from '../assets/review-staff-visibility.webp'
+import accessibility from '../assets/review-accessibility.webp'
+import facilities from '../assets/review-facilities.webp'
 
 const icons = {
   cleanliness,
@@ -12,9 +12,10 @@ const icons = {
   facilities,
 }
 
-export default function ReviewCategoryIcon({ category, size = 24 }) {
+export default function ReviewCategoryIcon({ category, size = 24, width, height }) {
   const src = icons[category]
   if (!src) return null
-  const iconSize = category === 'facilities' ? 46 : size
-  return <img src={src} width={iconSize} height={iconSize} alt="" aria-hidden="true" />
+  const iconWidth = width ?? (category === 'facilities' ? 46 : size)
+  const iconHeight = height ?? (category === 'facilities' ? 46 : size)
+  return <img src={src} width={iconWidth} height={iconHeight} alt="" aria-hidden="true" />
 }
